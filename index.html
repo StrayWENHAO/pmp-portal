@@ -283,13 +283,17 @@
   <div class="ring"></div>
 </div>
 
-<!-- SESSION EXPIRED -->
+<!-- SIGN IN / ACCESS REQUIRED -->
 <div id="expiredView" class="hidden">
   <div class="exp-card">
-    <div style="font-size:2.5rem;">🔒</div>
-    <h3>Access Required</h3>
-    <p>Please use your authorised link to access this portal.<br><br>
-    Contact your admin if you need a new link.</p>
+    <div style="font-size:2.5rem;" id="expIcon">⏳</div>
+    <h3 id="expTitle">Signing you in…</h3>
+    <p id="expMsg" style="color:#888;font-size:.85rem;margin-bottom:20px;">Please wait</p>
+    <!-- Google Sign-In button -->
+    <div id="gsiButtonWrap" style="display:none;justify-content:center;margin-bottom:10px;"></div>
+    <p id="expSubMsg" style="color:#bbb;font-size:.76rem;display:none;">
+      Sign in with your authorised Google account to continue.
+    </p>
   </div>
 </div>
 
@@ -982,6 +986,26 @@ function onGoogleSignIn(resp) {
 function showExpired(){
   document.getElementById('ls').style.display='none';
   document.getElementById('expiredView').classList.remove('hidden');
+  // Show sign-in button
+  document.getElementById('expIcon').textContent='🔑';
+  document.getElementById('expTitle').textContent='Sign In Required';
+  document.getElementById('expMsg').textContent='Sign in with your Google account to continue.';
+  document.getElementById('expSubMsg').style.display='none';
+  renderGSIButton();
+}
+
+function renderGSIButton(){
+  if(typeof google==='undefined'||!google.accounts){setTimeout(renderGSIButton,200);return;}
+  var wrap=document.getElementById('gsiButtonWrap');
+  wrap.style.display='flex';
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback:  onGoogleSignIn,
+    auto_select: false
+  });
+  google.accounts.id.renderButton(wrap,{
+    theme:'outline', size:'large', width:260, text:'signin_with'
+  });
 }
 
 // Initialize Google Sign-In
@@ -990,12 +1014,30 @@ function initGSI(){
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
     callback:  onGoogleSignIn,
-    auto_select: true
+    auto_select: true,
+    use_fedcm_for_prompt: false
   });
-  google.accounts.id.prompt();
+  // Render button first so user can always click
+  var wrap=document.getElementById('gsiButtonWrap');
+  wrap.style.display='flex';
+  google.accounts.id.renderButton(wrap,{
+    theme:'outline', size:'large', width:260, text:'signin_with'
+  });
+  document.getElementById('expIcon').textContent='🔑';
+  document.getElementById('expTitle').textContent='Sign In';
+  document.getElementById('expMsg').textContent='Sign in with your authorised Google account.';
+  // Try silent sign-in too
+  google.accounts.id.prompt(function(notification){
+    // If dismissed or not shown, button is already visible
+  });
 }
-// Start GSI init after page loads
-setTimeout(initGSI, 500);
+// Start GSI init — show sign in page first, GSI will auto-select if session exists
+setTimeout(function(){
+  // Show the sign-in page immediately
+  document.getElementById('ls').style.display='none';
+  document.getElementById('expiredView').classList.remove('hidden');
+  initGSI();
+}, 300);
 
 function initPads(){
   lPad=new SignaturePad(document.getElementById('lSigPad'));
