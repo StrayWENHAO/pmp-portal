@@ -932,8 +932,10 @@ var _cbCount = 0;
 function api(action, params) {
   return new Promise(function(resolve, reject) {
     var cbName = '_gasCallback' + (++_cbCount);
+    // base64 encode token to avoid URL encoding issues with JWT special chars
+    var safeToken = btoa(__idToken);
     var url = GAS_API_URL + '?action=' + encodeURIComponent(action)
-            + '&token=' + encodeURIComponent(__idToken)
+            + '&token=' + encodeURIComponent(safeToken)
             + '&cb=' + cbName;
     if (params && typeof params === 'object') {
       Object.keys(params).forEach(function(k){
