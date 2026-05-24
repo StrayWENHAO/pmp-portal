@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    var GOOGLE_CLIENT_ID = '392663550457-46806iegqfa4dmf5s2me8sshiup3oo45.apps.googleusercontent.com';
+    var GAS_API_URL      = 'https://script.google.com/macros/s/AKfycbwcch99zkEnllJQeWcSP_X94l8kuT-mevA5JXH8KJ2GKXUrtaiLaj342__Qhdswnb5z/exec';
+    var __idToken = '';   // set after Google Sign-In
+  </script>
+  <!-- Google Sign-In -->
+  <script src="https://accounts.google.com/gsi/client" async></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Open+Sans:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  <style>
+    :root{--blue:#003366;--red:#cc0000;--green:#1a7a4a;--orange:#d97706;--purple:#6d28d9;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#f0f2f7;font-family:'Open Sans',sans-serif;min-height:100vh;}
+    .hidden{display:none!important;}
+
+    /* LOADING */
+    #ls{position:fixed;inset:0;background:var(--blue);display:flex;flex-direction:column;
+        align-items:center;justify-content:center;z-index:9999;transition:opacity .3s;}
+    #ls .logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:2.8rem;color:#fff;letter-spacing:2px;}
+    #ls .sub{color:rgba(255,255,255,.5);font-size:.78rem;margin:4px 0 24px;letter-spacing:1px;}
+    .ring{width:36px;height:36px;border-radius:50%;border:3px solid rgba(255,255,255,.2);
+          border-top-color:#fff;animation:spin .7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* SESSION EXPIRED */
+    #expiredView{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--blue);}
+    .exp-card{background:#fff;border-radius:20px;padding:40px 32px;text-align:center;max-width:340px;width:90%;}
+    .exp-card h3{font-family:'Montserrat',sans-serif;color:var(--blue);margin:12px 0 8px;}
+    .exp-card p{color:#888;font-size:.88rem;line-height:1.6;}
+
+    /* ══════════════════ HOMEPAGE ══════════════════ */
+    #homeView{min-height:100vh;background:var(--blue);}
+    .home-header{padding:32px 20px 20px;text-align:center;}
+    .home-header .logo{font-family:'Montserrat',sans-serif;font-weight:900;
+      font-size:2.2rem;color:#fff;letter-spacing:2px;}
+    .home-header .tagline{color:rgba(255,255,255,.5);font-size:.75rem;letter-spacing:1.5px;margin-top:4px;}
+    .home-header .user-badge{display:inline-flex;align-items:center;gap:8px;
+      background:rgba(255,255,255,.12);border-radius:20px;padding:5px 14px;
+      margin-top:14px;font-size:.78rem;color:rgba(255,255,255,.8);}
+    .home-header .role-pill{background:var(--red);color:#fff;border-radius:10px;
+      padding:2px 8px;font-size:.65rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+    .home-header .role-pill.admin{background:#1a6aa0;}
+    .home-header .role-pill.superadmin{background:var(--red);}
+
+    .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:16px 16px 32px;}
+    @media(min-width:600px){.home-grid{grid-template-columns:repeat(3,1fr);max-width:700px;margin:0 auto;}}
+    .home-card{background:#fff;border-radius:18px;padding:26px 16px 22px;text-align:center;
+      cursor:pointer;transition:.2s;box-shadow:0 4px 20px rgba(0,0,0,.12);position:relative;overflow:hidden;}
+    .home-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+    .home-card.leave::before{background:var(--red);}
+    .home-card.order::before{background:var(--orange);}
+    .home-card.ot::before{background:var(--green);}
+    .home-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.18);}
+    .home-card .icon{font-size:2.4rem;margin-bottom:10px;}
+    .home-card h3{font-family:'Montserrat',sans-serif;font-weight:800;font-size:1rem;
+      color:#1a1a2e;margin-bottom:4px;}
+    .home-card p{font-size:.76rem;color:#888;line-height:1.4;}
+
+    /* ══════════════════ APP SHELL ══════════════════ */
+    #appView{min-height:100vh;display:flex;flex-direction:column;}
+    .app-topbar{background:var(--blue);padding:14px 18px;display:flex;align-items:center;
+      justify-content:space-between;position:sticky;top:0;z-index:100;
+      box-shadow:0 2px 12px rgba(0,0,0,.2);}
+    .app-topbar .back-btn{background:rgba(255,255,255,.15);border:none;color:#fff;
+      border-radius:8px;padding:7px 14px;font-size:.82rem;font-weight:700;cursor:pointer;transition:.15s;}
+    .app-topbar .back-btn:hover{background:rgba(255,255,255,.25);}
+    .app-topbar .app-title{font-family:'Montserrat',sans-serif;color:#fff;font-weight:800;font-size:1rem;}
+    .app-topbar .app-role{font-size:.68rem;color:rgba(255,255,255,.55);margin-top:1px;}
+    .app-content{flex:1;padding:16px;max-width:1100px;margin:0 auto;width:100%;}
+
+    /* ══════════════════ SECTION TABS ══════════════════ */
+    .stabs{display:flex;gap:6px;margin-bottom:18px;overflow-x:auto;padding-bottom:4px;}
+    .stab{padding:8px 18px;border-radius:20px;border:2px solid #e5e7eb;background:#fff;
+      font-weight:700;font-size:.78rem;cursor:pointer;transition:.15s;color:#555;white-space:nowrap;}
+    .stab.on{color:#fff;}
+    .stab.on.leave{background:var(--red);border-color:var(--red);}
+    .stab.on.order{background:var(--orange);border-color:var(--orange);}
+    .stab.on.ot{background:var(--green);border-color:var(--green);}
+
+    /* ══════════════════ CARDS / FORMS ══════════════════ */
+    .pcard{background:#fff;border-radius:16px;box-shadow:0 3px 16px rgba(0,0,0,.06);
+      overflow:hidden;margin-bottom:18px;}
+    .pcard-hdr{padding:14px 18px;border-bottom:1px solid #f0f0f0;display:flex;
+      align-items:center;justify-content:space-between;}
+    .pcard-hdr h4{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.92rem;
+      color:#1a1a2e;margin:0;}
+    .pcard-body{padding:18px;}
+
+    .form-label{font-weight:700;font-size:.82rem;color:#333;display:block;margin-top:12px;margin-bottom:4px;}
+    .form-control{border-radius:9px!important;padding:10px 13px!important;
+      height:auto!important;font-size:.9rem!important;border:1.5px solid #e5e7eb!important;}
+    .form-control:focus{border-color:var(--blue)!important;box-shadow:none!important;}
+    select.form-control{cursor:pointer;}
+    .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    @media(max-width:480px){.form-row-2{grid-template-columns:1fr;}}
+
+    /* Signature */
+    .sig-canvas{border:2px dashed #e5e7eb;border-radius:10px;width:100%;height:140px;
+      background:#fff;cursor:crosshair;margin-top:4px;}
+    .sig-clear{background:none;border:none;color:#aaa;font-size:.78rem;cursor:pointer;
+      padding:4px 0;margin-top:2px;}
+
+    /* Submit button */
+    .btn-submit{width:100%;padding:14px;border:none;border-radius:11px;font-family:'Montserrat',sans-serif;
+      font-weight:800;font-size:1rem;color:#fff;margin-top:20px;cursor:pointer;transition:.2s;opacity:.35;}
+    .btn-submit.ready{opacity:1;}
+    .btn-submit.leave{background:var(--red);}
+    .btn-submit.order{background:var(--orange);}
+    .btn-submit.ot{background:var(--green);}
+
+    /* Verify badge */
+    .vbadge{color:#28a745;font-size:.78rem;font-weight:700;margin-top:3px;display:none;}
+
+    /* Duration box */
+    .dur-box{background:#f8f9fa;border-radius:11px;padding:12px;text-align:center;
+      margin-top:14px;border-left:6px solid var(--blue);}
+    .dur-val{font-family:'Montserrat',sans-serif;font-size:1.8rem;font-weight:800;color:var(--blue);}
+
+    /* Type selector (Pre/Post) */
+    .type-toggle{display:flex;gap:8px;margin-top:4px;}
+    .type-btn{flex:1;padding:9px;border:2px solid #e5e7eb;border-radius:9px;background:#fff;
+      font-weight:700;font-size:.82rem;cursor:pointer;transition:.15s;color:#666;text-align:center;}
+    .type-btn.on{border-color:var(--green);background:#ecfdf5;color:var(--green);}
+
+    /* ══════════════════ ADMIN DASHBOARD ══════════════════ */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+    @media(max-width:560px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+    .stat-card{background:#fff;border-radius:12px;padding:14px 10px;text-align:center;
+      box-shadow:0 2px 10px rgba(0,0,0,.06);}
+    .stat-val{font-family:'Montserrat',sans-serif;font-size:1.7rem;font-weight:800;}
+    .stat-lbl{font-size:.68rem;color:#aaa;font-weight:600;margin-top:2px;text-transform:uppercase;}
+
+    /* Tables */
+    .ptbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+    .ptbl th{background:#f8f9fa;padding:8px 10px;text-align:left;font-weight:700;
+      color:#555;font-size:.7rem;text-transform:uppercase;letter-spacing:.3px;
+      border-bottom:2px solid #eee;white-space:nowrap;}
+    .ptbl td{padding:10px;border-bottom:1px solid #f3f3f3;vertical-align:middle;}
+    .ptbl tr:hover td{background:#fafbff;}
+    .ptbl tr:last-child td{border-bottom:none;}
+    .tbl-wrap{overflow-x:auto;}
+
+    /* Badges */
+    .bs{display:inline-block;padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:700;}
+    .bs-pending{background:#fff3cd;color:#856404;}
+    .bs-approved{background:#d1fae5;color:#065f46;}
+    .bs-rejected{background:#fee2e2;color:#991b1b;}
+    .bs-ordered{background:#dbeafe;color:#1e40af;}
+    .bs-ready{background:#d1fae5;color:#065f46;}
+    .bs-mach-pending{background:#ffedd5;color:#9a3412;}
+
+    /* Action buttons */
+    .ab{padding:4px 9px;border-radius:6px;font-size:.7rem;font-weight:700;
+      border:none;cursor:pointer;transition:.12s;}
+    .ab-edit{background:#dbeafe;color:#1d4ed8;} .ab-edit:hover{background:#1d4ed8;color:#fff;}
+    .ab-ok{background:#d1fae5;color:#065f46;} .ab-ok:hover{background:#065f46;color:#fff;}
+    .ab-rej{background:#fee2e2;color:#991b1b;} .ab-rej:hover{background:#991b1b;color:#fff;}
+    .ab-del{background:#f3f4f6;color:#6b7280;} .ab-del:hover{background:#6b7280;color:#fff;}
+    .ab-wa{background:#dcfce7;color:#166534;} .ab-wa:hover{background:#166534;color:#fff;}
+    .ab-assign{background:#ede9fe;color:#6d28d9;} .ab-assign:hover{background:#6d28d9;color:#fff;}
+    .act{display:flex;gap:4px;flex-wrap:wrap;}
+
+    /* Filter bar */
+    .fbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+    .fbtn{padding:5px 13px;border-radius:20px;border:2px solid #e5e7eb;background:#fff;
+      font-weight:600;font-size:.74rem;cursor:pointer;transition:.12s;color:#666;}
+    .fbtn.on{border-color:var(--blue);background:var(--blue);color:#fff;}
+    .fbar input,.fbar select{padding:5px 10px;border-radius:20px;border:2px solid #e5e7eb;
+      font-size:.74rem;font-weight:600;color:#555;background:#fff;outline:none;}
+    .fbar input:focus,.fbar select:focus{border-color:var(--blue);}
+
+    /* Calendar */
+    .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+    .cnb{background:none;border:1px solid #e5e7eb;border-radius:6px;padding:3px 9px;
+      cursor:pointer;font-size:.78rem;transition:.12s;}
+    .cnb:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+    .ctit{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.84rem;color:var(--blue);}
+    .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+    .cdh{font-size:.6rem;font-weight:700;color:#bbb;text-align:center;padding:3px 0;}
+    .cd{font-size:.67rem;text-align:center;padding:5px 1px;border-radius:5px;line-height:1.2;}
+    .cd.hol{background:#fee2e2;color:#b91c1c;font-weight:700;}
+    .cd.onl{background:#dbeafe;color:#1e40af;font-weight:700;}
+    .cd.tod{outline:2px solid var(--blue);}
+    .cd.we{color:#ddd;} .cd.fil{color:#ebebeb;}
+
+    /* Date filter */
+    .dfilter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;
+      padding:10px 12px;background:#f8f9fa;border-radius:10px;}
+    .dfilter label{font-size:.73rem;font-weight:700;color:#666;margin:0;white-space:nowrap;}
+    .dfilter input[type=date]{padding:4px 8px;border-radius:7px;border:1.5px solid #e5e7eb;
+      font-size:.76rem;outline:none;}
+    .dfilter input:focus{border-color:var(--blue);}
+    .btn-reset{padding:4px 11px;border-radius:7px;border:1.5px solid #e5e7eb;background:#fff;
+      font-size:.72rem;font-weight:700;color:#666;cursor:pointer;transition:.12s;}
+    .btn-reset:hover{border-color:var(--red);color:var(--red);}
+
+    /* Month pills */
+    .mpills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+    .mpill{padding:4px 11px;border-radius:20px;border:1.5px solid #e5e7eb;background:#fff;
+      font-size:.7rem;font-weight:700;color:#555;cursor:pointer;transition:.12s;}
+    .mpill:hover{border-color:var(--blue);color:var(--blue);}
+    .mpill.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+    /* Past section collapse */
+    .past-hdr{display:flex;align-items:center;justify-content:space-between;
+      padding:8px 12px;background:#f3f4f6;border-radius:9px;cursor:pointer;margin-bottom:8px;}
+    .past-hdr:hover{background:#e9eaec;}
+    .past-hdr span{font-size:.76rem;font-weight:700;color:#888;}
+    .past-body{display:none;}
+    .past-body.open{display:block;}
+
+    /* Date groups */
+    .date-group{margin-bottom:12px;}
+    .date-label{font-family:'DM Mono',monospace;font-size:.79rem;font-weight:600;
+      color:var(--blue);padding:5px 10px;background:#f0f4ff;border-radius:7px;
+      margin-bottom:5px;display:flex;align-items:center;gap:7px;}
+    .date-label.past-lbl{background:#f3f4f6;color:#aaa;}
+    .date-label.today-lbl{background:#dbeafe;color:#1e40af;}
+    .staff-pills{display:flex;flex-wrap:wrap;gap:5px;padding-left:6px;}
+    .spill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
+      border-radius:20px;font-size:.76rem;font-weight:600;background:#fff;
+      border:1px solid #e5e7eb;color:#333;}
+    .spill.past-p{opacity:.42;background:#f9f9f9;}
+    .spill.today-p{border-color:#93c5fd;background:#eff6ff;}
+
+    /* Empty state */
+    .empty{text-align:center;padding:32px;color:#ccc;font-size:.84rem;}
+
+    /* Modal */
+    .modal-ov{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.7);
+      align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+    .modal-box{background:#fff;border-radius:16px;padding:24px;width:92%;max-width:480px;
+      max-height:90vh;overflow-y:auto;box-shadow:0 24px 50px rgba(0,0,0,.15);}
+    .modal-box h4{font-family:'Montserrat',sans-serif;color:var(--blue);font-weight:700;margin-bottom:14px;}
+
+    /* Machine status boxes */
+    .mach-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+    .mach-stat{border-radius:12px;padding:14px 10px;text-align:center;}
+    .mach-stat.pending{background:#fff7ed;border:2px solid #fed7aa;}
+    .mach-stat.ready{background:#f0fdf4;border:2px solid #bbf7d0;}
+    .mach-stat.ordered{background:#eff6ff;border:2px solid #bfdbfe;}
+    .mach-stat .mv{font-family:'Montserrat',sans-serif;font-size:1.6rem;font-weight:800;}
+    .mach-stat.pending .mv{color:#ea580c;}
+    .mach-stat.ready .mv{color:#16a34a;}
+    .mach-stat.ordered .mv{color:#2563eb;}
+    .mach-stat .ml{font-size:.68rem;font-weight:600;color:#888;margin-top:2px;text-transform:uppercase;}
+
+    /* OT form location checkboxes */
+    .loc-opts{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+    .loc-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:9px;
+      border:1.5px solid #e5e7eb;cursor:pointer;transition:.15s;}
+    .loc-opt:hover{border-color:var(--green);}
+    .loc-opt.on{border-color:var(--green);background:#ecfdf5;}
+    .loc-opt input[type=radio]{accent-color:var(--green);}
+
+    /* Order form spec */
+    .spec-row{display:flex;gap:8px;align-items:flex-end;}
+    .spec-row input{flex:1;}
+    .spec-row .unit-badge{padding:10px 12px;background:#f0f4ff;border-radius:9px;
+      font-weight:700;font-size:.82rem;color:var(--blue);white-space:nowrap;}
+
+    /* WA button */
+    .wa-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;
+      background:#25d366;color:#fff;border-radius:10px;font-weight:700;
+      font-size:.82rem;text-decoration:none;transition:.15s;}
+    .wa-btn:hover{background:#1da851;color:#fff;}
+
+    ::-webkit-scrollbar{width:4px;}
+    ::-webkit-scrollbar-thumb{background:#ccd;border-radius:4px;}
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="ls">
+  <div class="logo">PMP</div>
+  <div class="sub">EQUIPMENTS SDN BHD</div>
+  <div class="ring"></div>
+</div>
+
+<!-- SESSION EXPIRED -->
+<div id="expiredView" class="hidden">
+  <div class="exp-card">
+    <div style="font-size:2.5rem;">🔒</div>
+    <h3>Access Required</h3>
+    <p>Please use your authorised link to access this portal.<br><br>
+    Contact your admin if you need a new link.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ HOMEPAGE ══════════════════════════════════ -->
+<div id="homeView" class="hidden">
+  <div class="home-header">
+    <div class="logo">PMP</div>
+    <div class="tagline">EQUIPMENTS SDN BHD — STAFF PORTAL</div>
+    <div class="user-badge">
+      <span id="homeEmail"></span>
+      <span class="role-pill" id="homeRolePill"></span>
+    </div>
+  </div>
+  <div class="home-grid">
+    <div class="home-card leave" onclick="openApp('leave')">
+      <div class="icon">🏖️</div>
+      <h3>Leave</h3>
+      <p>Submit &amp; manage leave applications</p>
+    </div>
+    <div class="home-card ot" onclick="openApp('ot')">
+      <div class="icon">⏰</div>
+      <h3>Overtime</h3>
+      <p>Pre &amp; post overtime applications</p>
+    </div>
+    <div class="home-card order" onclick="openApp('order')">
+      <div class="icon">🚧</div>
+      <h3>Orders</h3>
+      <p>Machine rental order management</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ APP VIEW ══════════════════════════════════ -->
+<div id="appView" class="hidden">
+  <div class="app-topbar">
+    <button class="back-btn" onclick="goHome()">← Home</button>
+    <div style="text-align:center;">
+      <div class="app-title" id="appTitle"></div>
+      <div class="app-role" id="appRoleLbl"></div>
+    </div>
+    <div style="width:70px;"></div>
+  </div>
+  <div class="app-content">
+
+    <!-- ─── LEAVE SYSTEM ─── -->
+    <div id="leaveApp" class="hidden">
+      <!-- Staff: leave form -->
+      <div id="leaveStaffView" class="hidden">
+        <div class="pcard">
+          <div class="pcard-hdr"><h4>🏖️ Leave Application</h4></div>
+          <div class="pcard-body">
+            <label class="form-label">Staff Name *</label>
+            <div class="input-group">
+              <input type="text" id="lStaffName" class="form-control" placeholder="Enter Full Name">
+              <div class="input-group-append">
+                <button class="btn" style="background:var(--blue);color:#fff;border-radius:0 9px 9px 0;font-weight:700;"
+                        onclick="leaveVerify()">Verify</button>
+              </div>
+            </div>
+            <div id="lVbadge" class="vbadge">✅ Verified &amp; Locked</div>
+            <input type="hidden" id="lVerified" value="false">
+
+            <label class="form-label">Email *</label>
+            <input type="email" id="lEmail" class="form-control" readonly style="background:#f0f2f5;">
+
+            <label class="form-label">Leave Type *</label>
+            <select id="lType" class="form-control" onchange="lToggleMC()">
+              <option value="Annual Leave">Annual Leave</option>
+              <option value="Medical Leave (MC)">Medical Leave (MC)</option>
+              <option value="Emergency Leave">Emergency Leave</option>
+              <option value="Unpaid Leave">Unpaid Leave</option>
+            </select>
+
+            <div id="lMCSec" class="hidden mt-2">
+              <label class="form-label" style="color:var(--red);">MC Attachment *</label>
+              <input type="file" id="lMCFile" class="form-control-file" accept="image/*,.pdf">
+            </div>
+
+            <div class="form-row-2 mt-2">
+              <div>
+                <label class="form-label">Start Date</label>
+                <input type="date" id="lStartDate" class="form-control" onchange="lOnSD()">
+                <select id="lStartTime" class="form-control mt-1" onchange="lCalcDur()"></select>
+              </div>
+              <div>
+                <label class="form-label">End Date</label>
+                <input type="date" id="lEndDate" class="form-control" onchange="lCalcDur()">
+                <select id="lEndTime" class="form-control mt-1" onchange="lCalcDur()"></select>
+              </div>
+            </div>
+
+            <div class="dur-box">
+              <div style="font-size:.7rem;font-weight:700;color:#777;">TOTAL WORKING DAYS</div>
+              <div id="lDurDisp" class="dur-val">0</div>
+              <input type="hidden" id="lDuration">
+            </div>
+
+            <label class="form-label">Reason *</label>
+            <textarea id="lReason" class="form-control" rows="2" placeholder="Brief explanation…"></textarea>
+
+            <label class="form-label">Signature *</label>
+            <canvas id="lSigPad" class="sig-canvas"></canvas>
+            <button type="button" class="sig-clear" onclick="lPad.clear()">✕ Clear</button>
+
+            <button class="btn-submit leave" id="lSubmitBtn" onclick="lShowConfirm()">SUBMIT APPLICATION</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin/Superadmin: dashboard -->
+      <div id="leaveAdminView" class="hidden">
+        <!-- Stats -->
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-val" id="lsTotal" style="color:var(--blue);">—</div><div class="stat-lbl">Total</div></div>
+          <div class="stat-card"><div class="stat-val" id="lsPending" style="color:var(--orange);">—</div><div class="stat-lbl">Pending</div></div>
+          <div class="stat-card"><div class="stat-val" id="lsApproved" style="color:var(--green);">—</div><div class="stat-lbl">Approved</div></div>
+          <div class="stat-card"><div class="stat-val" id="lsRejected" style="color:var(--red);">—</div><div class="stat-lbl">Rejected</div></div>
+        </div>
+
+        <!-- Tabs: Records | Calendar | Holidays | Schedule -->
+        <div class="stabs">
+          <button class="stab on leave" onclick="lAdminTab('records',this)">📋 Records</button>
+          <button class="stab" onclick="lAdminTab('schedule',this)">🗓 Schedule</button>
+          <button class="stab" onclick="lAdminTab('calendar',this)">📅 Calendar</button>
+          <button class="stab" onclick="lAdminTab('holidays',this)">🎌 Holidays</button>
+        </div>
+
+        <!-- Records -->
+        <div id="lTabRecords">
+          <div class="pcard">
+            <div class="pcard-hdr">
+              <h4>Leave Records</h4>
+              <button class="ab ab-edit" onclick="lAdminRefresh()">↻ Refresh</button>
+            </div>
+            <div class="pcard-body">
+              <div class="fbar">
+                <button class="fbtn on" onclick="lFilt('All',this)">All</button>
+                <button class="fbtn" onclick="lFilt('Pending',this)">Pending</button>
+                <button class="fbtn" onclick="lFilt('Approved',this)">Approved</button>
+                <button class="fbtn" onclick="lFilt('Rejected',this)">Rejected</button>
+                <select id="lNameFilt" onchange="lFilt(lCurFilt,document.querySelector('.fbtn.on'))">
+                  <option value="">All Staff</option>
+                </select>
+              </div>
+              <div class="tbl-wrap">
+                <table class="ptbl">
+                  <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Period</th><th>Days</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
+                  <tbody id="lRecordsTbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule -->
+        <div id="lTabSchedule" class="hidden">
+          <div class="pcard">
+            <div class="pcard-hdr"><h4>Staff Schedule</h4></div>
+            <div class="pcard-body">
+              <select class="form-control mb-2" id="lSchedNF" onchange="lRenderSched()" style="border-radius:9px!important;">
+                <option value="">— All Staff —</option>
+              </select>
+              <div id="lSchedMonths" class="mpills"></div>
+              <div class="dfilter">
+                <label>From</label><input type="date" id="lSchedFrom" onchange="lOnDFChange()">
+                <span style="color:#bbb;">→</span>
+                <label>To</label><input type="date" id="lSchedTo" onchange="lOnDFChange()">
+                <button class="btn-reset" onclick="lResetDF()">↺ Reset</button>
+              </div>
+              <div id="lSchedGroups"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar -->
+        <div id="lTabCalendar" class="hidden">
+          <div class="pcard">
+            <div class="pcard-hdr"><h4>Leave Calendar</h4></div>
+            <div class="pcard-body">
+              <div class="cal-nav">
+                <button class="cnb" onclick="lCalM(-1)">‹</button>
+                <span id="lCalTitle" class="ctit"></span>
+                <button class="cnb" onclick="lCalM(1)">›</button>
+              </div>
+              <div class="cgrid">
+                <div class="cdh">Su</div><div class="cdh">Mo</div><div class="cdh">Tu</div>
+                <div class="cdh">We</div><div class="cdh">Th</div><div class="cdh">Fr</div><div class="cdh">Sa</div>
+              </div>
+              <div class="cgrid" id="lCalGrid"></div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:.7rem;color:#777;">
+                <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#fee2e2;"></span> Holiday</span>
+                <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#dbeafe;"></span> On Leave</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Holidays -->
+        <div id="lTabHolidays" class="hidden">
+          <div class="pcard">
+            <div class="pcard-hdr"><h4>Public Holidays</h4></div>
+            <div class="pcard-body">
+              <div id="lHolList"><div class="empty">Loading…</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── OT SYSTEM ─── -->
+    <div id="otApp" class="hidden">
+      <!-- Staff OT form -->
+      <div id="otStaffView" class="hidden">
+        <div class="pcard">
+          <div class="pcard-hdr"><h4>⏰ Overtime Application</h4></div>
+          <div class="pcard-body">
+            <label class="form-label">Application Type *</label>
+            <div class="type-toggle">
+              <div class="type-btn on" id="otTypePre" onclick="otSetType('Pre')">Pre-Application</div>
+              <div class="type-btn" id="otTypePost" onclick="otSetType('Post')">Post-Application</div>
+            </div>
+            <input type="hidden" id="otType" value="Pre">
+
+            <label class="form-label">Employee Name *</label>
+            <div class="input-group">
+              <input type="text" id="otEmpName" class="form-control" placeholder="Enter Full Name">
+              <div class="input-group-append">
+                <button class="btn" style="background:var(--green);color:#fff;border-radius:0 9px 9px 0;font-weight:700;"
+                        onclick="otVerify()">Verify</button>
+              </div>
+            </div>
+            <div id="otVbadge" class="vbadge">✅ Verified &amp; Locked</div>
+            <input type="hidden" id="otVerified" value="false">
+
+            <label class="form-label">Department *</label>
+            <select id="otDept" class="form-control">
+              <option value="Office">Office</option>
+              <option value="Workshop">Workshop</option>
+            </select>
+
+            <label class="form-label">OT Date *</label>
+            <input type="date" id="otDate" class="form-control">
+
+            <div class="form-row-2">
+              <div>
+                <label class="form-label">Reason / Unit No *</label>
+                <input type="text" id="otReason" class="form-control" placeholder="e.g. BL149 — servicing">
+              </div>
+              <div>
+                <label class="form-label">Vehicle Plate No</label>
+                <input type="text" id="otVehicle" class="form-control" placeholder="e.g. JKR1234">
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div>
+                <label class="form-label">Estimated OT Hours *</label>
+                <select id="otEstHours" class="form-control">
+                  <option value="0.5">0.5 hr</option>
+                  <option value="1">1 hr</option>
+                  <option value="1.5">1.5 hr</option>
+                  <option value="2">2 hr</option>
+                  <option value="2.5">2.5 hr</option>
+                  <option value="3">3 hr</option>
+                  <option value="3.5">3.5 hr</option>
+                  <option value="4">4 hr</option>
+                  <option value="5">5 hr</option>
+                  <option value="6">6 hr</option>
+                </select>
+              </div>
+              <div id="otClockOutWrap" class="hidden">
+                <label class="form-label">Clock-out Time (Site)</label>
+                <input type="time" id="otClockOut" class="form-control">
+              </div>
+            </div>
+
+            <label class="form-label">Job Location *</label>
+            <div class="loc-opts">
+              <label class="loc-opt on" id="locOffice">
+                <input type="radio" name="otLoc" value="Office" checked onchange="otSetLoc(this)"> Office
+              </label>
+              <label class="loc-opt" id="locWorkshop">
+                <input type="radio" name="otLoc" value="Workshop" onchange="otSetLoc(this)"> Workshop
+              </label>
+            </div>
+            <input type="hidden" id="otLocVal" value="Office">
+
+            <label class="form-label">Partner</label>
+            <div class="form-row-2">
+              <select id="otPartner" class="form-control" onchange="otTogglePartner()">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+              <input type="text" id="otPartnerName" class="form-control hidden" placeholder="Partner's name">
+            </div>
+
+            <label class="form-label">Requested By *</label>
+            <input type="text" id="otReqBy" class="form-control" placeholder="Requester name / company">
+
+            <label class="form-label">Signature *</label>
+            <canvas id="otSigPad" class="sig-canvas"></canvas>
+            <button type="button" class="sig-clear" onclick="otPad.clear()">✕ Clear</button>
+
+            <button class="btn-submit ot" id="otSubmitBtn" onclick="otShowConfirm()">SUBMIT OT APPLICATION</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin OT dashboard -->
+      <div id="otAdminView" class="hidden">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-val" id="otsTotal" style="color:var(--blue);">—</div><div class="stat-lbl">Total</div></div>
+          <div class="stat-card"><div class="stat-val" id="otsPending" style="color:var(--orange);">—</div><div class="stat-lbl">Pending</div></div>
+          <div class="stat-card"><div class="stat-val" id="otsApproved" style="color:var(--green);">—</div><div class="stat-lbl">Approved</div></div>
+          <div class="stat-card"><div class="stat-val" id="otsRejected" style="color:var(--red);">—</div><div class="stat-lbl">Rejected</div></div>
+        </div>
+        <div class="pcard">
+          <div class="pcard-hdr">
+            <h4>OT Records</h4>
+            <button class="ab ab-edit" onclick="otAdminRefresh()">↻ Refresh</button>
+          </div>
+          <div class="pcard-body">
+            <div class="fbar">
+              <button class="fbtn on" onclick="otFilt('All',this)">All</button>
+              <button class="fbtn" onclick="otFilt('Pending',this)">Pending</button>
+              <button class="fbtn" onclick="otFilt('Approved',this)">Approved</button>
+              <button class="fbtn" onclick="otFilt('Rejected',this)">Rejected</button>
+              <select id="otNameFilt" onchange="otFilt(otCurFilt,document.querySelector('.fbtn.on'))">
+                <option value="">All Staff</option>
+              </select>
+            </div>
+            <div class="tbl-wrap">
+              <table class="ptbl">
+                <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>OT Date</th><th>Type</th><th>Est. Hrs</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="otRecordsTbody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ORDER SYSTEM ─── -->
+    <div id="orderApp" class="hidden">
+      <!-- Staff: submit order -->
+      <div id="orderStaffView" class="hidden">
+        <div class="stabs">
+          <button class="stab on order" onclick="ordTab('form',this)">📋 New Order</button>
+          <button class="stab" onclick="ordTab('myorders',this)">📊 My Orders</button>
+        </div>
+        <div id="ordTabForm">
+          <div class="pcard">
+            <div class="pcard-hdr"><h4>🚧 New Machine Order</h4></div>
+            <div class="pcard-body">
+              <label class="form-label">Machine Type *</label>
+              <select id="ordMachType" class="form-control" onchange="ordTypeChange()">
+                <option value="">Select machine type…</option>
+              </select>
+
+              <label class="form-label">Specification *</label>
+              <div class="spec-row">
+                <input type="number" id="ordSpecVal" class="form-control" placeholder="Value" min="0" step="0.1">
+                <div class="unit-badge" id="ordSpecUnit">—</div>
+              </div>
+
+              <div class="form-row-2">
+                <div>
+                  <label class="form-label">Power Type *</label>
+                  <select id="ordPower" class="form-control">
+                    <option value="AC (Site Power Supply TNB)">AC (TNB)</option>
+                    <option value="DC (Site Power Supply TNB)">DC (TNB)</option>
+                    <option value="AC (Generator)">AC (Generator)</option>
+                    <option value="DC (Battery)">DC (Battery)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label">Unit Qty *</label>
+                  <input type="number" id="ordQty" class="form-control" value="1" min="1">
+                </div>
+              </div>
+
+              <label class="form-label">Delivery Date *</label>
+              <input type="date" id="ordDelDate" class="form-control">
+
+              <label class="form-label">Rental Period *</label>
+              <input type="text" id="ordRental" class="form-control" placeholder="e.g. 1 Month, 2 Weeks">
+
+              <label class="form-label">Location / Project Name *</label>
+              <input type="text" id="ordLocation" class="form-control" placeholder="Project site name">
+
+              <label class="form-label">Job Type *</label>
+              <select id="ordJobType" class="form-control">
+                <option value="SL">SL — Scissor Lift</option>
+                <option value="BL">BL — Boom Lift</option>
+                <option value="FL">FL — Forklift</option>
+                <option value="TF">TF — Teleforklift</option>
+                <option value="BTL">BTL — Battery Telehandler</option>
+                <option value="GT">GT — Generator</option>
+                <option value="WS">WS — Welding Set</option>
+                <option value="VL">VL — Vertical Lift</option>
+                <option value="LT">LT — Lighting Tower</option>
+                <option value="ATCH">ATCH — Attachment</option>
+              </select>
+
+              <label class="form-label">Requested By (Company) *</label>
+              <input type="text" id="ordReqBy" class="form-control" placeholder="Company / client name">
+
+              <label class="form-label">Special Requirements</label>
+              <textarea id="ordSpecReq" class="form-control" rows="2" placeholder="e.g. Good Tire, Motion Alarm…"></textarea>
+
+              <button class="btn-submit order ready" onclick="ordSubmit()">SUBMIT ORDER</button>
+            </div>
+          </div>
+        </div>
+        <div id="ordTabMyOrders" class="hidden">
+          <div class="pcard">
+            <div class="pcard-hdr"><h4>My Recent Orders</h4><button class="ab ab-edit" onclick="ordLoadMyOrders()">↻</button></div>
+            <div class="pcard-body">
+              <div class="tbl-wrap">
+                <table class="ptbl">
+                  <thead><tr><th>Order ID</th><th>Machine</th><th>Delivery</th><th>Location</th><th>Unit</th></tr></thead>
+                  <tbody id="myOrdersTbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Order dashboard -->
+      <div id="orderAdminView" class="hidden">
+        <div class="stabs">
+          <button class="stab on order" onclick="ordAdminTab('orders',this)">📋 Orders</button>
+          <button class="stab" onclick="ordAdminTab('machines',this)">🚗 Machines</button>
+        </div>
+
+        <!-- Orders panel -->
+        <div id="ordAdminOrders">
+          <div class="pcard">
+            <div class="pcard-hdr">
+              <h4>Order List</h4>
+              <button class="ab ab-edit" onclick="ordAdminRefresh()">↻ Refresh</button>
+            </div>
+            <div class="pcard-body">
+              <div class="fbar">
+                <button class="fbtn on" onclick="ordFilt('',this)">All</button>
+                <button class="fbtn" onclick="ordFilt('pending',this)">Pending</button>
+                <button class="fbtn" onclick="ordFilt('assigned',this)">Assigned</button>
+                <input type="text" id="ordSearch" placeholder="Search…" oninput="ordRenderTbl()">
+              </div>
+              <div class="tbl-wrap">
+                <table class="ptbl">
+                  <thead><tr><th>Order ID</th><th>Machine</th><th>Qty</th><th>Delivery</th><th>Location</th><th>Requested By</th><th>Unit Assigned</th><th>Submitted By</th><th>Actions</th></tr></thead>
+                  <tbody id="ordTbody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Machines panel -->
+        <div id="ordAdminMachines" class="hidden">
+          <div class="mach-stats">
+            <div class="mach-stat pending"><div class="mv" id="msPending">—</div><div class="ml">Pending</div></div>
+            <div class="mach-stat ready"><div class="mv" id="msReady">—</div><div class="ml">Ready</div></div>
+            <div class="mach-stat ordered"><div class="mv" id="msOrdered">—</div><div class="ml">Ordered</div></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-hdr"><h4>Machine List</h4><button class="ab ab-edit" onclick="ordAdminRefresh()">↻</button></div>
+            <div class="pcard-body">
+              <div class="fbar">
+                <button class="fbtn on" onclick="machFilt('',this)">All</button>
+                <button class="fbtn" onclick="machFilt('PENDING',this)">Pending</button>
+                <button class="fbtn" onclick="machFilt('READY',this)">Ready</button>
+                <button class="fbtn" onclick="machFilt('ORDERED',this)">Ordered</button>
+                <input type="text" id="machSearch" placeholder="Search…" oninput="machRenderTbl()">
+              </div>
+              <div class="tbl-wrap">
+                <table class="ptbl">
+                  <thead><tr><th>Unit ID</th><th>Brand / Model</th><th>Type</th><th>H/M</th><th>Status</th><th>Customer</th><th>Delivery</th><th>Actions</th></tr></thead>
+                  <tbody id="machTbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /app-content -->
+</div><!-- /appView -->
+
+<!-- Leave confirm modal -->
+<div id="lConfirmModal" class="modal-ov">
+  <div class="modal-box">
+    <h4>Review Summary</h4>
+    <div id="lConfirmContent" style="font-size:.9rem;line-height:1.9;"></div>
+    <div class="form-row-2 mt-3">
+      <button onclick="document.getElementById('lConfirmModal').style.display='none'" class="btn btn-light border btn-block">Edit</button>
+      <button id="lConfirmBtn" onclick="lDoSubmit()" class="btn btn-block" style="background:var(--red);color:#fff;">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- OT confirm modal -->
+<div id="otConfirmModal" class="modal-ov">
+  <div class="modal-box">
+    <h4>OT Application Summary</h4>
+    <div id="otConfirmContent" style="font-size:.9rem;line-height:1.9;"></div>
+    <div class="form-row-2 mt-3">
+      <button onclick="document.getElementById('otConfirmModal').style.display='none'" class="btn btn-light border btn-block">Edit</button>
+      <button id="otConfirmBtn" onclick="otDoSubmit()" class="btn btn-block" style="background:var(--green);color:#fff;">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Leave success -->
+<div id="lSuccessView" class="hidden" style="padding:20px;">
+  <div class="pcard" style="text-align:center;padding:40px 24px;">
+    <div style="font-size:3rem;">✅</div>
+    <h3 style="font-family:'Montserrat',sans-serif;color:var(--green);margin:12px 0 6px;">Submitted!</h3>
+    <p style="color:#666;font-size:.88rem;">Your leave application has been sent.<br>You'll be notified by email once reviewed.</p>
+    <div id="lSuccessId" style="font-family:'DM Mono',monospace;background:#f0f4ff;color:var(--blue);
+      padding:6px 16px;border-radius:20px;font-size:.8rem;margin:16px 0;display:inline-block;"></div>
+    <br>
+    <button onclick="lResetForm()" class="btn" style="background:var(--blue);color:#fff;border-radius:10px;padding:10px 24px;font-weight:700;margin-top:8px;">
+      Submit Another
+    </button>
+  </div>
+</div>
+
+<!-- OT success -->
+<div id="otSuccessView" class="hidden" style="padding:20px;">
+  <div class="pcard" style="text-align:center;padding:40px 24px;">
+    <div style="font-size:3rem;">✅</div>
+    <h3 style="font-family:'Montserrat',sans-serif;color:var(--green);margin:12px 0 6px;">OT Submitted!</h3>
+    <p style="color:#666;font-size:.88rem;">Your overtime application has been submitted.</p>
+    <div id="otSuccessId" style="font-family:'DM Mono',monospace;background:#f0fff4;color:var(--green);
+      padding:6px 16px;border-radius:20px;font-size:.8rem;margin:16px 0;display:inline-block;"></div>
+    <br>
+    <button onclick="otResetForm()" class="btn" style="background:var(--green);color:#fff;border-radius:10px;padding:10px 24px;font-weight:700;margin-top:8px;">
+      Submit Another
+    </button>
+  </div>
+</div>
+
+<!-- Leave Edit Modal -->
+<div id="lEditModal" class="modal-ov">
+  <div class="modal-box">
+    <h4>✏️ Edit Leave Record</h4>
+    <input type="hidden" id="lEditRow">
+    <label class="form-label">Staff Name</label>
+    <input type="text" id="lEditName" class="form-control" readonly style="background:#f0f2f5;">
+    <label class="form-label">Leave Type</label>
+    <select id="lEditType" class="form-control">
+      <option>Annual Leave</option><option>Medical Leave (MC)</option>
+      <option>Emergency Leave</option><option>Unpaid Leave</option>
+    </select>
+    <div class="form-row-2">
+      <div><label class="form-label">Start Date</label><input type="date" id="lEditStart" class="form-control"></div>
+      <div><label class="form-label">End Date</label><input type="date" id="lEditEnd" class="form-control"></div>
+    </div>
+    <label class="form-label">Status</label>
+    <select id="lEditStatus" class="form-control">
+      <option>Pending</option><option>Approved</option><option>Rejected</option>
+    </select>
+    <label class="form-label">Reason</label>
+    <textarea id="lEditReason" class="form-control" rows="2"></textarea>
+    <div class="form-row-2 mt-3">
+      <button onclick="document.getElementById('lEditModal').style.display='none'" class="btn btn-light border">Cancel</button>
+      <button onclick="lSaveEdit()" class="btn" style="background:var(--blue);color:#fff;">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- OT Edit Modal -->
+<div id="otEditModal" class="modal-ov">
+  <div class="modal-box">
+    <h4>✏️ Update OT Record</h4>
+    <input type="hidden" id="otEditRow">
+    <label class="form-label">Employee</label>
+    <input type="text" id="otEditName" class="form-control" readonly style="background:#f0f2f5;">
+    <label class="form-label">Status</label>
+    <select id="otEditStatus" class="form-control">
+      <option>Pending</option><option>Approved</option><option>Rejected</option>
+    </select>
+    <label class="form-label">Remarks</label>
+    <textarea id="otEditRemarks" class="form-control" rows="2" placeholder="Optional remarks…"></textarea>
+    <div class="form-row-2 mt-3">
+      <button onclick="document.getElementById('otEditModal').style.display='none'" class="btn btn-light border">Cancel</button>
+      <button onclick="otSaveEdit()" class="btn" style="background:var(--green);color:#fff;">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Unit Modal -->
+<div id="assignModal" class="modal-ov">
+  <div class="modal-box">
+    <h4>🔧 Assign Unit Numbers</h4>
+    <p style="color:#888;font-size:.82rem;margin-bottom:14px;" id="assignOrderInfo"></p>
+    <div id="assignSlots"></div>
+    <div class="form-row-2 mt-3">
+      <button onclick="document.getElementById('assignModal').style.display='none'" class="btn btn-light border">Cancel</button>
+      <button onclick="doAssignUnits()" class="btn" style="background:var(--purple);color:#fff;">Confirm Assign</button>
+    </div>
+  </div>
+</div>
+
+<!-- WA Modal -->
+<div id="waModal" class="modal-ov">
+  <div class="modal-box">
+    <h4>📱 Send to Technician</h4>
+    <p style="color:#888;font-size:.82rem;margin-bottom:14px;" id="waOrderInfo"></p>
+    <div id="waTechList"></div>
+    <button onclick="document.getElementById('waModal').style.display='none'" class="btn btn-light border btn-block mt-3">Close</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// GLOBALS
+// ═══════════════════════════════════════════════════════════════
+var myEmail='', myRole='staff', myName='';
+var lPad, otPad;
+var holidays=[], staffNames=[], leaveRecords=[], otRecords=[], allOrders=[], allMachines=[], technicians=[], machineTypes=[];
+var lCurFilt='All', otCurFilt='All', ordCurFilt='', machCurFilt='';
+var lCalYear, lCalMonth;
+var currentApp='';
+var assignOrderData={};
+
+// ═══════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════
+// ── API HELPER ────────────────────────────────────────────────
+function api(action, params) {
+  var url = GAS_API_URL + '?action=' + action + '&token=' + encodeURIComponent(__idToken);
+  if (params && typeof params === 'object') {
+    Object.keys(params).forEach(function(k){
+      url += '&' + k + '=' + encodeURIComponent(params[k]);
+    });
+  }
+  return fetch(url).then(function(r){return r.json();});
+}
+function apiPost(action, data) {
+  data.action = action;
+  data.token  = __idToken;
+  return fetch(GAS_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(function(r){return r.json();});
+}
+
+// ── BOOT ──────────────────────────────────────────────────────
+window.onload=function(){
+  var now=new Date(); lCalYear=now.getFullYear(); lCalMonth=now.getMonth();
+  // GSI will call onGoogleSignIn when ready
+  // Show loading until signed in
+};
+
+// Called by Google Sign-In SDK after user signs in
+function onGoogleSignIn(resp) {
+  __idToken = resp.credential;
+  // Get role from GAS
+  api('getRole').then(function(res) {
+    if (!res.ok) { showExpired(); return; }
+    myEmail = res.email;
+    myRole  = res.role;
+    // Load base data
+    api('getLeaveBundle').then(function(b) {
+      if (!b.ok) { showExpired(); return; }
+      holidays   = b.data.holidays   || [];
+      staffNames = b.data.staffNames || [];
+      document.getElementById('ls').style.opacity='0';
+      setTimeout(function(){
+        document.getElementById('ls').style.display='none';
+        // Set home UI
+        document.getElementById('homeEmail').textContent=myEmail;
+        var rp=document.getElementById('homeRolePill');
+        rp.textContent=myRole.toUpperCase();
+        rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'');
+        if(myRole==='staff')rp.style.display='none';
+        document.getElementById('homeView').classList.remove('hidden');
+        initPads();
+      },250);
+    });
+  }).catch(function(){ showExpired(); });
+}
+
+function showExpired(){
+  document.getElementById('ls').style.display='none';
+  document.getElementById('expiredView').classList.remove('hidden');
+}
+
+// Initialize Google Sign-In
+function initGSI(){
+  if(typeof google==='undefined'||!google.accounts){setTimeout(initGSI,100);return;}
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback:  onGoogleSignIn,
+    auto_select: true
+  });
+  google.accounts.id.prompt();
+}
+// Start GSI init after page loads
+setTimeout(initGSI, 500);
+
+function initPads(){
+  lPad=new SignaturePad(document.getElementById('lSigPad'));
+  otPad=new SignaturePad(document.getElementById('otSigPad'));
+}
+function resizePad(pad,canvasId){
+  var c=document.getElementById(canvasId);
+  if(!c||c.offsetWidth===0)return;
+  var r=Math.max(window.devicePixelRatio||1,1);
+  var data=pad?pad.toData():null;
+  c.width=c.offsetWidth*r; c.height=c.offsetHeight*r;
+  c.getContext('2d').scale(r,r);
+  if(data&&pad)pad.fromData(data);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HOME NAV
+// ═══════════════════════════════════════════════════════════════
+function goHome(){
+  document.getElementById('appView').classList.add('hidden');
+  document.getElementById('homeView').classList.remove('hidden');
+}
+
+function openApp(app){
+  currentApp=app;
+  document.getElementById('homeView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+  document.getElementById('leaveApp').classList.add('hidden');
+  document.getElementById('otApp').classList.add('hidden');
+  document.getElementById('orderApp').classList.add('hidden');
+  document.getElementById('lSuccessView').classList.add('hidden');
+  document.getElementById('otSuccessView').classList.add('hidden');
+
+  var titles={leave:'🏖️ Leave System',ot:'⏰ Overtime System',order:'🚧 Order System'};
+  document.getElementById('appTitle').textContent=titles[app]||app;
+  document.getElementById('appRoleLbl').textContent=myEmail+' · '+myRole;
+
+  document.getElementById(app+'App').classList.remove('hidden');
+
+  if(app==='leave') loadLeaveApp();
+  else if(app==='ot') loadOTApp();
+  else if(app==='order') loadOrderApp();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LEAVE SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function loadLeaveApp(){
+  if(myRole==='superadmin'||myRole==='admin'){
+    document.getElementById('leaveAdminView').classList.remove('hidden');
+    lAdminRefresh();
+  } else {
+    document.getElementById('leaveStaffView').classList.remove('hidden');
+    document.getElementById('lEmail').value=myEmail;
+    lInitTimes();
+    setTimeout(function(){resizePad(lPad,'lSigPad');},80);
+  }
+}
+
+function lInitTimes(){
+  var s=document.getElementById('lStartTime'),e=document.getElementById('lEndTime');
+  if(s.options.length>1)return;
+  for(var h=8;h<=17;h++){
+    ['00','30'].forEach(function(m){
+      if(h===17&&m==='30')return;
+      var v=(h<10?'0'+h:h)+':'+m;
+      var l=(h>12?h-12:h)+':'+m+(h>=12?' PM':' AM');
+      s.options.add(new Option(l,v)); e.options.add(new Option(l,v));
+    });
+  }
+  e.value='17:00';
+}
+
+function lToggleMC(){
+  document.getElementById('lMCSec').classList.toggle('hidden',document.getElementById('lType').value!=='Medical Leave (MC)');
+}
+
+function lOnSD(){
+  var sD=document.getElementById('lStartDate').value;
+  var eD=document.getElementById('lEndDate');
+  if(sD){eD.min=sD;if(eD.value&&eD.value<sD)eD.value=sD;}
+  lCalcDur();
+}
+
+function lCalcDur(){
+  var sD=document.getElementById('lStartDate').value,eD=document.getElementById('lEndDate').value;
+  var sT=document.getElementById('lStartTime').value,eT=document.getElementById('lEndTime').value;
+  if(!sD||!eD)return;
+  var start=new Date(sD+'T'+sT),end=new Date(eD+'T'+eT);
+  if(end<=start){document.getElementById('lDurDisp').textContent='0';return;}
+  var hrs=0,cur=new Date(start);
+  while(cur<end){
+    var ds=cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
+    if(cur.getDay()!==0&&!holidays.includes(ds)){
+      var wS=new Date(cur);wS.setHours(8,0,0,0);
+      var wE=new Date(cur);wE.setHours(17,0,0,0);
+      var aS=cur>wS?cur:wS,aE=end<wE?end:wE;
+      if(aE>aS){var h=(aE-aS)/36e5;if(aS.getHours()<12&&aE.getHours()>=13)h-=1;if(h>0)hrs+=h;}
+    }
+    cur.setDate(cur.getDate()+1);cur.setHours(8,0,0,0);
+  }
+  var d=Math.round((hrs/8)*1000)/1000;
+  document.getElementById('lDurDisp').textContent=d;
+  document.getElementById('lDuration').value=d;
+}
+
+async function leaveVerify(){
+  var name=document.getElementById('lStaffName').value.trim().toLowerCase();
+  if(!name){Swal.fire('Error','Enter your name first.','error');return;}
+  if(!staffNames.includes(name)){Swal.fire('Unknown','Name not in staff list.','warning');return;}
+  var r=await Swal.fire({title:'Verify Identity',input:'password',inputLabel:'Personal Passcode',inputPlaceholder:'••••',showCancelButton:true,confirmButtonColor:'#003366'});
+  if(!r.value)return;
+  Swal.fire({title:'Checking…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+  apiPost('checkPersonalCode',{name:name,code:r.value}).then(function(res){
+    Swal.close();
+    var ok=res&&res.valid;
+    if(ok){
+      document.getElementById('lVerified').value='true';
+      document.getElementById('lVbadge').style.display='block';
+      document.getElementById('lSubmitBtn').classList.add('ready');
+      document.getElementById('lStaffName').readOnly=true;
+    } else Swal.fire('Failed','Incorrect passcode.','error');
+  });
+}
+
+function lShowConfirm(){
+  if(document.getElementById('lVerified').value!=='true'){Swal.fire('Not Verified','Please verify first.','info');return;}
+  if(document.getElementById('lType').value==='Medical Leave (MC)'&&!document.getElementById('lMCFile').files[0]){
+    Swal.fire('MC Required','Upload MC file.','error');return;}
+  var sD=document.getElementById('lStartDate').value,eD=document.getElementById('lEndDate').value;
+  var sT=document.getElementById('lStartTime').value,eT=document.getElementById('lEndTime').value;
+  if(!sD||!eD){Swal.fire('Missing Dates','Select start and end dates.','warning');return;}
+  if(new Date(eD+'T'+eT)<=new Date(sD+'T'+sT)){Swal.fire('Date Error','End must be after start.','error');return;}
+  if(!document.getElementById('lReason').value.trim()){Swal.fire('Missing','Enter a reason.','warning');return;}
+  if(lPad.isEmpty()){Swal.fire('Missing','Please sign.','warning');return;}
+  document.getElementById('lConfirmContent').innerHTML=
+    '<b>Name:</b> '+document.getElementById('lStaffName').value+'<br>'+
+    '<b>Type:</b> '+document.getElementById('lType').value+'<br>'+
+    '<b>Period:</b> '+sD+' '+sT+' → '+eD+' '+eT+'<br>'+
+    '<b>Total:</b> '+document.getElementById('lDuration').value+' day(s)';
+  document.getElementById('lConfirmModal').style.display='flex';
+}
+
+function lDoSubmit(){
+  var btn=document.getElementById('lConfirmBtn');
+  btn.disabled=true;btn.textContent='Submitting…';
+  var data={
+    staffName:document.getElementById('lStaffName').value,
+    email:myEmail,
+    leaveType:document.getElementById('lType').value,
+    startDate:document.getElementById('lStartDate').value,
+    startTime:document.getElementById('lStartTime').value,
+    endDate:document.getElementById('lEndDate').value,
+    endTime:document.getElementById('lEndTime').value,
+    duration:document.getElementById('lDuration').value,
+    reason:document.getElementById('lReason').value,
+    signatureData:lPad.toDataURL()
+  };
+  var mc=document.getElementById('lMCFile').files[0];
+  var doSend=function(d){
+    apiPost('submitLeave',d).then(function(res){
+      btn.disabled=false;btn.textContent='Confirm';
+      document.getElementById('lConfirmModal').style.display='none';
+      if(res.ok){
+        document.getElementById('leaveStaffView').classList.add('hidden');
+        document.getElementById('lSuccessView').classList.remove('hidden');
+        document.getElementById('lSuccessId').textContent=res.id;
+      } else Swal.fire('Error',res.error||'Unknown error','error');
+    }).catch(function(e){
+      btn.disabled=false;btn.textContent='Confirm';
+      Swal.fire('Error',e.toString(),'error');
+    });
+  };
+  if(mc){var fr=new FileReader();fr.onload=function(e){data.mcFile={contents:btoa(e.target.result),mimeType:mc.type};doSend(data);};fr.readAsBinaryString(mc);}
+  else doSend(data);
+}
+
+function lResetForm(){
+  document.getElementById('lSuccessView').classList.add('hidden');
+  document.getElementById('leaveStaffView').classList.remove('hidden');
+  document.getElementById('lStaffName').value='';
+  document.getElementById('lStaffName').readOnly=false;
+  document.getElementById('lVerified').value='false';
+  document.getElementById('lVbadge').style.display='none';
+  document.getElementById('lSubmitBtn').classList.remove('ready');
+  document.getElementById('lStartDate').value='';
+  document.getElementById('lEndDate').value='';
+  document.getElementById('lReason').value='';
+  document.getElementById('lDurDisp').textContent='0';
+  document.getElementById('lDuration').value='';
+  document.getElementById('lMCSec').classList.add('hidden');
+  lPad.clear();
+  setTimeout(function(){resizePad(lPad,'lSigPad');},80);
+}
+
+// ── Leave Admin ──
+function lAdminRefresh(){
+  document.getElementById('lRecordsTbody').innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
+  api('getLeaveAdminBundle').then(function(res){
+    var b=res.data||{};
+    leaveRecords=b.leaveRecords||[];
+    holidays=b.holidays||[];
+    lRenderStats();
+    lBuildNF('lNameFilt');
+    lBuildNF('lSchedNF');
+    lFilt(lCurFilt,document.querySelector('.fbtn.on'));
+    lBuildMonthPills();
+    lRenderSched();
+    lRenderCal();
+    lRenderHols();
+  });
+}
+
+function lRenderStats(){
+  document.getElementById('lsTotal').textContent=leaveRecords.length;
+  document.getElementById('lsPending').textContent=leaveRecords.filter(function(r){return r.status==='Pending';}).length;
+  document.getElementById('lsApproved').textContent=leaveRecords.filter(function(r){return r.status==='Approved';}).length;
+  document.getElementById('lsRejected').textContent=leaveRecords.filter(function(r){return r.status==='Rejected';}).length;
+}
+
+function lBuildNF(selId){
+  var sel=document.getElementById(selId),cur=sel.value;
+  var names=[];
+  leaveRecords.forEach(function(r){if(names.indexOf(r.name)===-1)names.push(r.name);});
+  names.sort();
+  while(sel.options.length>1)sel.remove(1);
+  names.forEach(function(n){sel.add(new Option(n,n));});
+  if(cur)sel.value=cur;
+}
+
+function lAdminTab(tab,btn){
+  ['records','schedule','calendar','holidays'].forEach(function(t){
+    document.getElementById('lTab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('hidden',t!==tab);
+  });
+  document.querySelectorAll('#leaveAdminView .stab').forEach(function(b){b.classList.remove('on','leave');});
+  btn.classList.add('on','leave');
+}
+
+function lFilt(filter,btn){
+  lCurFilt=filter;
+  document.querySelectorAll('#leaveAdminView .fbar .fbtn').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  var nameF=document.getElementById('lNameFilt').value;
+  var list=leaveRecords.filter(function(r){
+    return (filter==='All'||r.status===filter)&&(!nameF||r.name===nameF);
+  });
+  var tb=document.getElementById('lRecordsTbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="8" class="empty">No records.</td></tr>';return;}
+  tb.innerHTML=list.map(function(r){
+    var sc=r.status==='Pending'?'bs-pending':r.status==='Approved'?'bs-approved':'bs-rejected';
+    var hasAtt=(r.mcUrl&&r.mcUrl.length>4)||(r.signUrl&&r.signUrl.length>4);
+    return '<tr>'+
+      '<td style="font-family:\'DM Mono\',monospace;font-size:.7rem;color:#bbb;">'+r.id+'</td>'+
+      '<td style="font-weight:700;">'+r.name+'</td>'+
+      '<td><span style="font-size:.72rem;">'+r.leaveType.replace(' Leave','').replace(' (MC)','')+'</span></td>'+
+      '<td style="font-size:.78rem;">'+r.startDate+'<br><span style="color:#bbb;">→'+r.endDate+'</span></td>'+
+      '<td style="font-weight:800;color:var(--blue);text-align:center;">'+r.duration+'</td>'+
+      '<td><span class="bs '+sc+'">'+r.status+'</span></td>'+
+      '<td style="font-size:.72rem;color:#bbb;">'+r.submitted+'</td>'+
+      '<td><div class="act">'+
+        '<button class="ab ab-edit" onclick="lOpenEdit('+r.rowIndex+')">Edit</button>'+
+        (r.status==='Pending'?'<button class="ab ab-ok" onclick="lQuick('+r.rowIndex+',\'Approved\')">✓</button>'+
+          '<button class="ab ab-rej" onclick="lQuick('+r.rowIndex+',\'Rejected\')">✗</button>':'')+
+        (hasAtt?'<button class="ab" style="background:#f0f4ff;color:#3730a3;" onclick="lViewAtt('+r.rowIndex+')">📎</button>':'')+
+        '<button class="ab ab-del" onclick="lDel('+r.rowIndex+',\''+r.id+'\',\''+r.name+'\')">Del</button>'+
+      '</div></td></tr>';
+  }).join('');
+}
+
+function lOpenEdit(ri){
+  var r=leaveRecords.find(function(x){return x.rowIndex===ri;});
+  if(!r)return;
+  document.getElementById('lEditRow').value=ri;
+  document.getElementById('lEditName').value=r.name;
+  document.getElementById('lEditType').value=r.leaveType;
+  document.getElementById('lEditStart').value=r.startDate;
+  document.getElementById('lEditEnd').value=r.endDate;
+  document.getElementById('lEditStatus').value=r.status;
+  document.getElementById('lEditReason').value=r.reason;
+  document.getElementById('lEditModal').style.display='flex';
+}
+function lSaveEdit(){
+  Swal.fire({title:'Saving…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+  apiPost('adminLeaveEdit',{rowIndex:parseInt(document.getElementById('lEditRow').value),
+    leaveType:document.getElementById('lEditType').value,
+    startDate:document.getElementById('lEditStart').value,
+    endDate:document.getElementById('lEditEnd').value,
+    status:document.getElementById('lEditStatus').value,
+    reason:document.getElementById('lEditReason').value}).then(function(res){
+    Swal.close();
+    if(res.ok){Swal.fire('Saved!','','success');document.getElementById('lEditModal').style.display='none';lAdminRefresh();}
+    else Swal.fire('Error',res.error,'error');
+  });
+}
+function lQuick(ri,status){
+  Swal.fire({title:status==='Approved'?'✅ Approve?':'❌ Reject?',text:'Staff will be notified.',
+    showCancelButton:true,confirmButtonColor:status==='Approved'?'#1a7a4a':'#cc0000',confirmButtonText:status})
+  .then(function(r){
+    if(!r.isConfirmed)return;
+    Swal.fire({title:'Processing…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+    apiPost('adminLeaveStatus',{rowIndex:ri,status:status}).then(function(res){
+      Swal.close();
+      if(res.ok){Swal.fire('Done!','','success');lAdminRefresh();}
+      else Swal.fire('Error',res.error,'error');
+    });
+  });
+}
+function lDel(ri,id,name){
+  Swal.fire({title:'Delete '+id+'?',html:'Remove <b>'+name+'</b>\'s record permanently.',
+    icon:'warning',showCancelButton:true,confirmButtonColor:'#cc0000',confirmButtonText:'Delete'})
+  .then(function(r){
+    if(!r.isConfirmed)return;
+    Swal.fire({title:'Deleting…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+    apiPost('adminLeaveDelete',{rowIndex:ri}).then(function(res){
+      Swal.close();if(res.ok){Swal.fire('Deleted!','','success');lAdminRefresh();}
+      else Swal.fire('Error',res.error,'error');
+    });
+  });
+}
+function lViewAtt(ri){
+  var r=leaveRecords.find(function(x){return x.rowIndex===ri;});
+  if(!r)return;
+  var html='';
+  if(r.mcUrl&&r.mcUrl.length>4) html+='<p><a href="'+r.mcUrl+'" target="_blank" class="btn btn-sm" style="background:#003366;color:#fff;">Open MC File</a></p>';
+  if(r.signUrl&&r.signUrl.length>4) html+='<p style="margin-top:8px;"><b>Signature:</b></p><img src="'+r.signUrl+'" style="max-width:100%;border-radius:8px;border:1px solid #eee;" onerror="this.style.display=\'none\'">';
+  if(!html) html='<p style="color:#aaa;">No attachments found.</p>';
+  Swal.fire({title:'📎 Attachments',html:html,showConfirmButton:false,showCloseButton:true,width:380});
+}
+
+// Leave schedule (admin grouped view)
+function lBuildMonthPills(){
+  var cont=document.getElementById('lSchedMonths');
+  if(!cont)return;
+  var ms={};
+  leaveRecords.forEach(function(r){if(r.startDate){var p=r.startDate.split('-');if(p.length>=2)ms[p[0]+'-'+p[1]]=true;}});
+  var now=new Date();
+  for(var i=0;i<3;i++){var d=new Date(now.getFullYear(),now.getMonth()+i,1);ms[d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')]=true;}
+  var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  cont.innerHTML=Object.keys(ms).sort().map(function(m){
+    var p=m.split('-'),yr=p[0],mo=parseInt(p[1]);
+    return '<button class="mpill" data-m="'+m+'" onclick="lSelMonth(\''+m+'\')">'+(MN[mo-1]||mo)+' '+yr+'</button>';
+  }).join('');
+}
+function lSelMonth(ym){
+  var p=ym.split('-'),yr=parseInt(p[0]),mo=parseInt(p[1])-1;
+  var last=new Date(yr,mo+1,0);
+  var pad=function(n){return String(n).padStart(2,'0');};
+  document.getElementById('lSchedFrom').value=yr+'-'+pad(mo+1)+'-01';
+  document.getElementById('lSchedTo').value=yr+'-'+pad(mo+1)+'-'+pad(last.getDate());
+  document.querySelectorAll('.mpill').forEach(function(p){p.classList.toggle('on',p.dataset.m===ym);});
+  lRenderSched();
+}
+function lOnDFChange(){document.querySelectorAll('.mpill').forEach(function(p){p.classList.remove('on');});lRenderSched();}
+function lResetDF(){document.getElementById('lSchedFrom').value='';document.getElementById('lSchedTo').value='';document.querySelectorAll('.mpill').forEach(function(p){p.classList.remove('on');});lRenderSched();}
+
+function lRenderSched(){
+  var nameF=document.getElementById('lSchedNF').value;
+  var from=document.getElementById('lSchedFrom').value;
+  var to=document.getElementById('lSchedTo').value;
+  var today=new Date();today.setHours(0,0,0,0);
+  var fromD=from?new Date(from):null,toD=to?new Date(to):null;
+  if(fromD)fromD.setHours(0,0,0,0);if(toD)toD.setHours(23,59,59,999);
+  var records=leaveRecords.filter(function(r){return r.status!=='Rejected'&&(!nameF||r.name===nameF);});
+  var dateMap={};
+  records.forEach(function(r){
+    if(!r.startDate||!r.endDate)return;
+    var cur=new Date(r.startDate),end=new Date(r.endDate);
+    cur.setHours(0,0,0,0);end.setHours(0,0,0,0);
+    while(cur<=end){
+      if(cur.getDay()!==0){
+        var ds=cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
+        if(!holidays.includes(ds)){
+          var ok=(!fromD||cur>=fromD)&&(!toD||cur<=toD);
+          if(ok){if(!dateMap[ds])dateMap[ds]=[];var dup=dateMap[ds].some(function(x){return x.name===r.name&&x.rowIndex===r.rowIndex;});if(!dup)dateMap[ds].push(r);}
+        }
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+  });
+  var dates=Object.keys(dateMap).sort();
+  if(!dates.length){document.getElementById('lSchedGroups').innerHTML='<div class="empty">No records found.</div>';return;}
+  var past=[],future=[];
+  dates.forEach(function(ds){var d=new Date(ds);d.setHours(0,0,0,0);(d<today?past:future).push(ds);});
+  var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function grp(ds){
+    var d=new Date(ds);d.setHours(0,0,0,0);
+    var isPast=d<today,isToday=d.getTime()===today.getTime();
+    var lc=isPast?'date-label past-lbl':isToday?'date-label today-lbl':'date-label';
+    var tag=isToday?'<span style="font-size:.6rem;background:#1e40af;color:#fff;padding:1px 6px;border-radius:10px;">TODAY</span>':'';
+    var out='<div class="date-group"><div class="'+lc+'"><span style="font-size:.8rem;">'+ds+'</span>'+
+      '<span style="font-size:.68rem;opacity:.6;margin-left:5px;">'+DOW[d.getDay()]+'</span>'+tag+'</div>'+
+      '<div class="staff-pills">';
+    dateMap[ds].forEach(function(r){
+      var pCls='spill'+(isPast?' past-p':isToday?' today-p':'');
+      var short=r.leaveType.replace(' Leave','').replace(' (MC)','');
+      out+='<div class="'+pCls+'">'+short+' · '+r.name+'<span style="font-size:.65rem;color:#aaa;"> ('+r.duration+'d)</span></div>';
+    });
+    return out+'</div></div>';
+  }
+  var html='';
+  if(past.length){
+    html+='<div class="past-hdr" onclick="this.classList.toggle(\'open\');this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.ps-lbl\').textContent=(this.classList.contains(\'open\')?\'▾\':\'▸\')+\' Past (\'+'+past.length+'+\' days) — click to \'+(this.classList.contains(\'open\')?\'collapse\':\'expand\')">'+'<span class="ps-lbl">▸ Past ('+past.length+' day'+(past.length>1?'s':'')+') — click to expand</span><span>▾</span></div>'+
+    '<div class="past-body">';
+    past.forEach(function(ds){html+=grp(ds);});
+    html+='</div>';
+  }
+  future.forEach(function(ds){html+=grp(ds);});
+  document.getElementById('lSchedGroups').innerHTML=html;
+}
+
+// Leave calendar
+function lCalM(d){lCalMonth+=d;if(lCalMonth>11){lCalMonth=0;lCalYear++;}if(lCalMonth<0){lCalMonth=11;lCalYear--;}lRenderCal();}
+function lRenderCal(){
+  var MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('lCalTitle').textContent=MN[lCalMonth]+' '+lCalYear;
+  var today=new Date(),fd=new Date(lCalYear,lCalMonth,1).getDay(),dim=new Date(lCalYear,lCalMonth+1,0).getDate();
+  var prev=new Date(lCalYear,lCalMonth,0).getDate();
+  var ld=new Set();
+  leaveRecords.filter(function(r){return r.status!=='Rejected';}).forEach(function(r){
+    if(!r.startDate||!r.endDate)return;
+    var c=new Date(r.startDate),e=new Date(r.endDate);
+    while(c<=e){if(c.getFullYear()===lCalYear&&c.getMonth()===lCalMonth&&c.getDay()!==0)ld.add(c.getDate());c.setDate(c.getDate()+1);}
+  });
+  var hd=new Set();
+  holidays.forEach(function(h){var d=new Date(h);if(d.getFullYear()===lCalYear&&d.getMonth()===lCalMonth)hd.add(d.getDate());});
+  var html='';
+  for(var i=0;i<fd;i++)html+='<div class="cd fil">'+(prev-fd+1+i)+'</div>';
+  for(var d=1;d<=dim;d++){
+    var isT=today.getFullYear()===lCalYear&&today.getMonth()===lCalMonth&&today.getDate()===d;
+    var isSun=new Date(lCalYear,lCalMonth,d).getDay()===0;
+    var cls='cd'+(isSun?' we':hd.has(d)?' hol':ld.has(d)?' onl':'')+(isT?' tod':'');
+    html+='<div class="'+cls+'">'+d+'</div>';
+  }
+  var tail=(fd+dim)%7;if(tail)for(var j=1;j<=7-tail;j++)html+='<div class="cd fil">'+j+'</div>';
+  document.getElementById('lCalGrid').innerHTML=html;
+}
+
+function lRenderHols(){
+  api('getHolidaysWithNames').then(function(res){
+    var list=(res&&res.data)||[];
+    var el=document.getElementById('lHolList');
+    if(!list||!list.length){el.innerHTML='<div class="empty">No holidays on record.</div>';return;}
+    el.innerHTML='<div style="display:flex;flex-direction:column;gap:0;">'+list.map(function(h){
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3f3f3;">'+
+        '<div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;"></div>'+
+        '<div style="font-family:\'DM Mono\',monospace;font-size:.76rem;color:var(--blue);min-width:88px;">'+h.date+'</div>'+
+        '<div style="font-size:.82rem;">'+( h.name||'—')+'</div></div>';
+    }).join('')+'</div>';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OT SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function loadOTApp(){
+  if(myRole==='superadmin'||myRole==='admin'){
+    document.getElementById('otAdminView').classList.remove('hidden');
+    otAdminRefresh();
+  } else {
+    document.getElementById('otStaffView').classList.remove('hidden');
+    var today=new Date().toISOString().split('T')[0];
+    document.getElementById('otDate').value=today;
+    document.getElementById('otVerified').value='false';
+    setTimeout(function(){resizePad(otPad,'otSigPad');},80);
+  }
+}
+
+function otSetType(type){
+  document.getElementById('otType').value=type;
+  document.getElementById('otTypePre').classList.toggle('on',type==='Pre');
+  document.getElementById('otTypePost').classList.toggle('on',type==='Post');
+  document.getElementById('otClockOutWrap').classList.toggle('hidden',type!=='Post');
+}
+function otSetLoc(radio){
+  document.getElementById('otLocVal').value=radio.value;
+  document.querySelectorAll('.loc-opt').forEach(function(el){el.classList.remove('on');});
+  radio.closest('.loc-opt').classList.add('on');
+}
+function otTogglePartner(){
+  document.getElementById('otPartnerName').classList.toggle('hidden',document.getElementById('otPartner').value!=='Yes');
+}
+
+async function otVerify(){
+  var name=document.getElementById('otEmpName').value.trim().toLowerCase();
+  if(!name){Swal.fire('Error','Enter your name first.','error');return;}
+  if(!staffNames.includes(name)){Swal.fire('Unknown','Name not in staff list.','warning');return;}
+  var r=await Swal.fire({title:'Verify Identity',input:'password',inputLabel:'Personal Passcode',inputPlaceholder:'••••',showCancelButton:true,confirmButtonColor:'#1a7a4a'});
+  if(!r.value)return;
+  Swal.fire({title:'Checking…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+  apiPost('checkPersonalCode',{name:name,code:r.value}).then(function(res){
+    Swal.close();
+    var ok=res&&res.valid;
+    if(ok){
+      document.getElementById('otVerified').value='true';
+      document.getElementById('otVbadge').style.display='block';
+      document.getElementById('otSubmitBtn').classList.add('ready');
+      document.getElementById('otEmpName').readOnly=true;
+    } else Swal.fire('Failed','Incorrect passcode.','error');
+  });
+}
+
+function otShowConfirm(){
+  if(document.getElementById('otVerified').value!=='true'){Swal.fire('Not Verified','Please verify first.','info');return;}
+  if(!document.getElementById('otDate').value){Swal.fire('Missing','Select OT date.','warning');return;}
+  if(!document.getElementById('otReason').value.trim()){Swal.fire('Missing','Enter reason/unit no.','warning');return;}
+  if(!document.getElementById('otReqBy').value.trim()){Swal.fire('Missing','Enter requester.','warning');return;}
+  if(otPad.isEmpty()){Swal.fire('Missing','Please sign.','warning');return;}
+  var type=document.getElementById('otType').value;
+  document.getElementById('otConfirmContent').innerHTML=
+    '<b>Name:</b> '+document.getElementById('otEmpName').value+'<br>'+
+    '<b>Type:</b> '+type+'-Application<br>'+
+    '<b>Department:</b> '+document.getElementById('otDept').value+'<br>'+
+    '<b>OT Date:</b> '+document.getElementById('otDate').value+'<br>'+
+    '<b>Est. Hours:</b> '+document.getElementById('otEstHours').value+' hr(s)<br>'+
+    '<b>Location:</b> '+document.getElementById('otLocVal').value;
+  document.getElementById('otConfirmModal').style.display='flex';
+}
+
+function otDoSubmit(){
+  var btn=document.getElementById('otConfirmBtn');
+  btn.disabled=true;btn.textContent='Submitting…';
+  var data={
+    submittedBy:myEmail,
+    applicationType:document.getElementById('otType').value,
+    employeeName:document.getElementById('otEmpName').value,
+    department:document.getElementById('otDept').value,
+    otDate:document.getElementById('otDate').value,
+    reason:document.getElementById('otReason').value,
+    unitNo:document.getElementById('otReason').value,
+    vehiclePlate:document.getElementById('otVehicle').value,
+    estimatedHours:document.getElementById('otEstHours').value,
+    clockOutTime:document.getElementById('otClockOut').value,
+    jobLocation:document.getElementById('otLocVal').value,
+    locationDetail:'',
+    partner:document.getElementById('otPartner').value,
+    partnerName:document.getElementById('otPartnerName').value,
+    requestedBy:document.getElementById('otReqBy').value,
+    signatureData:otPad.toDataURL()
+  };
+  apiPost('submitOT',data).then(function(res){
+    btn.disabled=false;btn.textContent='Confirm';
+    document.getElementById('otConfirmModal').style.display='none';
+    if(res.ok){
+      document.getElementById('otStaffView').classList.add('hidden');
+      document.getElementById('otSuccessView').classList.remove('hidden');
+      document.getElementById('otSuccessId').textContent=res.id;
+    } else Swal.fire('Error',res.error||'Unknown error','error');
+  }).catch(function(e){
+    btn.disabled=false;btn.textContent='Confirm';Swal.fire('Error',e.toString(),'error');
+  });
+}
+
+function otResetForm(){
+  document.getElementById('otSuccessView').classList.add('hidden');
+  document.getElementById('otStaffView').classList.remove('hidden');
+  document.getElementById('otEmpName').value='';
+  document.getElementById('otEmpName').readOnly=false;
+  document.getElementById('otVerified').value='false';
+  document.getElementById('otVbadge').style.display='none';
+  document.getElementById('otSubmitBtn').classList.remove('ready');
+  document.getElementById('otReason').value='';
+  document.getElementById('otVehicle').value='';
+  document.getElementById('otReqBy').value='';
+  otPad.clear();
+  otSetType('Pre');
+  setTimeout(function(){resizePad(otPad,'otSigPad');},80);
+}
+
+// OT Admin
+function otAdminRefresh(){
+  api('getOTAdminBundle').then(function(res){
+    var b=res.data||{};
+    otRecords=b.otRecords||[];
+    document.getElementById('otsTotal').textContent=otRecords.length;
+    document.getElementById('otsPending').textContent=otRecords.filter(function(r){return r.status==='Pending';}).length;
+    document.getElementById('otsApproved').textContent=otRecords.filter(function(r){return r.status==='Approved';}).length;
+    document.getElementById('otsRejected').textContent=otRecords.filter(function(r){return r.status==='Rejected';}).length;
+    lBuildOTNF();
+    otFilt(otCurFilt,document.querySelector('#otAdminView .fbtn.on'));
+  });
+}
+function lBuildOTNF(){
+  var sel=document.getElementById('otNameFilt'),cur=sel.value;
+  var names=[];
+  otRecords.forEach(function(r){if(names.indexOf(r.employeeName)===-1)names.push(r.employeeName);});
+  names.sort();while(sel.options.length>1)sel.remove(1);
+  names.forEach(function(n){sel.add(new Option(n,n));});
+  if(cur)sel.value=cur;
+}
+function otFilt(filter,btn){
+  otCurFilt=filter;
+  document.querySelectorAll('#otAdminView .fbar .fbtn').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  var nameF=document.getElementById('otNameFilt').value;
+  var list=otRecords.filter(function(r){return(filter==='All'||r.status===filter)&&(!nameF||r.employeeName===nameF);});
+  var tb=document.getElementById('otRecordsTbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="9" class="empty">No records.</td></tr>';return;}
+  tb.innerHTML=list.map(function(r){
+    var sc=r.status==='Pending'?'bs-pending':r.status==='Approved'?'bs-approved':'bs-rejected';
+    return '<tr>'+
+      '<td style="font-family:\'DM Mono\',monospace;font-size:.7rem;color:#bbb;">'+r.id+'</td>'+
+      '<td style="font-weight:700;">'+r.employeeName+'</td>'+
+      '<td>'+r.department+'</td>'+
+      '<td style="font-size:.78rem;">'+r.otDate+'</td>'+
+      '<td><span class="bs" style="background:#f0f4ff;color:#3730a3;">'+r.applicationType+'</span></td>'+
+      '<td style="text-align:center;font-weight:700;">'+r.estimatedHours+'h</td>'+
+      '<td style="font-size:.78rem;">'+r.jobLocation+'</td>'+
+      '<td><span class="bs '+sc+'">'+r.status+'</span></td>'+
+      '<td><div class="act">'+
+        '<button class="ab ab-edit" onclick="otOpenEdit('+r.rowIndex+')">Update</button>'+
+        (r.signatureUrl&&r.signatureUrl.length>4?'<button class="ab" style="background:#f0f4ff;color:#3730a3;" onclick="otViewSign(\''+r.signatureUrl+'\')">✍️</button>':'')+
+        '<button class="ab ab-del" onclick="otDel('+r.rowIndex+',\''+r.id+'\',\''+r.employeeName+'\')">Del</button>'+
+      '</div></td></tr>';
+  }).join('');
+}
+function otOpenEdit(ri){
+  var r=otRecords.find(function(x){return x.rowIndex===ri;});if(!r)return;
+  document.getElementById('otEditRow').value=ri;
+  document.getElementById('otEditName').value=r.employeeName;
+  document.getElementById('otEditStatus').value=r.status;
+  document.getElementById('otEditRemarks').value=r.adminRemarks;
+  document.getElementById('otEditModal').style.display='flex';
+}
+function otSaveEdit(){
+  Swal.fire({title:'Saving…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+  apiPost('adminOTUpdate',{rowIndex:parseInt(document.getElementById('otEditRow').value),
+    status:document.getElementById('otEditStatus').value,
+    remarks:document.getElementById('otEditRemarks').value}).then(function(res){
+    Swal.close();
+    if(res.ok){Swal.fire('Saved!','','success');document.getElementById('otEditModal').style.display='none';otAdminRefresh();}
+    else Swal.fire('Error',res.error,'error');
+  });
+}
+function otViewSign(url){
+  Swal.fire({title:'✍️ Signature',html:'<img src="'+url+'" style="max-width:100%;border-radius:8px;border:1px solid #eee;" onerror="this.style.display=\'none\'">',showConfirmButton:false,showCloseButton:true});
+}
+function otDel(ri,id,name){
+  Swal.fire({title:'Delete '+id+'?',html:'Remove <b>'+name+'</b>\'s OT record permanently.',
+    icon:'warning',showCancelButton:true,confirmButtonColor:'#cc0000',confirmButtonText:'Delete'})
+  .then(function(r){
+    if(!r.isConfirmed)return;
+    Swal.fire({title:'Deleting…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+    apiPost('adminOTDelete',{rowIndex:ri}).then(function(res){
+      Swal.close();if(res.ok){Swal.fire('Deleted!','','success');otAdminRefresh();}
+      else Swal.fire('Error',res.error,'error');
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ORDER SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function loadOrderApp(){
+  if(myRole==='superadmin'||myRole==='admin'){
+    document.getElementById('orderAdminView').classList.remove('hidden');
+    ordAdminRefresh();
+  } else {
+    document.getElementById('orderStaffView').classList.remove('hidden');
+    ordLoadMachineTypes();
+    ordLoadMyOrders();
+  }
+}
+
+function ordTab(tab,btn){
+  document.getElementById('ordTabForm').classList.toggle('hidden',tab!=='form');
+  document.getElementById('ordTabMyOrders').classList.toggle('hidden',tab!=='myorders');
+  document.querySelectorAll('#orderStaffView .stab').forEach(function(b){b.classList.remove('on','order');});
+  btn.classList.add('on','order');
+}
+
+function ordLoadMachineTypes(){
+  api('getOrderBundle').then(function(res){
+    var b=res.data||{};
+    machineTypes=b.machineTypes||[];
+    technicians=b.technicians||[];
+    var sel=document.getElementById('ordMachType');
+    sel.innerHTML='<option value="">Select machine type…</option>';
+    machineTypes.forEach(function(t){sel.add(new Option(t.type,t.type));});
+  });
+}
+
+function ordTypeChange(){
+  var type=document.getElementById('ordMachType').value;
+  var found=machineTypes.find(function(t){return t.type===type;});
+  document.getElementById('ordSpecUnit').textContent=found?found.unit:'—';
+}
+
+function ordSubmit(){
+  var type=document.getElementById('ordMachType').value;
+  var spec=document.getElementById('ordSpecVal').value;
+  var del=document.getElementById('ordDelDate').value;
+  var rental=document.getElementById('ordRental').value.trim();
+  var loc=document.getElementById('ordLocation').value.trim();
+  var req=document.getElementById('ordReqBy').value.trim();
+  if(!type||!spec||!del||!rental||!loc||!req){Swal.fire('Incomplete','Fill all required fields.','warning');return;}
+  Swal.fire({title:'Confirm Order?',html:'<b>'+type+'</b> — '+spec+' '+document.getElementById('ordSpecUnit').textContent+'<br>Delivery: '+del+'<br>Location: '+loc,
+    showCancelButton:true,confirmButtonColor:'#d97706',confirmButtonText:'Submit'})
+  .then(function(r){
+    if(!r.isConfirmed)return;
+    Swal.fire({title:'Submitting…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+    apiPost('submitOrder',{
+      machineType:type,specValue:spec,specUnit:document.getElementById('ordSpecUnit').textContent,
+      powerType:document.getElementById('ordPower').value,unitQty:document.getElementById('ordQty').value,
+      deliveryDate:del,rentalPeriod:rental,location:loc,
+      jobType:document.getElementById('ordJobType').value,
+      requestedBy:req,submittedBy:myEmail,
+      specialReq:document.getElementById('ordSpecReq').value
+    }).then(function(res){
+      Swal.close();
+      if(res.ok){
+        Swal.fire('Order Submitted!','ID: '+res.id,'success');
+        ordLoadMyOrders();
+        ordTab('myorders',document.querySelectorAll('#orderStaffView .stab')[1]);
+      } else Swal.fire('Error',res.error,'error');
+    });
+  });
+}
+
+function ordLoadMyOrders(){
+  api('getOrderAdminBundle').then(function(res){
+    var b=res.data||{};
+    var orders=(b.orders||[]).filter(function(o){return o.submittedBy===myEmail;});
+    var tb=document.getElementById('myOrdersTbody');
+    if(!orders.length){tb.innerHTML='<tr><td colspan="5" class="empty">No orders yet.</td></tr>';return;}
+    tb.innerHTML=orders.slice(0,20).map(function(o){
+      return '<tr><td style="font-family:\'DM Mono\',monospace;font-size:.78rem;">'+o.orderId+'</td>'+
+        '<td>'+o.machineType+'<br><span style="font-size:.72rem;color:#aaa;">'+o.specValue+' '+o.specUnit+'</span></td>'+
+        '<td>'+o.deliveryDate+'</td>'+
+        '<td style="font-size:.8rem;">'+o.location+'</td>'+
+        '<td>'+(o.selectedUnit?'<span class="bs bs-ordered">'+o.selectedUnit+'</span>':'<span class="bs bs-pending">Pending</span>')+'</td></tr>';
+    }).join('');
+  });
+}
+
+// ── Order Admin ──
+function ordAdminTab(tab,btn){
+  document.getElementById('ordAdminOrders').classList.toggle('hidden',tab!=='orders');
+  document.getElementById('ordAdminMachines').classList.toggle('hidden',tab!=='machines');
+  document.querySelectorAll('#orderAdminView .stab').forEach(function(b){b.classList.remove('on','order');});
+  btn.classList.add('on','order');
+}
+
+function ordAdminRefresh(){
+  api('getOrderAdminBundle').then(function(res){
+    var b=res.data||{};
+    allOrders=b.orders||[];
+    allMachines=b.machines||[];
+    technicians=b.technicians||[];
+    machineTypes=b.machineTypes||[];
+    ordRenderTbl();
+    machRenderStats();
+    machRenderTbl();
+  });
+}
+
+var ordStatusFilt='';
+function ordFilt(f,btn){
+  ordStatusFilt=f;
+  document.querySelectorAll('#ordAdminOrders .fbar .fbtn').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  ordRenderTbl();
+}
+
+function ordRenderTbl(){
+  var search=document.getElementById('ordSearch').value.toLowerCase();
+  var list=allOrders.filter(function(o){
+    var matchF=ordStatusFilt===''||(ordStatusFilt==='pending'&&!o.selectedUnit)||(ordStatusFilt==='assigned'&&!!o.selectedUnit);
+    var matchS=!search||(o.orderId+o.machineType+o.location+o.requestedBy+o.submittedBy+o.selectedUnit).toLowerCase().indexOf(search)>-1;
+    return matchF&&matchS;
+  });
+  var tb=document.getElementById('ordTbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="9" class="empty">No orders.</td></tr>';return;}
+  tb.innerHTML=list.map(function(o){
+    var unitCell=o.selectedUnit?'<span class="bs bs-ordered">'+o.selectedUnit+'</span>':'<span class="bs bs-pending">Unassigned</span>';
+    var subName=o.submittedBy.replace(/\s*\(.*?\)/g,'');
+    return '<tr>'+
+      '<td style="font-family:\'DM Mono\',monospace;font-size:.75rem;">'+o.orderId+'</td>'+
+      '<td style="font-weight:700;">'+o.machineType+'<br><span style="font-size:.72rem;color:#aaa;">'+o.specValue+' '+o.specUnit+'</span></td>'+
+      '<td style="text-align:center;">'+o.unitQty+'</td>'+
+      '<td style="font-size:.78rem;">'+o.deliveryDate+'</td>'+
+      '<td style="font-size:.78rem;">'+o.location+'</td>'+
+      '<td style="font-size:.78rem;">'+o.requestedBy+'</td>'+
+      '<td>'+unitCell+'</td>'+
+      '<td style="font-size:.75rem;color:#888;">'+subName+'</td>'+
+      '<td><div class="act">'+
+        '<button class="ab ab-assign" onclick="openAssign(\''+o.orderId+'\',\''+o.machineType+'\','+o.unitQty+',\''+o.rowIndex+'\')">Assign</button>'+
+        '<button class="ab ab-wa" onclick="openWA(\''+o.orderId+'\',\''+o.machineType+'\',\''+o.deliveryDate+'\',\''+o.location+'\',\''+o.requestedBy+'\',\''+o.unitQty+'\',\''+o.rentalPeriod+'\',\''+o.powerType+'\',\''+o.jobType+'\',\''+o.specialReq+'\')">WhatsApp</button>'+
+        '<button class="ab ab-del" onclick="ordDel('+o.rowIndex+',\''+o.orderId+'\')">Del</button>'+
+      '</div></td></tr>';
+  }).join('');
+}
+
+function machRenderStats(){
+  document.getElementById('msPending').textContent=allMachines.filter(function(m){return m.status==='PENDING';}).length;
+  document.getElementById('msReady').textContent=allMachines.filter(function(m){return m.status==='READY';}).length;
+  document.getElementById('msOrdered').textContent=allMachines.filter(function(m){return m.status==='ORDERED';}).length;
+}
+
+function machFilt(f,btn){
+  machCurFilt=f;
+  document.querySelectorAll('#ordAdminMachines .fbar .fbtn').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  machRenderTbl();
+}
+
+function machRenderTbl(){
+  var search=document.getElementById('machSearch').value.toLowerCase();
+  var list=allMachines.filter(function(m){
+    var matchF=!machCurFilt||m.status===machCurFilt;
+    var matchS=!search||(m.unitId+m.brand+m.model+m.machineType+m.status+m.customerName).toLowerCase().indexOf(search)>-1;
+    return matchF&&matchS;
+  });
+  var tb=document.getElementById('machTbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="8" class="empty">No machines.</td></tr>';return;}
+  tb.innerHTML=list.map(function(m){
+    var sc=m.status==='READY'?'bs-ready':m.status==='ORDERED'?'bs-ordered':'bs-mach-pending';
+    var actions='';
+    if(m.status==='PENDING'){
+      actions='<button class="ab ab-ok" onclick="doMarkReady(\''+m.unitId+'\','+m.rowIndex+')">✅ Ready</button>';
+    } else if(m.status==='READY'){
+      actions='<button class="ab ab-rej" onclick="doMarkPending(\''+m.unitId+'\','+m.rowIndex+')">⚠️ Pending</button>';
+    } else if(m.status==='ORDERED'){
+      actions='<button class="ab" style="background:#ffedd5;color:#9a3412;" onclick="doCancelOrdered(\''+m.unitId+'\',\''+m.orderId+'\')">🚫 Cancel</button>';
+    }
+    return '<tr>'+
+      '<td style="font-family:\'DM Mono\',monospace;font-weight:700;">'+m.unitId+'</td>'+
+      '<td>'+m.brand+' '+m.model+'</td>'+
+      '<td style="font-size:.78rem;">'+m.machineType+'</td>'+
+      '<td style="font-size:.78rem;">'+m.hmReading+'</td>'+
+      '<td><span class="bs '+sc+'">'+m.status+'</span></td>'+
+      '<td style="font-size:.78rem;">'+m.customerName+'</td>'+
+      '<td style="font-size:.78rem;">'+m.deliveryDate+'</td>'+
+      '<td><div class="act">'+actions+'</div></td></tr>';
+  }).join('');
+}
+
+function doMarkReady(unitId,ri){
+  Swal.fire({title:'Mark as READY',input:'text',inputLabel:'H/M Reading',inputPlaceholder:'e.g. 1250',showCancelButton:true,confirmButtonColor:'#1a7a4a',confirmButtonText:'Confirm'})
+  .then(function(r){
+    if(!r.isConfirmed)return;
+    Swal.fire({title:'Updating…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+    apiPost('markReady',{unitId:unitId,hmReading:r.value||''}).then(function(res){
+      Swal.close();if(res.ok){Swal.fire('Done!','','success');ordAdminRefresh();}
+      else Swal.fire('Error',res.error,'error');
+    });
+  });
+}
+function doMarkPending(unitId,ri){
+  Swal.fire({title:'Cancel Ready → Pending?',text:'This will revert the machine to PENDING.',showCancelButton:true,confirmButtonColor:'#cc0000',confirmButtonText:'Confirm'})
+  .then(function(r){
+    if(!r.isConfirmed)return;
+    apiPost('markPending',{unitId:unitId}).then(function(res){
+      if(res.ok){Swal.fire('Done!','','success');ordAdminRefresh();}
+      else Swal.fire('Error',res.error,'error');
+    });
+  });
+}
+function doCancelOrdered(unitId,orderId){
+  Swal.fire({title:'Cancel Ordered → Ready?',text:'Machine returns to READY. Order unit assignment cleared.',showCancelButton:true,confirmButtonColor:'#cc0000',confirmButtonText:'Confirm'})
+  .then(function(r){
+    if(!r.isConfirmed)return;
+    apiPost('cancelOrdered',{unitId:unitId,orderId:orderId}).then(function(res){
+      if(res.ok){Swal.fire('Done!','','success');ordAdminRefresh();}
+      else Swal.fire('Error',res.error,'error');
+    });
+  });
+}
+
+function ordDel(ri,id){
+  Swal.fire({title:'Delete '+id+'?',text:'This cannot be undone.',icon:'warning',showCancelButton:true,confirmButtonColor:'#cc0000',confirmButtonText:'Delete'})
+  .then(function(r){
+    if(!r.isConfirmed)return;
+    apiPost('deleteOrder',{rowIndex:ri}).then(function(res){
+      if(res.ok){Swal.fire('Deleted!','','success');ordAdminRefresh();}
+      else Swal.fire('Error',res.error,'error');
+    });
+  });
+}
+
+// Assign unit modal
+function openAssign(orderId,machType,qty,rowIndex){
+  assignOrderData={orderId:orderId,machType:machType,qty:parseInt(qty),rowIndex:parseInt(rowIndex)};
+  document.getElementById('assignOrderInfo').textContent='Order: '+orderId+' | Type: '+machType+' | Qty: '+qty;
+  var slots=document.getElementById('assignSlots');
+  slots.innerHTML='<div class="empty">Loading available units…</div>';
+  document.getElementById('assignModal').style.display='flex';
+  api('getReadyMachinesForType',{machineType:machType}).then(function(res){
+    var units=res.data||[];
+    var html='';
+    for(var i=0;i<assignOrderData.qty;i++){
+      html+='<div style="margin-bottom:12px;"><label class="form-label">Unit '+(i+1)+'</label>'+
+        '<select class="form-control assign-slot" data-idx="'+i+'" onchange="onAssignSelect()">'+
+        '<option value="">Select unit…</option>'+
+        units.map(function(u){return '<option value="'+u.unitId+'" data-hm="'+u.hmReading+'">'+u.label+' (H/M: '+u.hmReading+')</option>';}).join('')+
+        '</select></div>';
+    }
+    slots.innerHTML=html||'<div class="empty">No READY units available for this machine type.</div>';
+  });
+}
+
+function onAssignSelect(){
+  // Prevent duplicate selections across slots
+  var sels=document.querySelectorAll('.assign-slot');
+  var chosen={};
+  sels.forEach(function(s){if(s.value)chosen[s.value]=true;});
+  sels.forEach(function(s){
+    Array.from(s.options).forEach(function(opt){
+      if(opt.value&&opt.value!==s.value)opt.disabled=chosen[opt.value]&&!false;
+    });
+  });
+}
+
+function doAssignUnits(){
+  var sels=document.querySelectorAll('.assign-slot');
+  var units=Array.from(sels).map(function(s){return s.value;}).filter(Boolean);
+  if(units.length!==assignOrderData.qty){Swal.fire('Missing','Select all '+assignOrderData.qty+' unit(s).','warning');return;}
+  Swal.fire({title:'Confirm Assignment?',html:'Units: <b>'+units.join(', ')+'</b>',showCancelButton:true,confirmButtonColor:'#6d28d9',confirmButtonText:'Confirm'})
+  .then(function(r){
+    if(!r.isConfirmed)return;
+    Swal.fire({title:'Assigning…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+    apiPost('assignUnit',{orderId:assignOrderData.orderId,units:units}).then(function(res){
+      Swal.close();document.getElementById('assignModal').style.display='none';
+      if(res.ok){Swal.fire('Assigned!','','success');ordAdminRefresh();}
+      else Swal.fire('Error',res.error,'error');
+    });
+  });
+}
+
+// WA modal
+function openWA(orderId,machType,delDate,location,reqBy,qty,rental,power,jobType,specialReq){
+  document.getElementById('waOrderInfo').textContent='Order: '+orderId;
+  var url=window.location.href.split('?')[0];
+  var msg='*NEW JOB ASSIGNMENT*\n----------------------\n'+
+    '*Order ID:* '+orderId+'\n'+
+    '*Machine:* '+machType+'\nQty: '+qty+' Unit(s)\n'+
+    'Rental Period: '+rental+'\nPower: '+power+'\n'+
+    '*Delivery Date:* '+delDate+'\nLocation: '+location+'\n'+
+    'Job Type: '+jobType+'\nRequested by: '+reqBy+
+    (specialReq?'\nRequirements: '+specialReq:'')+'\n\nUpdate here:\n'+url;
+  var list=document.getElementById('waTechList');
+  list.innerHTML=technicians.map(function(t){
+    var wa='https://wa.me/60'+t.phone.replace(/^0/,'').replace(/\D/g,'')+'?text='+encodeURIComponent(msg);
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f3f3;">'+
+      '<div><div style="font-weight:700;font-size:.88rem;">'+t.name+'</div>'+
+      '<div style="font-size:.75rem;color:#888;">'+t.phone+'</div></div>'+
+      '<a class="wa-btn" href="'+wa+'" target="_blank" onclick="logWA(\''+orderId+'\',\''+t.name+'\',\''+t.phone+'\')">'+
+      '📱 Send</a></div>';
+  }).join('')||'<div class="empty">No technicians in list.</div>';
+  document.getElementById('waModal').style.display='flex';
+}
+
+function logWA(orderId,name,phone){
+  apiPost('logWA',{orderId:orderId,techName:name,techPhone:phone});
+}
+</script>
+</body>
+</html>
