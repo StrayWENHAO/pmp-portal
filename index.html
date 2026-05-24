@@ -1010,49 +1010,43 @@ function showExpired(){
 }
 
 function renderGSIButton(){
-  if(typeof google==='undefined'||!google.accounts){setTimeout(renderGSIButton,200);return;}
+  // GSI already initialized in initGSI — just ensure button is visible
   var wrap=document.getElementById('gsiButtonWrap');
-  wrap.style.display='flex';
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback:  onGoogleSignIn,
-    auto_select: false
-  });
-  google.accounts.id.renderButton(wrap,{
-    theme:'outline', size:'large', width:260, text:'signin_with'
-  });
+  if(wrap) wrap.style.display='flex';
 }
 
 // Initialize Google Sign-In
+var _gsiReady = false;
 function initGSI(){
-  if(typeof google==='undefined'||!google.accounts){setTimeout(initGSI,100);return;}
+  if(typeof google==='undefined'||!google.accounts){setTimeout(initGSI,150);return;}
+  if(_gsiReady) return;
+  _gsiReady = true;
+
   google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback:  onGoogleSignIn,
-    auto_select: true,
-    use_fedcm_for_prompt: false
+    client_id:    GOOGLE_CLIENT_ID,
+    callback:     onGoogleSignIn,
+    auto_select:  true,
+    use_fedcm_for_prompt: true
   });
-  // Render button first so user can always click
-  var wrap=document.getElementById('gsiButtonWrap');
-  wrap.style.display='flex';
-  google.accounts.id.renderButton(wrap,{
-    theme:'outline', size:'large', width:260, text:'signin_with'
-  });
+
+  // Show sign-in UI
   document.getElementById('expIcon').textContent='🔑';
   document.getElementById('expTitle').textContent='Sign In';
   document.getElementById('expMsg').textContent='Sign in with your authorised Google account.';
-  // Try silent sign-in too
-  google.accounts.id.prompt(function(notification){
-    // If dismissed or not shown, button is already visible
+
+  var wrap=document.getElementById('gsiButtonWrap');
+  wrap.style.display='flex';
+  google.accounts.id.renderButton(wrap,{
+    theme:'outline', size:'large', width:260, text:'signin_with', locale:'en'
   });
+
+  // Try One Tap (auto-select if session exists)
+  google.accounts.id.prompt();
 }
-// Start GSI init — show sign in page first, GSI will auto-select if session exists
-setTimeout(function(){
-  // Show the sign-in page immediately
-  document.getElementById('ls').style.display='none';
-  document.getElementById('expiredView').classList.remove('hidden');
-  initGSI();
-}, 300);
+// Show sign-in page immediately, init GSI
+document.getElementById('ls').style.display='none';
+document.getElementById('expiredView').classList.remove('hidden');
+initGSI();
 
 function initPads(){
   lPad=new SignaturePad(document.getElementById('lSigPad'));
