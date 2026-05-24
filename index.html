@@ -927,24 +927,39 @@ var assignOrderData={};
 // ═══════════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════════
-// ── API HELPER ────────────────────────────────────────────────
+// ── API HELPER (JSONP — bypasses CORS) ───────────────────────
+var _cbCount = 0;
 function api(action, params) {
-  var url = GAS_API_URL + '?action=' + action + '&token=' + encodeURIComponent(__idToken);
-  if (params && typeof params === 'object') {
-    Object.keys(params).forEach(function(k){
-      url += '&' + k + '=' + encodeURIComponent(params[k]);
-    });
-  }
-  return fetch(url).then(function(r){return r.json();});
+  return new Promise(function(resolve, reject) {
+    var cbName = '_gasCallback' + (++_cbCount);
+    var url = GAS_API_URL + '?action=' + encodeURIComponent(action)
+            + '&token=' + encodeURIComponent(__idToken)
+            + '&cb=' + cbName;
+    if (params && typeof params === 'object') {
+      Object.keys(params).forEach(function(k){
+        url += '&' + k + '=' + encodeURIComponent(
+          typeof params[k]==='object' ? JSON.stringify(params[k]) : params[k]
+        );
+      });
+    }
+    window[cbName] = function(data) {
+      delete window[cbName];
+      document.head.removeChild(script);
+      resolve(data);
+    };
+    var script = document.createElement('script');
+    script.src = url;
+    script.onerror = function() {
+      delete window[cbName];
+      document.head.removeChild(script);
+      reject(new Error('API call failed: ' + action));
+    };
+    document.head.appendChild(script);
+  });
 }
+// apiPost now also uses JSONP GET (GAS handles data param)
 function apiPost(action, data) {
-  data.action = action;
-  data.token  = __idToken;
-  return fetch(GAS_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  }).then(function(r){return r.json();});
+  return api(action, { data: JSON.stringify(data) });
 }
 
 // ── BOOT ──────────────────────────────────────────────────────
