@@ -310,21 +310,22 @@
 <!-- LOADING -->
 <div id="ls">
   <img class="ls-logo" src="https://straywenhao.github.io/pmp-portal/logo.png"
-       onerror="this.style.display='none'" alt="PMP">
-  <div class="ls-name">PMP</div>
-  <div class="ls-sub">EQUIPMENTS SDN BHD</div>
+       onerror="this.style.display='none'" alt="PMP" style="width:110px;margin-bottom:16px;">
+  <div class="ls-sub" style="color:rgba(255,255,255,.45);font-size:.68rem;letter-spacing:2px;margin-bottom:28px;">EQUIPMENTS SDN BHD</div>
   <div class="ring"></div>
 </div>
 
 <!-- SIGN IN / ACCESS REQUIRED -->
 <div id="expiredView" class="hidden">
   <div class="exp-card">
-    <img class="ec-logo" src="https://straywenhao.github.io/pmp-portal/logo.png"
-         onerror="this.style.display='none'" alt="PMP">
-    <div class="ec-name">PMP</div>
-    <div class="ec-sub">EQUIPMENTS SDN BHD</div>
-    <h3 id="expTitle">Staff Portal</h3>
-    <p id="expMsg" style="margin-bottom:22px;">Sign in with your authorised Google account to continue.</p>
+    <div style="background:linear-gradient(135deg,#003366,#001a40);border-radius:16px;padding:20px;margin-bottom:20px;">
+      <img src="https://straywenhao.github.io/pmp-portal/logo.png"
+           style="width:90px;display:block;margin:0 auto;" alt="PMP"
+           onerror="this.parentNode.innerHTML='<div style='font-family:Montserrat,sans-serif;font-size:1.8rem;font-weight:900;color:#fff;letter-spacing:2px;text-align:center;'>PMP</div>'">
+    </div>
+    <div style="font-size:.68rem;color:#aaa;letter-spacing:1.5px;margin-bottom:18px;">EQUIPMENTS SDN BHD</div>
+    <h3 id="expTitle" style="font-size:.95rem;color:#1a1a2e;margin-bottom:6px;">Staff Portal</h3>
+    <p id="expMsg" style="margin-bottom:22px;">Sign in with your Google account to continue.</p>
     <div id="gsiButtonWrap" style="display:none;justify-content:center;margin-bottom:8px;"></div>
     <p id="expSubMsg" style="display:none;"></p>
   </div>
@@ -334,8 +335,7 @@
 <div id="homeView" class="hidden">
   <div class="home-header">
     <img class="hh-logo" src="https://straywenhao.github.io/pmp-portal/logo.png"
-         onerror="this.style.display='none'" alt="PMP">
-    <div class="hh-name">PMP</div>
+         onerror="this.outerHTML='<div class='hh-name'>PMP</div>'" alt="PMP">
     <div class="hh-sub">EQUIPMENTS SDN BHD</div>
     <div class="hh-divider"></div>
     <div class="user-badge">
@@ -431,6 +431,7 @@
               <div style="font-size:.7rem;font-weight:700;color:#777;">TOTAL WORKING DAYS</div>
               <div id="lDurDisp" class="dur-val">0</div>
               <input type="hidden" id="lDuration">
+              <div id="lExclDates"></div>
             </div>
 
             <label class="form-label">Reason *</label>
@@ -460,7 +461,6 @@
           <button class="stab on leave" onclick="lAdminTab('records',this)">📋 Records</button>
           <button class="stab" onclick="lAdminTab('schedule',this)">🗓 Schedule</button>
           <button class="stab" onclick="lAdminTab('calendar',this)">📅 Calendar</button>
-          <button class="stab" onclick="lAdminTab('holidays',this)">🎌 Holidays</button>
         </div>
 
         <!-- Records -->
@@ -531,17 +531,16 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Holidays -->
-        <div id="lTabHolidays" class="hidden">
-          <div class="pcard">
-            <div class="pcard-hdr"><h4>Public Holidays</h4></div>
+          <!-- Holidays list inside Calendar tab -->
+          <div class="pcard" style="margin-top:14px;">
+            <div class="pcard-hdr"><h4>🎌 Public Holidays</h4></div>
             <div class="pcard-body">
               <div id="lHolList"><div class="empty">Loading…</div></div>
             </div>
           </div>
         </div>
+
+
       </div>
     </div>
 
@@ -959,6 +958,33 @@
 // GLOBALS
 // ═══════════════════════════════════════════════════════════════
 var myEmail='', myRole='staff', myName='';
+
+// ── SESSION STORAGE ──────────────────────────────────────────
+function _saveSession(token, email, role) {
+  try {
+    sessionStorage.setItem('pmp_token', token);
+    sessionStorage.setItem('pmp_email', email);
+    sessionStorage.setItem('pmp_role', role);
+    sessionStorage.setItem('pmp_ts', Date.now().toString());
+  } catch(e) {}
+}
+function _loadSession() {
+  try {
+    var token = sessionStorage.getItem('pmp_token');
+    var email = sessionStorage.getItem('pmp_email');
+    var role  = sessionStorage.getItem('pmp_role');
+    var ts    = parseInt(sessionStorage.getItem('pmp_ts') || '0');
+    // Session valid for 55 minutes (JWT expires in 60)
+    if (token && email && role && (Date.now() - ts) < 55 * 60 * 1000) {
+      return { token: token, email: email, role: role };
+    }
+  } catch(e) {}
+  return null;
+}
+function _clearSession() {
+  try { sessionStorage.removeItem('pmp_token'); sessionStorage.removeItem('pmp_email');
+    sessionStorage.removeItem('pmp_role'); sessionStorage.removeItem('pmp_ts'); } catch(e) {}
+}
 var lPad, otPad;
 var holidays=[], staffNames=[], leaveRecords=[], otRecords=[], allOrders=[], allMachines=[], technicians=[], machineTypes=[];
 var lCurFilt='All', otCurFilt='All', ordCurFilt='', machCurFilt='';
@@ -1009,8 +1035,50 @@ function apiPost(action, data) {
 // ── BOOT ──────────────────────────────────────────────────────
 window.onload=function(){
   var now=new Date(); lCalYear=now.getFullYear(); lCalMonth=now.getMonth();
-  // GSI will call onGoogleSignIn when ready
-  // Show loading until signed in
+
+  // Try restore session from sessionStorage first
+  var saved = _loadSession();
+  if (saved) {
+    __idToken = saved.token;
+    myEmail   = saved.email;
+    myRole    = saved.role;
+    // Load data with saved token
+    api('getBootBundle').then(function(res) {
+      if (!res.ok) {
+        // Token expired, need re-login
+        _clearSession();
+        document.getElementById('ls').style.display='none';
+        document.getElementById('expiredView').classList.remove('hidden');
+        initGSI();
+        return;
+      }
+      // Update with fresh data
+      myEmail = res.email; myRole = res.role;
+      _saveSession(__idToken, myEmail, myRole);
+      var b = res.data || {};
+      holidays=b.holidays||[]; staffNames=b.staffNames||[];
+      leaveRecords=b.leaveRecords||[]; otRecords=b.otRecords||[];
+      allOrders=b.orders||[]; allMachines=b.machines||[];
+      technicians=b.technicians||[]; machineTypes=b.machineTypes||[];
+      document.getElementById('ls').style.display='none';
+      document.getElementById('expiredView').classList.add('hidden');
+      document.getElementById('homeEmail').textContent=myEmail;
+      var rp=document.getElementById('homeRolePill');
+      rp.textContent=myRole.toUpperCase();
+      rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');
+      document.getElementById('homeView').classList.remove('hidden');
+      initPads();
+    }).catch(function(){
+      _clearSession();
+      document.getElementById('ls').style.display='none';
+      document.getElementById('expiredView').classList.remove('hidden');
+      initGSI();
+    });
+    return;
+  }
+
+  // No saved session, show sign-in
+  // GSI will call onGoogleSignIn when user clicks
 };
 
 // Called by Google Sign-In SDK after user signs in
@@ -1021,6 +1089,7 @@ function onGoogleSignIn(resp) {
     if (!res.ok) { showExpired(); return; }
     myEmail = res.email;
     myRole  = res.role;
+    _saveSession(__idToken, myEmail, myRole);
     var b   = res.data || {};
 
     // Store all pre-loaded data
@@ -1066,11 +1135,9 @@ function initGSI(){
     client_id:    GOOGLE_CLIENT_ID,
     callback:     onGoogleSignIn,
     auto_select:  false,
-    use_fedcm_for_prompt: false,
-    ux_mode:      'popup'
+    use_fedcm_for_prompt: false
   });
 
-  // Show sign-in button only — no One Tap to avoid COOP issues
   var wrap=document.getElementById('gsiButtonWrap');
   if(wrap){
     wrap.style.display='flex';
@@ -1187,6 +1254,25 @@ function lCalcDur(){
   var d=Math.round((hrs/8)*1000)/1000;
   document.getElementById('lDurDisp').textContent=d;
   document.getElementById('lDuration').value=d;
+
+  // Show excluded dates breakdown
+  var excl=[];
+  var cur2=new Date(start);
+  while(cur2<end){
+    var ds2=cur2.getFullYear()+'-'+String(cur2.getMonth()+1).padStart(2,'0')+'-'+String(cur2.getDate()).padStart(2,'0');
+    if(cur2.getDay()===0) excl.push({date:ds2,reason:'Sunday'});
+    else if(holidays.includes(ds2)) excl.push({date:ds2,reason:'Public Holiday'});
+    cur2.setDate(cur2.getDate()+1);cur2.setHours(8,0,0,0);
+  }
+  var exclEl=document.getElementById('lExclDates');
+  if(exclEl){
+    if(excl.length){
+      exclEl.innerHTML='<div style="margin-top:6px;font-size:.72rem;color:#888;">Excluded dates:</div>'+
+        excl.map(function(e){return'<div style="font-size:.72rem;color:#aaa;padding:1px 0;">• '+e.date+' ('+e.reason+')</div>';}).join('');
+    } else {
+      exclEl.innerHTML='';
+    }
+  }
 }
 
 async function leaveVerify(){
@@ -1315,11 +1401,13 @@ function lBuildNF(selId){
 }
 
 function lAdminTab(tab,btn){
-  ['records','schedule','calendar','holidays'].forEach(function(t){
+  ['records','schedule','calendar'].forEach(function(t){
     document.getElementById('lTab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('hidden',t!==tab);
   });
   document.querySelectorAll('#leaveAdminView .stab').forEach(function(b){b.classList.remove('on','leave');});
   btn.classList.add('on','leave');
+  // Load holidays when calendar tab is opened
+  if(tab==='calendar') lRenderHols();
 }
 
 function lFilt(filter,btn){
@@ -1501,24 +1589,62 @@ function lRenderCal(){
   document.getElementById('lCalTitle').textContent=MN[lCalMonth]+' '+lCalYear;
   var today=new Date(),fd=new Date(lCalYear,lCalMonth,1).getDay(),dim=new Date(lCalYear,lCalMonth+1,0).getDate();
   var prev=new Date(lCalYear,lCalMonth,0).getDate();
-  var ld=new Set();
+
+  // Build leave map: date -> [names]
+  var leaveMap={};
   leaveRecords.filter(function(r){return r.status!=='Rejected';}).forEach(function(r){
     if(!r.startDate||!r.endDate)return;
-    var c=new Date(r.startDate),e=new Date(r.endDate);
-    while(c<=e){if(c.getFullYear()===lCalYear&&c.getMonth()===lCalMonth&&c.getDay()!==0)ld.add(c.getDate());c.setDate(c.getDate()+1);}
+    var cur=new Date(r.startDate),end=new Date(r.endDate);
+    while(cur<=end){
+      if(cur.getFullYear()===lCalYear&&cur.getMonth()===lCalMonth&&cur.getDay()!==0){
+        var dk=cur.getDate();
+        if(!leaveMap[dk])leaveMap[dk]=[];
+        if(!leaveMap[dk].includes(r.name))leaveMap[dk].push(r.name);
+      }
+      cur.setDate(cur.getDate()+1);
+    }
   });
-  var hd=new Set();
-  holidays.forEach(function(h){var d=new Date(h);if(d.getFullYear()===lCalYear&&d.getMonth()===lCalMonth)hd.add(d.getDate());});
+
+  // Build holiday map: date -> name
+  var holMap={};
+  holidays.forEach(function(h){
+    var d=new Date(h);
+    if(d.getFullYear()===lCalYear&&d.getMonth()===lCalMonth)holMap[d.getDate()]=true;
+  });
+
   var html='';
   for(var i=0;i<fd;i++)html+='<div class="cd fil">'+(prev-fd+1+i)+'</div>';
   for(var d=1;d<=dim;d++){
     var isT=today.getFullYear()===lCalYear&&today.getMonth()===lCalMonth&&today.getDate()===d;
     var isSun=new Date(lCalYear,lCalMonth,d).getDay()===0;
-    var cls='cd'+(isSun?' we':hd.has(d)?' hol':ld.has(d)?' onl':'')+(isT?' tod':'');
-    html+='<div class="'+cls+'">'+d+'</div>';
+    var hasLeave=leaveMap[d]&&leaveMap[d].length>0;
+    var cls='cd'+(isSun?' we':holMap[d]?' hol':hasLeave?' onl':'')+(isT?' tod':'');
+    var tip=hasLeave&&!isSun&&!holMap[d]?' title="'+leaveMap[d].join(', ')+'"':'';
+    html+='<div class="'+cls+'"'+tip+'>'+d+'</div>';
   }
   var tail=(fd+dim)%7;if(tail)for(var j=1;j<=7-tail;j++)html+='<div class="cd fil">'+j+'</div>';
   document.getElementById('lCalGrid').innerHTML=html;
+
+  // Show on-leave info below calendar for selected month
+  var calInfo=document.getElementById('lCalInfo');
+  if(!calInfo){
+    calInfo=document.createElement('div');
+    calInfo.id='lCalInfo';
+    calInfo.style.cssText='margin-top:14px;';
+    document.getElementById('lCalGrid').parentNode.appendChild(calInfo);
+  }
+  var infoHtml='';
+  Object.keys(leaveMap).sort(function(a,b){return a-b;}).forEach(function(d){
+    var pad=function(n){return String(n).padStart(2,'0');};
+    var ds=lCalYear+'-'+pad(lCalMonth+1)+'-'+pad(d);
+    var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(lCalYear,lCalMonth,parseInt(d)).getDay()];
+    infoHtml+='<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid #f3f3f3;">'+
+      '<div style="font-family:'DM Mono',monospace;font-size:.73rem;color:var(--blue);min-width:90px;">'+ds+' '+dow+'</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+
+      leaveMap[d].map(function(n){return'<span style="background:#dbeafe;color:#1e40af;border-radius:12px;padding:2px 8px;font-size:.7rem;font-weight:600;">'+n+'</span>';}).join('')+
+      '</div></div>';
+  });
+  calInfo.innerHTML=infoHtml||'<div style="color:#ccc;font-size:.8rem;text-align:center;padding:12px;">No leave records this month.</div>';
 }
 
 function lRenderHols(){
@@ -1748,9 +1874,17 @@ function loadOrderApp(){
     document.getElementById('orderAdminView').classList.remove('hidden');
     ordAdminRefresh();
   } else {
+    // Staff = Technician view: see machines, mark ready, assign unit
+    // No create order button
     document.getElementById('orderStaffView').classList.remove('hidden');
+    // Hide New Order tab, only show machines/status
     ordLoadMachineTypes();
     ordLoadMyOrders();
+    // Hide the New Order tab for staff
+    var formTab = document.querySelector('#orderStaffView .stab:first-child');
+    if(formTab) formTab.style.display='none';
+    // Show My Orders tab by default
+    ordTab('myorders', document.querySelectorAll('#orderStaffView .stab')[1]);
   }
 }
 
