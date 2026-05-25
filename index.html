@@ -1042,17 +1042,24 @@ window.onload=function(){
     __idToken = saved.token;
     myEmail   = saved.email;
     myRole    = saved.role;
-    // Load data with saved token
+
+    // Set timeout - if API takes >12s, give up and show sign-in
+    var sessionTimer = setTimeout(function(){
+      _clearSession();
+      document.getElementById('ls').style.display='none';
+      document.getElementById('expiredView').classList.remove('hidden');
+      initGSI();
+    }, 12000);
+
     api('getBootBundle').then(function(res) {
+      clearTimeout(sessionTimer);
       if (!res.ok) {
-        // Token expired, need re-login
         _clearSession();
         document.getElementById('ls').style.display='none';
         document.getElementById('expiredView').classList.remove('hidden');
         initGSI();
         return;
       }
-      // Update with fresh data
       myEmail = res.email; myRole = res.role;
       _saveSession(__idToken, myEmail, myRole);
       var b = res.data || {};
@@ -1069,6 +1076,7 @@ window.onload=function(){
       document.getElementById('homeView').classList.remove('hidden');
       initPads();
     }).catch(function(){
+      clearTimeout(sessionTimer);
       _clearSession();
       document.getElementById('ls').style.display='none';
       document.getElementById('expiredView').classList.remove('hidden');
@@ -1078,7 +1086,9 @@ window.onload=function(){
   }
 
   // No saved session, show sign-in
-  // GSI will call onGoogleSignIn when user clicks
+  document.getElementById('ls').style.display='none';
+  document.getElementById('expiredView').classList.remove('hidden');
+  initGSI();
 };
 
 // Called by Google Sign-In SDK after user signs in
