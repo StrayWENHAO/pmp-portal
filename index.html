@@ -21,76 +21,57 @@
     /* ── LOADING ── */
     #ls{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
         align-items:center;justify-content:center;
-        background:linear-gradient(160deg,#001a3d 0%,#003366 60%,#0a1628 100%);
-        transition:opacity .4s;}
-    #ls .ls-logo{width:90px;margin-bottom:20px;filter:drop-shadow(0 4px 24px rgba(0,80,200,.4));}
-    #ls .ls-name{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.5rem;
-      color:#fff;letter-spacing:3px;margin-bottom:4px;}
-    #ls .ls-sub{color:rgba(255,255,255,.4);font-size:.68rem;letter-spacing:2px;margin-bottom:28px;}
+        background:#f7f8fa;transition:opacity .4s;}
+    #ls .ls-logo{width:220px;margin-bottom:24px;}
+    #ls .ls-sub{color:#aaa;font-size:.72rem;letter-spacing:2px;margin-bottom:32px;text-transform:uppercase;}
     .ring{width:32px;height:32px;border-radius:50%;
-      border:2.5px solid rgba(255,255,255,.15);border-top-color:#fff;
+      border:2.5px solid #e5e7eb;border-top-color:var(--blue);
       animation:spin .7s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
 
     /* ── SIGN IN PAGE ── */
     #expiredView{min-height:100vh;display:flex;align-items:center;justify-content:center;
-      background:linear-gradient(160deg,#001a3d 0%,#003366 60%,#0a1628 100%);}
-    .exp-card{background:#fff;border-radius:24px;padding:40px 28px 36px;text-align:center;
-      max-width:360px;width:92%;box-shadow:0 24px 60px rgba(0,0,0,.35);}
-    .exp-card .ec-logo{width:72px;margin-bottom:16px;}
-    .exp-card .ec-name{font-family:'Montserrat',sans-serif;font-weight:900;
-      font-size:1.1rem;color:#003366;letter-spacing:2px;margin-bottom:2px;}
-    .exp-card .ec-sub{font-size:.7rem;color:#aaa;letter-spacing:1px;margin-bottom:24px;}
-    .exp-card h3{font-family:'Montserrat',sans-serif;color:#1a1a2e;font-size:1rem;margin-bottom:6px;}
-    .exp-card p{color:#999;font-size:.82rem;line-height:1.6;margin-bottom:0;}
+      background:#f7f8fa;}
+    .exp-card{background:#fff;border-radius:24px;padding:48px 36px 40px;text-align:center;
+      max-width:400px;width:92%;box-shadow:0 8px 40px rgba(0,51,102,.1);}
+    .exp-card p{color:#999;font-size:.85rem;line-height:1.6;margin-bottom:0;}
 
     /* ── HOMEPAGE ── */
-    #homeView{min-height:100vh;
-      background:linear-gradient(160deg,#001a3d 0%,#003366 55%,#001428 100%);}
-    .home-header{padding:48px 20px 28px;text-align:center;position:relative;}
-    .home-header .hh-logo{width:64px;margin-bottom:14px;filter:drop-shadow(0 4px 20px rgba(0,100,255,.3));}
-    .home-header .hh-name{font-family:'Montserrat',sans-serif;font-weight:900;
-      font-size:1.4rem;color:#fff;letter-spacing:3px;margin-bottom:2px;}
-    .home-header .hh-sub{font-size:.65rem;color:rgba(255,255,255,.35);letter-spacing:2px;margin-bottom:20px;}
-    .home-header .hh-divider{width:40px;height:2px;background:var(--red);
-      margin:0 auto 18px;border-radius:2px;}
+    #homeView{min-height:100vh;background:#f7f8fa;}
+    .home-header{background:#fff;border-bottom:1px solid #eee;
+      padding:28px 20px 22px;text-align:center;}
+    .home-header .hh-logo{width:240px;margin-bottom:10px;}
+    .home-header .hh-sub{font-size:.68rem;color:#aaa;letter-spacing:1.5px;
+      text-transform:uppercase;margin-bottom:16px;}
     .home-header .user-badge{display:inline-flex;align-items:center;gap:8px;
-      background:rgba(255,255,255,.1);backdrop-filter:blur(8px);
-      border:1px solid rgba(255,255,255,.15);
-      border-radius:30px;padding:7px 16px;font-size:.76rem;color:rgba(255,255,255,.85);}
+      background:#f0f4ff;border-radius:20px;padding:6px 14px;
+      font-size:.76rem;color:#555;}
     .role-pill{display:inline-block;padding:2px 9px;border-radius:20px;
       font-size:.62rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;}
-    .role-pill.staff{background:rgba(255,255,255,.15);color:rgba(255,255,255,.7);}
-    .role-pill.admin{background:#1565c0;color:#fff;}
-    .role-pill.superadmin{background:var(--red);color:#fff;}
+    .role-pill.staff{background:#e5e7eb;color:#555;}
+    .role-pill.admin{background:#dbeafe;color:#1d4ed8;}
+    .role-pill.superadmin{background:#fee2e2;color:#cc0000;}
 
-    .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;
+    .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;
       padding:20px 16px 40px;max-width:640px;margin:0 auto;}
-    @media(min-width:560px){.home-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:24px 20px 48px;}}
-    @media(min-width:900px){.home-grid{max-width:820px;gap:20px;}}
+    @media(min-width:560px){.home-grid{grid-template-columns:repeat(3,1fr);gap:18px;padding:28px 20px 48px;}}
+    @media(min-width:900px){.home-grid{max-width:780px;gap:20px;}}
 
-    .home-card{background:rgba(255,255,255,.06);backdrop-filter:blur(12px);
-      border:1px solid rgba(255,255,255,.1);
-      border-radius:20px;padding:28px 16px 24px;text-align:center;
-      cursor:pointer;transition:.25s;position:relative;overflow:hidden;}
-    .home-card::after{content:'';position:absolute;inset:0;
-      background:linear-gradient(135deg,rgba(255,255,255,.08),transparent);
-      pointer-events:none;}
-    .home-card:hover{transform:translateY(-4px);
-      background:rgba(255,255,255,.1);
-      border-color:rgba(255,255,255,.2);
-      box-shadow:0 16px 40px rgba(0,0,0,.3);}
-    .home-card:active{transform:translateY(-1px);}
-    .home-card .hc-stripe{position:absolute;top:0;left:0;right:0;height:3px;border-radius:20px 20px 0 0;}
-    .home-card.leave .hc-stripe{background:linear-gradient(90deg,#cc0000,#ff4444);}
-    .home-card.ot .hc-stripe{background:linear-gradient(90deg,#1a7a4a,#22c55e);}
+    .home-card{background:#fff;border-radius:18px;padding:30px 16px 26px;text-align:center;
+      cursor:pointer;transition:.2s;position:relative;overflow:hidden;
+      box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid #f0f0f0;}
+    .home-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,51,102,.12);}
+    .home-card:active{transform:translateY(0);}
+    .home-card .hc-stripe{position:absolute;top:0;left:0;right:0;height:4px;}
+    .home-card.leave .hc-stripe{background:linear-gradient(90deg,#cc0000,#ef4444);}
+    .home-card.ot .hc-stripe{background:linear-gradient(90deg,#1a7a4a,#16a34a);}
     .home-card.order .hc-stripe{background:linear-gradient(90deg,#d97706,#f59e0b);}
-    .home-card .hc-icon{font-size:2.2rem;margin-bottom:12px;display:block;}
-    .home-card h3{font-family:'Montserrat',sans-serif;font-weight:800;font-size:.92rem;
-      color:#fff;margin-bottom:5px;letter-spacing:.3px;}
-    .home-card p{font-size:.72rem;color:rgba(255,255,255,.5);line-height:1.4;}
-    .home-card .hc-arrow{position:absolute;bottom:14px;right:16px;
-      font-size:.7rem;color:rgba(255,255,255,.25);}
+    .home-card .hc-icon{font-size:2.4rem;margin-bottom:14px;display:block;}
+    .home-card h3{font-family:'Montserrat',sans-serif;font-weight:800;font-size:.95rem;
+      color:#1a1a2e;margin-bottom:5px;}
+    .home-card p{font-size:.73rem;color:#aaa;line-height:1.4;}
+    .home-card .hc-arrow{position:absolute;bottom:12px;right:14px;
+      font-size:.75rem;color:#ddd;}
 
     /* ══════════════════ APP SHELL ══════════════════ */
     #appView{min-height:100vh;display:flex;flex-direction:column;}
@@ -310,22 +291,20 @@
 <!-- LOADING -->
 <div id="ls">
   <img class="ls-logo" src="https://straywenhao.github.io/pmp-portal/logo.png"
-       onerror="this.style.display='none'" alt="PMP" style="width:110px;margin-bottom:16px;">
-  <div class="ls-sub" style="color:rgba(255,255,255,.45);font-size:.68rem;letter-spacing:2px;margin-bottom:28px;">EQUIPMENTS SDN BHD</div>
+       onerror="this.innerHTML='<div style='font-family:Montserrat,sans-serif;font-size:2rem;font-weight:900;color:#003366;letter-spacing:2px;'>PMP</div>'" alt="PMP">
+  <div class="ls-sub">Equipments Sdn Bhd</div>
   <div class="ring"></div>
 </div>
 
 <!-- SIGN IN / ACCESS REQUIRED -->
 <div id="expiredView" class="hidden">
   <div class="exp-card">
-    <div style="background:linear-gradient(135deg,#003366,#001a40);border-radius:16px;padding:20px;margin-bottom:20px;">
-      <img src="https://straywenhao.github.io/pmp-portal/logo.png"
-           style="width:90px;display:block;margin:0 auto;" alt="PMP"
-           onerror="this.parentNode.innerHTML='<div style='font-family:Montserrat,sans-serif;font-size:1.8rem;font-weight:900;color:#fff;letter-spacing:2px;text-align:center;'>PMP</div>'">
-    </div>
-    <div style="font-size:.68rem;color:#aaa;letter-spacing:1.5px;margin-bottom:18px;">EQUIPMENTS SDN BHD</div>
-    <h3 id="expTitle" style="font-size:.95rem;color:#1a1a2e;margin-bottom:6px;">Staff Portal</h3>
-    <p id="expMsg" style="margin-bottom:22px;">Sign in with your Google account to continue.</p>
+    <img src="https://straywenhao.github.io/pmp-portal/logo.png"
+         style="width:220px;display:block;margin:0 auto 8px;" alt="PMP"
+         onerror="this.outerHTML='<div style='font-family:Montserrat,sans-serif;font-size:2rem;font-weight:900;color:#003366;letter-spacing:2px;margin-bottom:8px;'>PMP</div>'">
+    <div style="font-size:.68rem;color:#bbb;letter-spacing:1.5px;margin-bottom:28px;text-transform:uppercase;">Equipments Sdn Bhd</div>
+    <div style="width:40px;height:3px;background:#cc0000;border-radius:2px;margin:0 auto 24px;"></div>
+    <p id="expMsg" style="margin-bottom:24px;">Sign in with your authorised Google account to continue.</p>
     <div id="gsiButtonWrap" style="display:none;justify-content:center;margin-bottom:8px;"></div>
     <p id="expSubMsg" style="display:none;"></p>
   </div>
@@ -335,11 +314,10 @@
 <div id="homeView" class="hidden">
   <div class="home-header">
     <img class="hh-logo" src="https://straywenhao.github.io/pmp-portal/logo.png"
-         onerror="this.outerHTML='<div class='hh-name'>PMP</div>'" alt="PMP">
-    <div class="hh-sub">EQUIPMENTS SDN BHD</div>
-    <div class="hh-divider"></div>
+         onerror="this.outerHTML='<div style='font-family:Montserrat,sans-serif;font-size:2rem;font-weight:900;color:#003366;letter-spacing:2px;'>PMP</div>'" alt="PMP">
+    <div class="hh-sub">Staff Portal</div>
     <div class="user-badge">
-      <span id="homeEmail"></span>
+      <span id="homeEmail" style="color:#333;"></span>
       <span class="role-pill" id="homeRolePill"></span>
     </div>
   </div>
