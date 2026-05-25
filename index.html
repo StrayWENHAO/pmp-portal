@@ -18,48 +18,79 @@
     body{background:#f0f2f7;font-family:'Open Sans',sans-serif;min-height:100vh;}
     .hidden{display:none!important;}
 
-    /* LOADING */
-    #ls{position:fixed;inset:0;background:var(--blue);display:flex;flex-direction:column;
-        align-items:center;justify-content:center;z-index:9999;transition:opacity .3s;}
-    #ls .logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:2.8rem;color:#fff;letter-spacing:2px;}
-    #ls .sub{color:rgba(255,255,255,.5);font-size:.78rem;margin:4px 0 24px;letter-spacing:1px;}
-    .ring{width:36px;height:36px;border-radius:50%;border:3px solid rgba(255,255,255,.2);
-          border-top-color:#fff;animation:spin .7s linear infinite;}
+    /* ── LOADING ── */
+    #ls{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;
+        background:linear-gradient(160deg,#001a3d 0%,#003366 60%,#0a1628 100%);
+        transition:opacity .4s;}
+    #ls .ls-logo{width:90px;margin-bottom:20px;filter:drop-shadow(0 4px 24px rgba(0,80,200,.4));}
+    #ls .ls-name{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.5rem;
+      color:#fff;letter-spacing:3px;margin-bottom:4px;}
+    #ls .ls-sub{color:rgba(255,255,255,.4);font-size:.68rem;letter-spacing:2px;margin-bottom:28px;}
+    .ring{width:32px;height:32px;border-radius:50%;
+      border:2.5px solid rgba(255,255,255,.15);border-top-color:#fff;
+      animation:spin .7s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
 
-    /* SESSION EXPIRED */
-    #expiredView{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--blue);}
-    .exp-card{background:#fff;border-radius:20px;padding:40px 32px;text-align:center;max-width:340px;width:90%;}
-    .exp-card h3{font-family:'Montserrat',sans-serif;color:var(--blue);margin:12px 0 8px;}
-    .exp-card p{color:#888;font-size:.88rem;line-height:1.6;}
+    /* ── SIGN IN PAGE ── */
+    #expiredView{min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(160deg,#001a3d 0%,#003366 60%,#0a1628 100%);}
+    .exp-card{background:#fff;border-radius:24px;padding:40px 28px 36px;text-align:center;
+      max-width:360px;width:92%;box-shadow:0 24px 60px rgba(0,0,0,.35);}
+    .exp-card .ec-logo{width:72px;margin-bottom:16px;}
+    .exp-card .ec-name{font-family:'Montserrat',sans-serif;font-weight:900;
+      font-size:1.1rem;color:#003366;letter-spacing:2px;margin-bottom:2px;}
+    .exp-card .ec-sub{font-size:.7rem;color:#aaa;letter-spacing:1px;margin-bottom:24px;}
+    .exp-card h3{font-family:'Montserrat',sans-serif;color:#1a1a2e;font-size:1rem;margin-bottom:6px;}
+    .exp-card p{color:#999;font-size:.82rem;line-height:1.6;margin-bottom:0;}
 
-    /* ══════════════════ HOMEPAGE ══════════════════ */
-    #homeView{min-height:100vh;background:var(--blue);}
-    .home-header{padding:32px 20px 20px;text-align:center;}
-    .home-header .logo{font-family:'Montserrat',sans-serif;font-weight:900;
-      font-size:2.2rem;color:#fff;letter-spacing:2px;}
-    .home-header .tagline{color:rgba(255,255,255,.5);font-size:.75rem;letter-spacing:1.5px;margin-top:4px;}
+    /* ── HOMEPAGE ── */
+    #homeView{min-height:100vh;
+      background:linear-gradient(160deg,#001a3d 0%,#003366 55%,#001428 100%);}
+    .home-header{padding:48px 20px 28px;text-align:center;position:relative;}
+    .home-header .hh-logo{width:64px;margin-bottom:14px;filter:drop-shadow(0 4px 20px rgba(0,100,255,.3));}
+    .home-header .hh-name{font-family:'Montserrat',sans-serif;font-weight:900;
+      font-size:1.4rem;color:#fff;letter-spacing:3px;margin-bottom:2px;}
+    .home-header .hh-sub{font-size:.65rem;color:rgba(255,255,255,.35);letter-spacing:2px;margin-bottom:20px;}
+    .home-header .hh-divider{width:40px;height:2px;background:var(--red);
+      margin:0 auto 18px;border-radius:2px;}
     .home-header .user-badge{display:inline-flex;align-items:center;gap:8px;
-      background:rgba(255,255,255,.12);border-radius:20px;padding:5px 14px;
-      margin-top:14px;font-size:.78rem;color:rgba(255,255,255,.8);}
-    .home-header .role-pill{background:var(--red);color:#fff;border-radius:10px;
-      padding:2px 8px;font-size:.65rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
-    .home-header .role-pill.admin{background:#1a6aa0;}
-    .home-header .role-pill.superadmin{background:var(--red);}
+      background:rgba(255,255,255,.1);backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:30px;padding:7px 16px;font-size:.76rem;color:rgba(255,255,255,.85);}
+    .role-pill{display:inline-block;padding:2px 9px;border-radius:20px;
+      font-size:.62rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;}
+    .role-pill.staff{background:rgba(255,255,255,.15);color:rgba(255,255,255,.7);}
+    .role-pill.admin{background:#1565c0;color:#fff;}
+    .role-pill.superadmin{background:var(--red);color:#fff;}
 
-    .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:16px 16px 32px;}
-    @media(min-width:600px){.home-grid{grid-template-columns:repeat(3,1fr);max-width:700px;margin:0 auto;}}
-    .home-card{background:#fff;border-radius:18px;padding:26px 16px 22px;text-align:center;
-      cursor:pointer;transition:.2s;box-shadow:0 4px 20px rgba(0,0,0,.12);position:relative;overflow:hidden;}
-    .home-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
-    .home-card.leave::before{background:var(--red);}
-    .home-card.order::before{background:var(--orange);}
-    .home-card.ot::before{background:var(--green);}
-    .home-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.18);}
-    .home-card .icon{font-size:2.4rem;margin-bottom:10px;}
-    .home-card h3{font-family:'Montserrat',sans-serif;font-weight:800;font-size:1rem;
-      color:#1a1a2e;margin-bottom:4px;}
-    .home-card p{font-size:.76rem;color:#888;line-height:1.4;}
+    .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;
+      padding:20px 16px 40px;max-width:640px;margin:0 auto;}
+    @media(min-width:560px){.home-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:24px 20px 48px;}}
+    @media(min-width:900px){.home-grid{max-width:820px;gap:20px;}}
+
+    .home-card{background:rgba(255,255,255,.06);backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:20px;padding:28px 16px 24px;text-align:center;
+      cursor:pointer;transition:.25s;position:relative;overflow:hidden;}
+    .home-card::after{content:'';position:absolute;inset:0;
+      background:linear-gradient(135deg,rgba(255,255,255,.08),transparent);
+      pointer-events:none;}
+    .home-card:hover{transform:translateY(-4px);
+      background:rgba(255,255,255,.1);
+      border-color:rgba(255,255,255,.2);
+      box-shadow:0 16px 40px rgba(0,0,0,.3);}
+    .home-card:active{transform:translateY(-1px);}
+    .home-card .hc-stripe{position:absolute;top:0;left:0;right:0;height:3px;border-radius:20px 20px 0 0;}
+    .home-card.leave .hc-stripe{background:linear-gradient(90deg,#cc0000,#ff4444);}
+    .home-card.ot .hc-stripe{background:linear-gradient(90deg,#1a7a4a,#22c55e);}
+    .home-card.order .hc-stripe{background:linear-gradient(90deg,#d97706,#f59e0b);}
+    .home-card .hc-icon{font-size:2.2rem;margin-bottom:12px;display:block;}
+    .home-card h3{font-family:'Montserrat',sans-serif;font-weight:800;font-size:.92rem;
+      color:#fff;margin-bottom:5px;letter-spacing:.3px;}
+    .home-card p{font-size:.72rem;color:rgba(255,255,255,.5);line-height:1.4;}
+    .home-card .hc-arrow{position:absolute;bottom:14px;right:16px;
+      font-size:.7rem;color:rgba(255,255,255,.25);}
 
     /* ══════════════════ APP SHELL ══════════════════ */
     #appView{min-height:100vh;display:flex;flex-direction:column;}
@@ -278,30 +309,35 @@
 
 <!-- LOADING -->
 <div id="ls">
-  <div class="logo">PMP</div>
-  <div class="sub">EQUIPMENTS SDN BHD</div>
+  <img class="ls-logo" src="https://straywenhao.github.io/pmp-portal/logo.png"
+       onerror="this.style.display='none'" alt="PMP">
+  <div class="ls-name">PMP</div>
+  <div class="ls-sub">EQUIPMENTS SDN BHD</div>
   <div class="ring"></div>
 </div>
 
 <!-- SIGN IN / ACCESS REQUIRED -->
 <div id="expiredView" class="hidden">
   <div class="exp-card">
-    <div style="font-size:2.5rem;" id="expIcon">⏳</div>
-    <h3 id="expTitle">Signing you in…</h3>
-    <p id="expMsg" style="color:#888;font-size:.85rem;margin-bottom:20px;">Please wait</p>
-    <!-- Google Sign-In button -->
-    <div id="gsiButtonWrap" style="display:none;justify-content:center;margin-bottom:10px;"></div>
-    <p id="expSubMsg" style="color:#bbb;font-size:.76rem;display:none;">
-      Sign in with your authorised Google account to continue.
-    </p>
+    <img class="ec-logo" src="https://straywenhao.github.io/pmp-portal/logo.png"
+         onerror="this.style.display='none'" alt="PMP">
+    <div class="ec-name">PMP</div>
+    <div class="ec-sub">EQUIPMENTS SDN BHD</div>
+    <h3 id="expTitle">Staff Portal</h3>
+    <p id="expMsg" style="margin-bottom:22px;">Sign in with your authorised Google account to continue.</p>
+    <div id="gsiButtonWrap" style="display:none;justify-content:center;margin-bottom:8px;"></div>
+    <p id="expSubMsg" style="display:none;"></p>
   </div>
 </div>
 
 <!-- ══════════════════════════════════ HOMEPAGE ══════════════════════════════════ -->
 <div id="homeView" class="hidden">
   <div class="home-header">
-    <div class="logo">PMP</div>
-    <div class="tagline">EQUIPMENTS SDN BHD — STAFF PORTAL</div>
+    <img class="hh-logo" src="https://straywenhao.github.io/pmp-portal/logo.png"
+         onerror="this.style.display='none'" alt="PMP">
+    <div class="hh-name">PMP</div>
+    <div class="hh-sub">EQUIPMENTS SDN BHD</div>
+    <div class="hh-divider"></div>
     <div class="user-badge">
       <span id="homeEmail"></span>
       <span class="role-pill" id="homeRolePill"></span>
@@ -309,19 +345,25 @@
   </div>
   <div class="home-grid">
     <div class="home-card leave" onclick="openApp('leave')">
-      <div class="icon">🏖️</div>
+      <div class="hc-stripe"></div>
+      <span class="hc-icon">🏖️</span>
       <h3>Leave</h3>
-      <p>Submit &amp; manage leave applications</p>
+      <p>Apply &amp; manage leave</p>
+      <span class="hc-arrow">›</span>
     </div>
     <div class="home-card ot" onclick="openApp('ot')">
-      <div class="icon">⏰</div>
+      <div class="hc-stripe"></div>
+      <span class="hc-icon">⏰</span>
       <h3>Overtime</h3>
-      <p>Pre &amp; post overtime applications</p>
+      <p>Pre &amp; post OT applications</p>
+      <span class="hc-arrow">›</span>
     </div>
     <div class="home-card order" onclick="openApp('order')">
-      <div class="icon">🚧</div>
+      <div class="hc-stripe"></div>
+      <span class="hc-icon">🚧</span>
       <h3>Orders</h3>
-      <p>Machine rental order management</p>
+      <p>Machine rental orders</p>
+      <span class="hc-arrow">›</span>
     </div>
   </div>
 </div>
@@ -974,31 +1016,31 @@ window.onload=function(){
 // Called by Google Sign-In SDK after user signs in
 function onGoogleSignIn(resp) {
   __idToken = resp.credential;
-  // Get role from GAS
-  api('getRole').then(function(res) {
+  // Single call: verify token + get role + load ALL data at once
+  api('getBootBundle').then(function(res) {
     if (!res.ok) { showExpired(); return; }
     myEmail = res.email;
     myRole  = res.role;
-    // Load base data
-    api('getLeaveBundle').then(function(b) {
-      if (!b.ok) { showExpired(); return; }
-      holidays   = b.data.holidays   || [];
-      staffNames = b.data.staffNames || [];
-      document.getElementById('ls').style.opacity='0';
-      setTimeout(function(){
-        document.getElementById('ls').style.display='none';
-        document.getElementById('expiredView').classList.add('hidden');
-        // Set home UI
-        document.getElementById('homeEmail').textContent=myEmail;
-        var rp=document.getElementById('homeRolePill');
-        rp.textContent=myRole.toUpperCase();
-        rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'');
-        if(myRole==='staff')rp.style.display='none';
-        document.getElementById('homeView').classList.remove('hidden');
-        initPads();
-      },250);
-    });
-  }).catch(function(){ showExpired(); });
+    var b   = res.data || {};
+
+    // Store all pre-loaded data
+    holidays     = b.holidays     || [];
+    staffNames   = b.staffNames   || [];
+    leaveRecords = b.leaveRecords || [];
+    otRecords    = b.otRecords    || [];
+    allOrders    = b.orders       || [];
+    allMachines  = b.machines     || [];
+    technicians  = b.technicians  || [];
+    machineTypes = b.machineTypes || [];
+
+    document.getElementById('expiredView').classList.add('hidden');
+    document.getElementById('homeEmail').textContent = myEmail;
+    var rp = document.getElementById('homeRolePill');
+    rp.textContent = myRole.toUpperCase();
+    rp.className = 'role-pill ' + (myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');
+    document.getElementById('homeView').classList.remove('hidden');
+    initPads();
+  }).catch(function(e){ showExpired(); });
 }
 
 function showExpired(){
@@ -1248,18 +1290,19 @@ function lResetForm(){
 // ── Leave Admin ──
 function lAdminRefresh(){
   document.getElementById('lRecordsTbody').innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
+  // If we already have data from boot, use it first then refresh in background
+  if(leaveRecords.length>0){
+    lRenderStats();lBuildNF('lNameFilt');lBuildNF('lSchedNF');
+    lFilt(lCurFilt,document.querySelector('.fbtn.on'));
+    lBuildMonthPills();lRenderSched();lRenderCal();lRenderHols();
+  }
   api('getLeaveAdminBundle').then(function(res){
     var b=res.data||{};
     leaveRecords=b.leaveRecords||[];
     holidays=b.holidays||[];
-    lRenderStats();
-    lBuildNF('lNameFilt');
-    lBuildNF('lSchedNF');
+    lRenderStats();lBuildNF('lNameFilt');lBuildNF('lSchedNF');
     lFilt(lCurFilt,document.querySelector('.fbtn.on'));
-    lBuildMonthPills();
-    lRenderSched();
-    lRenderCal();
-    lRenderHols();
+    lBuildMonthPills();lRenderSched();lRenderCal();lRenderHols();
   });
 }
 
@@ -1620,6 +1663,13 @@ function otResetForm(){
 
 // OT Admin
 function otAdminRefresh(){
+  if(otRecords.length>0){
+    document.getElementById('otsTotal').textContent=otRecords.length;
+    document.getElementById('otsPending').textContent=otRecords.filter(function(r){return r.status==='Pending';}).length;
+    document.getElementById('otsApproved').textContent=otRecords.filter(function(r){return r.status==='Approved';}).length;
+    document.getElementById('otsRejected').textContent=otRecords.filter(function(r){return r.status==='Rejected';}).length;
+    lBuildOTNF();otFilt(otCurFilt,document.querySelector('#otAdminView .fbtn.on'));
+  }
   api('getOTAdminBundle').then(function(res){
     var b=res.data||{};
     otRecords=b.otRecords||[];
@@ -1721,6 +1771,13 @@ function ordTab(tab,btn){
 }
 
 function ordLoadMachineTypes(){
+  // Use cached machineTypes if available
+  if(machineTypes.length>0){
+    var sel=document.getElementById('ordMachType');
+    sel.innerHTML='<option value="">Select machine type…</option>';
+    machineTypes.forEach(function(t){sel.add(new Option(t.type,t.type));});
+    return;
+  }
   api('getOrderBundle').then(function(res){
     var b=res.data||{};
     machineTypes=b.machineTypes||[];
@@ -1793,15 +1850,16 @@ function ordAdminTab(tab,btn){
 }
 
 function ordAdminRefresh(){
+  if(allOrders.length>0||allMachines.length>0){
+    ordRenderTbl();machRenderStats();machRenderTbl();
+  }
   api('getOrderAdminBundle').then(function(res){
     var b=res.data||{};
     allOrders=b.orders||[];
     allMachines=b.machines||[];
     technicians=b.technicians||[];
     machineTypes=b.machineTypes||[];
-    ordRenderTbl();
-    machRenderStats();
-    machRenderTbl();
+    ordRenderTbl();machRenderStats();machRenderTbl();
   });
 }
 
