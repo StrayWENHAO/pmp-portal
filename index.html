@@ -2432,7 +2432,7 @@ function ordTechRender(){
       '<td style="font-size:.78rem;">'+o.deliveryDate+'</td>'+
       '<td style="font-size:.78rem;">'+o.location+'</td>'+
       '<td>'+unit+'</td>'+
-      '<td>'+(canAssign?'<button class="ab ab-assign" onclick="openAssign(''+o.orderId+'',''+o.machineType+'','+o.unitQty+',''+o.rowIndex+'')">Assign</button>':'')+'</td>'+
+      '<td>'+(canAssign?'<button class="ab ab-assign" onclick="openAssign(\''+o.orderId+'\',\''+o.machineType+'\','+o.unitQty+',\''+o.rowIndex+'\')" >Assign</button>':'')+'</td>'+
     '</tr>';
   }).join('');
 }
@@ -2457,7 +2457,7 @@ function techMachRender(){
     var sc=m.status==='READY'?'bs-ready':m.status==='ORDERED'?'bs-ordered':'bs-mach-pending';
     var action='';
     if(m.status==='PENDING'){
-      action='<button class="ab ab-ok" onclick="doMarkReady(''+m.unitId+'','+m.rowIndex+')">✅ Mark Ready</button>';
+      action='<button class="ab ab-ok" onclick="doMarkReady(\''+m.unitId+'\','+m.rowIndex+')">✅ Mark Ready</button>';
     }
     return '<tr>'+
       '<td style="font-weight:700;">'+m.unitId+'</td>'+
@@ -2568,10 +2568,10 @@ function ordRenderTblWithRoles(){
   tb.innerHTML=list.map(function(o){
     var unitCell=o.selectedUnit?'<span class="bs bs-ordered">'+o.selectedUnit+'</span>':'<span class="bs bs-pending">Unassigned</span>';
     var subName=o.submittedBy.replace(/\s*\(.*?\)/g,'');
-    var actions='<button class="ab ab-assign" onclick="openAssign(''+o.orderId+'',''+o.machineType+'','+o.unitQty+',''+o.rowIndex+'')">Assign</button>'+
-      '<button class="ab ab-wa" onclick="openWA(''+o.orderId+'',''+o.machineType+'',''+o.deliveryDate+'',''+o.location+'',''+o.requestedBy+'',''+o.unitQty+'',''+o.rentalPeriod+'',''+o.powerType+'',''+o.jobType+'',''+o.specialReq+'')">WA</button>';
+    var actions='<button class="ab ab-assign" onclick="openAssign(\''+o.orderId+'\',\''+o.machineType+'\','+o.unitQty+',\''+o.rowIndex+'\')" >Assign</button>'+
+      '<button class="ab ab-wa" onclick="openWA(\''+o.orderId+'\',\''+o.machineType+'\',\''+o.deliveryDate+'\',\''+o.location+'\',\''+o.requestedBy+'\',\''+o.unitQty+'\',\''+o.rentalPeriod+'\',\''+o.powerType+'\',\''+o.jobType+'\',\''+o.specialReq+'\')" >WA</button>';
     if(isSuperAdmin){
-      actions+='<button class="ab ab-del" onclick="ordDel('+o.rowIndex+',''+o.orderId+'')">Del</button>';
+      actions+='<button class="ab ab-del" onclick="ordDel('+o.rowIndex+',\''+o.orderId+'\')" >Del</button>';
     }
     return '<tr>'+
       '<td style="font-size:.75rem;">'+o.orderId+'</td>'+
