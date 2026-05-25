@@ -7,7 +7,7 @@
     var __idToken = '';   // set after Google Sign-In
   </script>
   <!-- Google Sign-In -->
-  <script src="https://accounts.google.com/gsi/client" async></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Open+Sans:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1065,19 +1065,19 @@ function initGSI(){
   google.accounts.id.initialize({
     client_id:    GOOGLE_CLIENT_ID,
     callback:     onGoogleSignIn,
-    auto_select:  true,
-    use_fedcm_for_prompt: true
+    auto_select:  false,
+    use_fedcm_for_prompt: false,
+    ux_mode:      'popup'
   });
 
-  // Show sign-in button
+  // Show sign-in button only — no One Tap to avoid COOP issues
   var wrap=document.getElementById('gsiButtonWrap');
-  if(wrap) wrap.style.display='flex';
-  google.accounts.id.renderButton(wrap,{
-    theme:'outline', size:'large', width:260, text:'signin_with', locale:'en'
-  });
-
-  // Try One Tap (auto-select if session exists)
-  google.accounts.id.prompt();
+  if(wrap){
+    wrap.style.display='flex';
+    google.accounts.id.renderButton(wrap,{
+      theme:'outline', size:'large', width:260, text:'signin_with', locale:'en'
+    });
+  }
 }
 // Show sign-in page immediately, init GSI
 document.getElementById('ls').style.display='none';
