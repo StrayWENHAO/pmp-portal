@@ -1046,11 +1046,6 @@ function onGoogleSignIn(resp) {
 function showExpired(){
   document.getElementById('ls').style.display='none';
   document.getElementById('expiredView').classList.remove('hidden');
-  // Show sign-in button
-  document.getElementById('expIcon').textContent='🔑';
-  document.getElementById('expTitle').textContent='Sign In Required';
-  document.getElementById('expMsg').textContent='Sign in with your Google account to continue.';
-  document.getElementById('expSubMsg').style.display='none';
   renderGSIButton();
 }
 
@@ -1074,13 +1069,9 @@ function initGSI(){
     use_fedcm_for_prompt: true
   });
 
-  // Show sign-in UI
-  document.getElementById('expIcon').textContent='🔑';
-  document.getElementById('expTitle').textContent='Sign In';
-  document.getElementById('expMsg').textContent='Sign in with your authorised Google account.';
-
+  // Show sign-in button
   var wrap=document.getElementById('gsiButtonWrap');
-  wrap.style.display='flex';
+  if(wrap) wrap.style.display='flex';
   google.accounts.id.renderButton(wrap,{
     theme:'outline', size:'large', width:260, text:'signin_with', locale:'en'
   });
