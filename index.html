@@ -742,6 +742,72 @@
         </div>
       </div>
 
+      <!-- No Access -->
+      <div id="orderNoAccess" class="hidden" style="padding:40px 20px;text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:12px;">🔒</div>
+        <h3 style="font-family:Montserrat,sans-serif;color:#003366;margin-bottom:8px;">No Access</h3>
+        <p style="color:#aaa;font-size:.85rem;">You don't have access to the Order system.</p>
+      </div>
+
+      <!-- Technician View -->
+      <div id="orderTechView" class="hidden">
+        <div class="stabs">
+          <button class="stab on order" onclick="ordTechTab('orders',this)">📋 My Orders</button>
+          <button class="stab" onclick="ordTechTab('machines',this)">🔧 Machines</button>
+        </div>
+
+        <!-- Tech: Dept Orders -->
+        <div id="ordTechOrders">
+          <div class="pcard">
+            <div class="pcard-hdr">
+              <h4>Department Orders</h4>
+              <button class="ab ab-edit" onclick="ordTechRefresh()">↻</button>
+            </div>
+            <div class="pcard-body">
+              <div class="fbar">
+                <button class="fbtn on" onclick="ordTechFilt('',this)">All</button>
+                <button class="fbtn" onclick="ordTechFilt('pending',this)">Unassigned</button>
+                <button class="fbtn" onclick="ordTechFilt('assigned',this)">Assigned</button>
+                <input type="text" id="ordTechSearch" placeholder="Search…" oninput="ordTechRender()">
+              </div>
+              <div class="tbl-wrap">
+                <table class="ptbl">
+                  <thead><tr><th>Order ID</th><th>Machine</th><th>Qty</th><th>Delivery</th><th>Location</th><th>Unit</th><th>Action</th></tr></thead>
+                  <tbody id="ordTechTbody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tech: Machine Status -->
+        <div id="ordTechMachines" class="hidden">
+          <div class="mach-stats">
+            <div class="mach-stat pending"><div class="mv" id="techMsPending">—</div><div class="ml">Pending</div></div>
+            <div class="mach-stat ready"><div class="mv" id="techMsReady">—</div><div class="ml">Ready</div></div>
+            <div class="mach-stat ordered"><div class="mv" id="techMsOrdered">—</div><div class="ml">Ordered</div></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-hdr"><h4>Machine List</h4><button class="ab ab-edit" onclick="ordTechRefresh()">↻</button></div>
+            <div class="pcard-body">
+              <div class="fbar">
+                <button class="fbtn on" onclick="techMachFilt('',this)">All</button>
+                <button class="fbtn" onclick="techMachFilt('PENDING',this)">Pending</button>
+                <button class="fbtn" onclick="techMachFilt('READY',this)">Ready</button>
+                <button class="fbtn" onclick="techMachFilt('ORDERED',this)">Ordered</button>
+                <input type="text" id="techMachSearch" placeholder="Search…" oninput="techMachRender()">
+              </div>
+              <div class="tbl-wrap">
+                <table class="ptbl">
+                  <thead><tr><th>Unit ID</th><th>Brand/Model</th><th>Type</th><th>H/M</th><th>Status</th><th>Action</th></tr></thead>
+                  <tbody id="techMachTbody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Admin Order dashboard -->
       <div id="orderAdminView" class="hidden">
         <div class="stabs">
@@ -754,7 +820,11 @@
           <div class="pcard">
             <div class="pcard-hdr">
               <h4>Order List</h4>
-              <button class="ab ab-edit" onclick="ordAdminRefresh()">↻ Refresh</button>
+              <div style="display:flex;gap:6px;">
+                <button id="ordCreateBtn" class="ab" style="background:#d97706;color:#fff;display:none;"
+                  onclick="ordShowCreateForm()">+ New Order</button>
+                <button class="ab ab-edit" onclick="ordAdminRefresh()">↻</button>
+              </div>
             </div>
             <div class="pcard-body">
               <div class="fbar">
@@ -921,6 +991,68 @@
   </div>
 </div>
 
+<!-- Create Order Modal -->
+<div id="ordCreateModal" class="modal-ov">
+  <div class="modal-box" style="max-width:560px;">
+    <h4>🚧 New Machine Order</h4>
+    <label class="form-label">Machine Type *</label>
+    <select id="ordCrMachType" class="form-control" onchange="ordCrTypeChange()">
+      <option value="">Select machine type…</option>
+    </select>
+    <label class="form-label">Specification *</label>
+    <div class="spec-row">
+      <input type="number" id="ordCrSpecVal" class="form-control" placeholder="Value" min="0" step="0.1">
+      <div class="unit-badge" id="ordCrSpecUnit">—</div>
+    </div>
+    <div class="form-row-2">
+      <div>
+        <label class="form-label">Power Type *</label>
+        <select id="ordCrPower" class="form-control">
+          <option value="AC (Site Power Supply TNB)">AC (TNB)</option>
+          <option value="DC (Site Power Supply TNB)">DC (TNB)</option>
+          <option value="AC (Generator)">AC (Generator)</option>
+          <option value="DC (Battery)">DC (Battery)</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Unit Qty *</label>
+        <input type="number" id="ordCrQty" class="form-control" value="1" min="1">
+      </div>
+    </div>
+    <label class="form-label">Delivery Date *</label>
+    <input type="date" id="ordCrDelDate" class="form-control">
+    <label class="form-label">Rental Period *</label>
+    <input type="text" id="ordCrRental" class="form-control" placeholder="e.g. 1 Month">
+    <label class="form-label">Location / Project Name *</label>
+    <input type="text" id="ordCrLocation" class="form-control" placeholder="Project site name">
+    <label class="form-label">Job Type *</label>
+    <select id="ordCrJobType" class="form-control">
+      <option value="SL">SL — Scissor Lift</option>
+      <option value="BL">BL — Boom Lift</option>
+      <option value="FL">FL — Forklift</option>
+      <option value="TF">TF — Teleforklift</option>
+      <option value="BTL">BTL — Battery Telehandler</option>
+      <option value="GT">GT — Generator</option>
+      <option value="WS">WS — Welding Set</option>
+      <option value="VL">VL — Vertical Lift</option>
+      <option value="LT">LT — Lighting Tower</option>
+      <option value="ATCH">ATCH — Attachment</option>
+    </select>
+    <label class="form-label">Requested By (Company) *</label>
+    <input type="text" id="ordCrReqBy" class="form-control" placeholder="Company / client name">
+    <label class="form-label">Notify Technician (WhatsApp)</label>
+    <select id="ordCrTech" class="form-control">
+      <option value="">— None —</option>
+    </select>
+    <label class="form-label">Special Requirements</label>
+    <textarea id="ordCrSpecReq" class="form-control" rows="2" placeholder="e.g. Good Tire, Motion Alarm…"></textarea>
+    <div class="form-row-2 mt-3">
+      <button onclick="document.getElementById('ordCreateModal').style.display='none'" class="btn btn-light border">Cancel</button>
+      <button onclick="ordDoCreate()" class="btn" style="background:#d97706;color:#fff;">Submit Order</button>
+    </div>
+  </div>
+</div>
+
 <!-- WA Modal -->
 <div id="waModal" class="modal-ov">
   <div class="modal-box">
@@ -936,6 +1068,7 @@
 // GLOBALS
 // ═══════════════════════════════════════════════════════════════
 var myEmail='', myRole='staff', myName='';
+var myLeaveRole='staff', myOTRole='staff', myOrderRole='staff', myDepartment='';
 
 // ── SESSION STORAGE ──────────────────────────────────────────
 function _saveSession(token, email, role) {
@@ -1038,9 +1171,19 @@ window.onload=function(){
         initGSI();
         return;
       }
-      myEmail = res.email; myRole = res.role;
+      myEmail      = res.email;
+      myRole       = res.role;
+      var ar2      = res.authRec || {};
+      myLeaveRole  = ar2.leaveRole  || res.role || 'staff';
+      myOTRole     = ar2.otRole     || res.role || 'staff';
+      myOrderRole  = ar2.orderRole  || res.role || 'staff';
+      myDepartment = ar2.department || '';
       _saveSession(__idToken, myEmail, myRole);
       var b = res.data || {};
+      if (b.leaveRole)  myLeaveRole  = b.leaveRole;
+      if (b.otRole)     myOTRole     = b.otRole;
+      if (b.orderRole)  myOrderRole  = b.orderRole;
+      if (b.department) myDepartment = b.department;
       holidays=b.holidays||[]; staffNames=b.staffNames||[];
       leaveRecords=b.leaveRecords||[]; otRecords=b.otRecords||[];
       allOrders=b.orders||[]; allMachines=b.machines||[];
@@ -1074,11 +1217,25 @@ function onGoogleSignIn(resp) {
   __idToken = resp.credential;
   // Single call: verify token + get role + load ALL data at once
   api('getBootBundle').then(function(res) {
-    if (!res.ok) { showExpired(); return; }
-    myEmail = res.email;
-    myRole  = res.role;
+    if (!res.ok) {
+      if (res.error === 'ACCESS_DENIED') { showAccessDenied(res.email); }
+      else { showExpired(); }
+      return;
+    }
+    myEmail      = res.email;
+    myRole       = res.role; // backward compat (leaveRole)
+    var ar       = res.authRec || {};
+    myLeaveRole  = ar.leaveRole  || res.role || 'staff';
+    myOTRole     = ar.otRole     || res.role || 'staff';
+    myOrderRole  = ar.orderRole  || res.role || 'staff';
+    myDepartment = ar.department || '';
     _saveSession(__idToken, myEmail, myRole);
     var b   = res.data || {};
+    // Also get roles from data bundle
+    if (b.leaveRole)  myLeaveRole  = b.leaveRole;
+    if (b.otRole)     myOTRole     = b.otRole;
+    if (b.orderRole)  myOrderRole  = b.orderRole;
+    if (b.department) myDepartment = b.department;
 
     // Store all pre-loaded data
     holidays     = b.holidays     || [];
@@ -1104,6 +1261,28 @@ function showExpired(){
   document.getElementById('ls').style.display='none';
   document.getElementById('expiredView').classList.remove('hidden');
   renderGSIButton();
+}
+
+function showAccessDenied(email) {
+  document.getElementById('ls').style.display='none';
+  var ev = document.getElementById('expiredView');
+  ev.classList.remove('hidden');
+  // Show access denied message instead of sign-in button
+  var card = ev.querySelector('.exp-card');
+  if (card) {
+    card.innerHTML =
+      '<div style="font-size:2.5rem;margin-bottom:16px;">🚫</div>'+
+      '<h3 style="font-family:Montserrat,sans-serif;color:#cc0000;font-size:1rem;margin-bottom:8px;">Access Denied</h3>'+
+      '<p style="color:#666;font-size:.85rem;line-height:1.6;margin-bottom:20px;">'+
+        'The account <b>'+(email||'')+'</b> is not authorised to access this portal.<br><br>'+
+        'Please contact your administrator.'+
+      '</p>'+
+      '<button onclick="google.accounts.id.disableAutoSelect();_clearSession();location.reload();" '+
+        'style="background:#003366;color:#fff;border:none;border-radius:10px;padding:10px 24px;'+
+        'font-weight:700;cursor:pointer;font-size:.85rem;">'+
+        'Try Different Account'+
+      '</button>';
+  }
 }
 
 function renderGSIButton(){
@@ -1186,7 +1365,7 @@ function openApp(app){
 // LEAVE SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function loadLeaveApp(){
-  if(myRole==='superadmin'||myRole==='admin'){
+  if(myLeaveRole==='superadmin'||myLeaveRole==='admin'){
     document.getElementById('leaveAdminView').classList.remove('hidden');
     lAdminRefresh();
   } else {
@@ -1655,7 +1834,7 @@ function lRenderHols(){
 // OT SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function loadOTApp(){
-  if(myRole==='superadmin'||myRole==='admin'){
+  if(myOTRole==='superadmin'||myOTRole==='admin'){
     document.getElementById('otAdminView').classList.remove('hidden');
     otAdminRefresh();
   } else {
@@ -1860,21 +2039,37 @@ function otDel(ri,id,name){
 // ORDER SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function loadOrderApp(){
-  if(myRole==='superadmin'||myRole==='admin'){
+  if(myOrderRole==='superadmin'){
+    // Superadmin: full control
     document.getElementById('orderAdminView').classList.remove('hidden');
     ordAdminRefresh();
+    // Show create order button
+    document.getElementById('ordCreateBtn').style.display='';
+  } else if(myOrderRole==='admin'){
+    // Admin: can see all + create, but no edit/delete/cancel
+    document.getElementById('orderAdminView').classList.remove('hidden');
+    ordAdminRefresh();
+    document.getElementById('ordCreateBtn').style.display='';
+    // Hide edit/delete/cancel buttons - handled in render
+  } else if(myOrderRole==='technician'){
+    // Technician: see dept orders + machine status + assign
+    document.getElementById('orderTechView').classList.remove('hidden');
+    // Load tech data
+    api('getOrderAdminBundle').then(function(res){
+      var b=res.data||{};
+      allOrders=b.orders||[];
+      allMachines=b.machines||[];
+      machineTypes=b.machineTypes||[];
+      technicians=b.technicians||[];
+      document.getElementById('techMsPending').textContent=allMachines.filter(function(m){return m.status==='PENDING';}).length;
+      document.getElementById('techMsReady').textContent=allMachines.filter(function(m){return m.status==='READY';}).length;
+      document.getElementById('techMsOrdered').textContent=allMachines.filter(function(m){return m.status==='ORDERED';}).length;
+      ordTechRender();
+      techMachRender();
+    });
   } else {
-    // Staff = Technician view: see machines, mark ready, assign unit
-    // No create order button
-    document.getElementById('orderStaffView').classList.remove('hidden');
-    // Hide New Order tab, only show machines/status
-    ordLoadMachineTypes();
-    ordLoadMyOrders();
-    // Hide the New Order tab for staff
-    var formTab = document.querySelector('#orderStaffView .stab:first-child');
-    if(formTab) formTab.style.display='none';
-    // Show My Orders tab by default
-    ordTab('myorders', document.querySelectorAll('#orderStaffView .stab')[1]);
+    // Staff: no order access
+    document.getElementById('orderNoAccess').classList.remove('hidden');
   }
 }
 
@@ -1983,8 +2178,10 @@ function ordFilt(f,btn){
   ordStatusFilt=f;
   document.querySelectorAll('#ordAdminOrders .fbar .fbtn').forEach(function(b){b.classList.remove('on');});
   if(btn)btn.classList.add('on');
-  ordRenderTbl();
+  ordRenderTblWithRoles();
 }
+
+function ordRenderTbl(){ ordRenderTblWithRoles(); }
 
 function ordRenderTbl(){
   var search=document.getElementById('ordSearch').value.toLowerCase();
@@ -2176,6 +2373,217 @@ function openWA(orderId,machType,delDate,location,reqBy,qty,rental,power,jobType
 
 function logWA(orderId,name,phone){
   apiPost('logWA',{orderId:orderId,techName:name,techPhone:phone});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ORDER TECHNICIAN VIEW
+// ═══════════════════════════════════════════════════════════════
+var ordTechFiltVal = '';
+var techMachFiltVal = '';
+
+function ordTechTab(tab, btn){
+  document.getElementById('ordTechOrders').classList.toggle('hidden', tab!=='orders');
+  document.getElementById('ordTechMachines').classList.toggle('hidden', tab!=='machines');
+  document.querySelectorAll('#orderTechView .stab').forEach(function(b){b.classList.remove('on','order');});
+  btn.classList.add('on','order');
+}
+
+function ordTechRefresh(){
+  api('getOrderAdminBundle').then(function(res){
+    var b=res.data||{};
+    allOrders=b.orders||[];
+    allMachines=b.machines||[];
+    machineTypes=b.machineTypes||[];
+    technicians=b.technicians||[];
+    var ep=document.getElementById('techMsPending');
+    var er=document.getElementById('techMsReady');
+    var eo=document.getElementById('techMsOrdered');
+    if(ep) ep.textContent=allMachines.filter(function(m){return m.status==='PENDING';}).length;
+    if(er) er.textContent=allMachines.filter(function(m){return m.status==='READY';}).length;
+    if(eo) eo.textContent=allMachines.filter(function(m){return m.status==='ORDERED';}).length;
+    ordTechRender();
+    techMachRender();
+  });
+}
+
+function ordTechFilt(f, btn){
+  ordTechFiltVal=f;
+  document.querySelectorAll('#ordTechOrders .fbar .fbtn').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  ordTechRender();
+}
+
+function ordTechRender(){
+  var search=document.getElementById('ordTechSearch').value.toLowerCase();
+  var list=allOrders.filter(function(o){
+    var matchF=ordTechFiltVal===''||(ordTechFiltVal==='pending'&&!o.selectedUnit)||(ordTechFiltVal==='assigned'&&!!o.selectedUnit);
+    var matchS=!search||(o.orderId+o.machineType+o.location+o.requestedBy).toLowerCase().indexOf(search)>-1;
+    return matchF&&matchS;
+  });
+  var tb=document.getElementById('ordTechTbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="7" class="empty">No orders.</td></tr>';return;}
+  tb.innerHTML=list.map(function(o){
+    var unit=o.selectedUnit?'<span class="bs bs-ordered">'+o.selectedUnit+'</span>':'<span class="bs bs-pending">Unassigned</span>';
+    var canAssign=!o.selectedUnit;
+    return '<tr>'+
+      '<td style="font-size:.75rem;font-weight:700;">'+o.orderId+'</td>'+
+      '<td>'+o.machineType+'<br><span style="font-size:.7rem;color:#aaa;">'+o.specValue+' '+o.specUnit+'</span></td>'+
+      '<td style="text-align:center;">'+o.unitQty+'</td>'+
+      '<td style="font-size:.78rem;">'+o.deliveryDate+'</td>'+
+      '<td style="font-size:.78rem;">'+o.location+'</td>'+
+      '<td>'+unit+'</td>'+
+      '<td>'+(canAssign?'<button class="ab ab-assign" onclick="openAssign(''+o.orderId+'',''+o.machineType+'','+o.unitQty+',''+o.rowIndex+'')">Assign</button>':'')+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function techMachFilt(f, btn){
+  techMachFiltVal=f;
+  document.querySelectorAll('#ordTechMachines .fbar .fbtn').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  techMachRender();
+}
+
+function techMachRender(){
+  var search=document.getElementById('techMachSearch').value.toLowerCase();
+  var list=allMachines.filter(function(m){
+    var matchF=!techMachFiltVal||m.status===techMachFiltVal;
+    var matchS=!search||(m.unitId+m.brand+m.model+m.machineType).toLowerCase().indexOf(search)>-1;
+    return matchF&&matchS;
+  });
+  var tb=document.getElementById('techMachTbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="6" class="empty">No machines.</td></tr>';return;}
+  tb.innerHTML=list.map(function(m){
+    var sc=m.status==='READY'?'bs-ready':m.status==='ORDERED'?'bs-ordered':'bs-mach-pending';
+    var action='';
+    if(m.status==='PENDING'){
+      action='<button class="ab ab-ok" onclick="doMarkReady(''+m.unitId+'','+m.rowIndex+')">✅ Mark Ready</button>';
+    }
+    return '<tr>'+
+      '<td style="font-weight:700;">'+m.unitId+'</td>'+
+      '<td>'+m.brand+' '+m.model+'</td>'+
+      '<td style="font-size:.78rem;">'+m.machineType+'</td>'+
+      '<td style="font-size:.78rem;">'+m.hmReading+'</td>'+
+      '<td><span class="bs '+sc+'">'+m.status+'</span></td>'+
+      '<td>'+action+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ORDER CREATE (Admin/Superadmin)
+// ═══════════════════════════════════════════════════════════════
+function ordShowCreateForm(){
+  // Populate machine types
+  var sel=document.getElementById('ordCrMachType');
+  sel.innerHTML='<option value="">Select machine type…</option>';
+  machineTypes.forEach(function(t){sel.add(new Option(t.type,t.type));});
+  // Populate technicians
+  var tsel=document.getElementById('ordCrTech');
+  tsel.innerHTML='<option value="">— None —</option>';
+  technicians.forEach(function(t){tsel.add(new Option(t.name+' ('+t.department+')', t.name+'|'+t.phone+'|'+t.department));});
+  document.getElementById('ordCreateModal').style.display='flex';
+}
+
+function ordCrTypeChange(){
+  var type=document.getElementById('ordCrMachType').value;
+  var found=machineTypes.find(function(t){return t.type===type;});
+  document.getElementById('ordCrSpecUnit').textContent=found?found.unit:'—';
+}
+
+function ordDoCreate(){
+  var type=document.getElementById('ordCrMachType').value;
+  var spec=document.getElementById('ordCrSpecVal').value;
+  var del=document.getElementById('ordCrDelDate').value;
+  var rental=document.getElementById('ordCrRental').value.trim();
+  var loc=document.getElementById('ordCrLocation').value.trim();
+  var req=document.getElementById('ordCrReqBy').value.trim();
+  if(!type||!spec||!del||!rental||!loc||!req){Swal.fire('Incomplete','Fill all required fields.','warning');return;}
+
+  var techVal=document.getElementById('ordCrTech').value;
+  var dept='';
+  var techName='', techPhone='';
+  if(techVal){
+    var parts=techVal.split('|');
+    techName=parts[0]||''; techPhone=parts[1]||''; dept=parts[2]||'';
+  }
+
+  Swal.fire({title:'Submitting…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+  apiPost('submitOrder',{
+    machineType:type, specValue:spec,
+    specUnit:document.getElementById('ordCrSpecUnit').textContent,
+    powerType:document.getElementById('ordCrPower').value,
+    unitQty:document.getElementById('ordCrQty').value,
+    deliveryDate:del, rentalPeriod:rental, location:loc,
+    jobType:document.getElementById('ordCrJobType').value,
+    requestedBy:req, department:dept,
+    specialReq:document.getElementById('ordCrSpecReq').value
+  }).then(function(res){
+    Swal.close();
+    document.getElementById('ordCreateModal').style.display='none';
+    if(res.ok){
+      var successMsg='Order created! ID: '+res.id;
+      // Send WhatsApp if technician selected
+      if(techName&&techPhone){
+        var url=window.location.href.split('?')[0];
+        var msg='*NEW JOB ASSIGNMENT*\n----------------------\n'+
+          '*Order ID:* '+res.id+'\n*Machine:* '+type+'\nQty: '+
+          document.getElementById('ordCrQty').value+' Unit(s)\n'+
+          'Rental: '+rental+'\nPower: '+document.getElementById('ordCrPower').value+'\n'+
+          '*Delivery:* '+del+'\nLocation: '+loc+'\nRequested by: '+req+
+          (document.getElementById('ordCrSpecReq').value?'\nRequirements: '+document.getElementById('ordCrSpecReq').value:'')+
+          '\n\nUpdate here:\n'+url;
+        var waUrl='https://wa.me/60'+techPhone.replace(/^0/,'').replace(/\D/g,'')+'?text='+encodeURIComponent(msg);
+        Swal.fire({
+          title:'✅ Order Created!',
+          html:'ID: <b>'+res.id+'</b><br><br>Send WhatsApp to <b>'+techName+'</b>?',
+          showCancelButton:true,
+          confirmButtonText:'📱 Send WhatsApp',
+          cancelButtonText:'Done',
+          confirmButtonColor:'#25d366'
+        }).then(function(r){
+          if(r.isConfirmed) window.open(waUrl,'_blank');
+          logWA(res.id, techName, techPhone);
+          ordAdminRefresh();
+        });
+      } else {
+        Swal.fire('✅ Order Created!','ID: '+res.id,'success');
+        ordAdminRefresh();
+      }
+    } else Swal.fire('Error',res.error,'error');
+  });
+}
+
+// Update admin order table to hide edit/delete for admin role
+function ordRenderTblWithRoles(){
+  var search=document.getElementById('ordSearch').value.toLowerCase();
+  var list=allOrders.filter(function(o){
+    var matchF=ordStatusFilt===''||(ordStatusFilt==='pending'&&!o.selectedUnit)||(ordStatusFilt==='assigned'&&!!o.selectedUnit);
+    var matchS=!search||(o.orderId+o.machineType+o.location+o.requestedBy+o.submittedBy+(o.selectedUnit||'')).toLowerCase().indexOf(search)>-1;
+    return matchF&&matchS;
+  });
+  var tb=document.getElementById('ordTbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="9" class="empty">No orders.</td></tr>';return;}
+  var isSuperAdmin=(myOrderRole==='superadmin');
+  tb.innerHTML=list.map(function(o){
+    var unitCell=o.selectedUnit?'<span class="bs bs-ordered">'+o.selectedUnit+'</span>':'<span class="bs bs-pending">Unassigned</span>';
+    var subName=o.submittedBy.replace(/\s*\(.*?\)/g,'');
+    var actions='<button class="ab ab-assign" onclick="openAssign(''+o.orderId+'',''+o.machineType+'','+o.unitQty+',''+o.rowIndex+'')">Assign</button>'+
+      '<button class="ab ab-wa" onclick="openWA(''+o.orderId+'',''+o.machineType+'',''+o.deliveryDate+'',''+o.location+'',''+o.requestedBy+'',''+o.unitQty+'',''+o.rentalPeriod+'',''+o.powerType+'',''+o.jobType+'',''+o.specialReq+'')">WA</button>';
+    if(isSuperAdmin){
+      actions+='<button class="ab ab-del" onclick="ordDel('+o.rowIndex+',''+o.orderId+'')">Del</button>';
+    }
+    return '<tr>'+
+      '<td style="font-size:.75rem;">'+o.orderId+'</td>'+
+      '<td style="font-weight:700;">'+o.machineType+'<br><span style="font-size:.7rem;color:#aaa;">'+o.specValue+' '+o.specUnit+'</span></td>'+
+      '<td style="text-align:center;">'+o.unitQty+'</td>'+
+      '<td style="font-size:.78rem;">'+o.deliveryDate+'</td>'+
+      '<td style="font-size:.78rem;">'+o.location+'</td>'+
+      '<td style="font-size:.78rem;">'+o.requestedBy+'</td>'+
+      '<td>'+unitCell+'</td>'+
+      '<td style="font-size:.75rem;color:#888;">'+subName+'</td>'+
+      '<td><div class="act">'+actions+'</div></td></tr>';
+  }).join('');
 }
 </script>
 </body>
