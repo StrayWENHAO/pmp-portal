@@ -1649,7 +1649,7 @@ function lRenderCal(){
     var ds=lCalYear+'-'+pad(lCalMonth+1)+'-'+pad(d);
     var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(lCalYear,lCalMonth,parseInt(d)).getDay()];
     infoHtml+='<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid #f3f3f3;">'+
-      '<div style="font-family:'DM Mono',monospace;font-size:.73rem;color:var(--blue);min-width:90px;">'+ds+' '+dow+'</div>'+
+      '<div style="font-family:\'DM Mono\',monospace;font-size:.73rem;color:var(--blue);min-width:90px;">'+ds+' '+dow+'</div>'+
       '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+
       leaveMap[d].map(function(n){return'<span style="background:#dbeafe;color:#1e40af;border-radius:12px;padding:2px 8px;font-size:.7rem;font-weight:600;">'+n+'</span>';}).join('')+
       '</div></div>';
