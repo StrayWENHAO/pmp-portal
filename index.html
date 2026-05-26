@@ -249,9 +249,7 @@ body {
 #pmpShell {
   display: flex; min-height: 100vh;
 }
-/* Hide mobile topbar when shell not visible */
-#pmpShell.hidden ~ * #mobileTopbar,
-body:not(.shell-visible) #mobileTopbar { display: none; }
+
 
 /* ── SIDEBAR ── */
 #pmpSidebar {
@@ -358,16 +356,19 @@ body:not(.shell-visible) #mobileTopbar { display: none; }
 
 /* ── MOBILE TOPBAR ── */
 #mobileTopbar {
-  display: none;
   background: var(--sidebar-bg);
   padding: 0 16px;
   height: 52px;
   align-items: center; justify-content: space-between;
   position: sticky; top: 0; z-index: 150;
   box-shadow: var(--shadow-sm);
+  display: none;
+}
+@media(max-width: 991px) {
+  #mobileTopbar { display: flex; }
 }
 @media(max-width: 991px) { #mobileTopbar { display: flex; }
-  #pmpShell.hidden #mobileTopbar { display: none; }
+  #pmpShell.hidden 
 }
 .mobile-menu-btn {
   background: rgba(255,255,255,0.08); border: none;
