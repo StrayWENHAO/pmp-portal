@@ -164,15 +164,11 @@ body {
 ════════════════════════════════════════════ */
 #expiredView {
   min-height: 100vh; display: flex;
-  background: var(--sidebar-bg);
+  background: #ffffff;
   position: relative; overflow: hidden;
 }
 #expiredView::before {
-  content: ''; position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 50%, rgba(0,68,136,0.4) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 80% at 80% 30%, rgba(0,34,68,0.6) 0%, transparent 60%);
-  pointer-events: none;
+  content: none;
 }
 /* Sign-in left brand panel */
 #expiredView .signin-brand {
@@ -182,9 +178,10 @@ body {
   flex-direction: column;
   justify-content: center;
   position: relative;
+  background: var(--sidebar-bg);
 }
 @media(min-width: 800px) {
-  #expiredView .signin-brand { display: flex; }
+  #expiredView .signin-brand { display: flex; min-height: 100vh; }
 }
 #expiredView .signin-brand .brand-logo {
   width: 160px; margin-bottom: 32px;
@@ -216,7 +213,7 @@ body {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: 40px 32px;
-  background: var(--bg-surface);
+  background: #ffffff;
   border-radius: 0;
   max-width: 100%;
   width: 100%;
@@ -288,9 +285,9 @@ body {
 }
 
 .sidebar-user {
-  padding: 14px 16px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--sidebar-border);
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 12px;
   flex-shrink: 0;
 }
 .sidebar-avatar {
@@ -961,8 +958,11 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
 <!-- LOADING -->
 <div id="ls">
-  <img class="ls-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
-       onerror="this.style.display='none'" alt="PMP">
+  <div style="background:#fff;border-radius:16px;padding:12px 20px;margin-bottom:20px;">
+    <img class="ls-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
+         style="width:200px;display:block;margin-bottom:0;"
+         onerror="this.style.display='none'" alt="PMP">
+  </div>
   <div class="ls-sub">Operations Platform</div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
     <div class="ring"></div>
@@ -974,8 +974,11 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 <div id="expiredView" class="hidden">
   <!-- Left brand panel (desktop) -->
   <div class="signin-brand">
-    <img class="brand-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
-         onerror="this.style.display='none'" alt="PMP">
+    <div style="background:#fff;border-radius:12px;padding:10px 16px;margin-bottom:24px;display:inline-block;align-self:flex-start;">
+      <img class="brand-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
+           style="width:180px;display:block;margin-bottom:0;"
+           onerror="this.style.display='none'" alt="PMP">
+    </div>
     <h1>Industrial Operations Platform</h1>
     <p>PMP Equipments internal operations management system for fleet, workforce, and rental dispatch.</p>
     <div class="brand-features">
@@ -1018,11 +1021,13 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
   <!-- ── SIDEBAR ── -->
   <nav id="pmpSidebar">
-    <div class="sidebar-header" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 12px 18px;width:100%;">
-      <img class="sidebar-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
-           style="width:160px;display:block;margin:0 auto;"
-           onerror="this.style.display='none'" alt="PMP">
-      <div class="sidebar-tagline" style="text-align:center;width:100%;margin-top:8px;">Operations Platform</div>
+    <div class="sidebar-header" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 16px 18px;width:100%;">
+      <div style="background:#fff;border-radius:12px;padding:10px 16px;margin-bottom:10px;display:inline-block;">
+        <img class="sidebar-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
+             style="width:140px;display:block;"
+             onerror="this.style.display='none'" alt="PMP">
+      </div>
+      <div class="sidebar-tagline" style="text-align:center;width:100%;margin-top:4px;">Operations Platform</div>
     </div>
 
     <div class="sidebar-user">
