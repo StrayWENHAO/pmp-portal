@@ -231,8 +231,8 @@ body {
 .exp-card .signin-form-inner {
   width: 100%; max-width: 360px;
 }
-.exp-card .signin-logo { width: 180px; margin-bottom: 8px; display: none; }
-@media(max-width: 799px) { .exp-card .signin-logo { display: block; margin: 0 auto 8px; } }
+.exp-card .signin-logo { width: 260px; margin-bottom: 12px; display: none; }
+@media(max-width: 799px) { .exp-card .signin-logo { display: block; margin: 0 auto 12px; } }
 .exp-card .signin-title {
   font-size: 1.4rem; font-weight: 700; color: var(--text-primary);
   margin-bottom: 4px; letter-spacing: -.3px;
@@ -302,13 +302,15 @@ body {
 }
 .sidebar-user-info { min-width: 0; }
 .sidebar-user-email {
-  font-size: .68rem; color: rgba(255,255,255,0.5);
+  font-size: .76rem; color: rgba(255,255,255,0.7);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-weight: 500;
 }
 .sidebar-user-role {
-  font-size: .6rem; color: rgba(255,255,255,0.3);
+  font-size: .68rem; color: rgba(255,255,255,0.45);
   text-transform: uppercase; letter-spacing: .5px;
   font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
 }
 
 .sidebar-nav {
@@ -738,7 +740,8 @@ textarea.form-control { resize: vertical; min-height: 80px; }
    TABLE SYSTEM
 ════════════════════════════════════════════ */
 .tbl-wrap { overflow-x: auto; }
-.ptbl { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.ptbl { width: 100%; border-collapse: collapse; font-size: .8rem; table-layout: auto; }
+.ptbl td, .ptbl th { overflow: hidden; }
 .ptbl th {
   background: var(--bg-subtle); padding: 9px 12px; text-align: left;
   font-size: .64rem; font-weight: 600; color: var(--text-secondary);
@@ -1107,19 +1110,24 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
 
         <!-- Quick Actions -->
-        <!-- Notice Banner -->
+        <!-- Notice + Clock Banner -->
         <div id="noticeBanner" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-md);padding:0;margin-bottom:16px;overflow:hidden;display:none;">
           <div style="display:flex;align-items:stretch;">
             <div style="background:#003366;width:4px;flex-shrink:0;"></div>
-            <div style="flex:1;padding:12px 16px;min-height:52px;display:flex;align-items:center;">
-              <div style="flex:1;">
-                <div id="noticeText" style="font-size:.84rem;color:var(--text-primary);font-weight:500;"></div>
-                <div id="noticeTime" style="font-size:.68rem;color:var(--text-tertiary);margin-top:2px;font-family:monospace;"></div>
+            <div style="flex:1;padding:12px 16px;min-height:56px;display:flex;align-items:center;gap:16px;">
+              <div style="flex:1;min-width:0;">
+                <div id="noticeText" style="font-size:.84rem;color:var(--text-primary);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                <div id="noticeDate" style="font-size:.68rem;color:var(--text-tertiary);margin-top:2px;"></div>
               </div>
-              <div id="noticeDots" style="display:flex;gap:5px;margin-left:12px;flex-shrink:0;"></div>
+              <div id="noticeDots" style="display:flex;gap:5px;flex-shrink:0;"></div>
+              <!-- Digital Clock -->
+              <div style="border-left:1px solid var(--border);padding-left:16px;flex-shrink:0;text-align:right;">
+                <div id="digitalClock" style="font-family:monospace;font-size:1.4rem;font-weight:700;color:#003366;letter-spacing:2px;line-height:1;"></div>
+                <div id="digitalDate" style="font-size:.62rem;color:var(--text-tertiary);margin-top:2px;letter-spacing:.5px;"></div>
+              </div>
             </div>
-            <div id="noticeEditBtn" style="display:none;padding:12px;">
-              <button onclick="openNoticeEditor()" style="background:none;border:1px solid var(--border);border-radius:var(--r-xs);padding:4px 10px;font-size:.7rem;color:var(--text-secondary);cursor:pointer;">Edit</button>
+            <div id="noticeEditBtn" style="display:none;padding:12px;align-items:center;display:flex;">
+              <button onclick="openNoticeEditor()" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:.7rem;color:var(--text-secondary);cursor:pointer;">Edit</button>
             </div>
           </div>
         </div>
@@ -1264,6 +1272,13 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
       <!-- Admin/Superadmin: dashboard -->
       <div id="leaveAdminView" class="hidden">
+        <!-- Action buttons row -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px;margin-top:8px;">
+          <button onclick="openApplyLeaveModal()" 
+            style="background:#003366;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:.82rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,51,102,0.2);">
+            <span>✏️</span> Apply Leave
+          </button>
+        </div>
         <!-- Stats -->
         <div class="stats-row">
           <div class="stat-card"><div class="stat-val" id="lsTotal" style="color:var(--blue);">—</div><div class="stat-lbl">Total</div></div>
@@ -1277,7 +1292,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <button class="stab on leave" onclick="lAdminTab('records',this)">📋 Records</button>
           <button class="stab" onclick="lAdminTab('schedule',this)">🗓 Schedule</button>
           <button class="stab" onclick="lAdminTab('calendar',this)">📅 Calendar</button>
-          <button class="stab stab-action" onclick="lAdminTab('apply',this)">✏️ Apply Leave</button>
+
         </div>
 
         <!-- Records -->
@@ -1529,7 +1544,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div style="padding:9px 16px;border-bottom:2px solid var(--ot-color);color:var(--ot-color);font-size:.78rem;font-weight:600;margin-bottom:-1px;">📋 Records</div>
           <div style="flex:1;"></div>
           <button onclick="otAdminRefresh()" style="background:none;border:none;color:var(--text-secondary);font-size:.76rem;cursor:pointer;padding:6px 10px;">↻ Refresh</button>
-          <button onclick="qaSubmitOT()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:.76rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+          <button onclick="openSubmitOTModal()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:.76rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:2px;">
             ⏱ Submit OT
           </button>
         </div>
@@ -1722,7 +1737,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="stat-card"><div class="stat-val" id="ordStMachines" style="color:var(--navy);">—</div><div class="stat-lbl">Total Fleet</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);margin-bottom:20px;padding-bottom:0;">
-          <button class="stab on order" id="ordTabBtn1" onclick="ordAdminTab('orders',this)" style="border-bottom:2px solid var(--order-color);color:var(--order-color);margin-bottom:-1px;">📋 Orders</button>
+          <button class="stab on order" id="ordTabBtn1" onclick="ordAdminTab('orders',this)">📋 Orders</button>
           <button class="stab" id="ordTabBtn2" onclick="ordAdminTab('machines',this)">🚗 Machines</button>
           <div style="flex:1;"></div>
           <button id="ordCreateBtn" style="display:none;background:#d97706;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:.76rem;font-weight:600;cursor:pointer;margin-bottom:2px;"
@@ -2032,6 +2047,125 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     <div class="form-row-2 mt-3">
       <button onclick="document.getElementById('ordCreateModal').style.display='none'" class="btn btn-light border">Cancel</button>
       <button onclick="ordDoCreate()" class="btn" style="background:#d97706;color:#fff;font-weight:700;">Submit Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- Apply Leave Modal -->
+<div id="applyLeaveModal" class="modal-ov">
+  <div class="modal-box" style="max-width:560px;">
+    <h4>✏️ Apply Leave</h4>
+    <label class="form-label">Staff Name *</label>
+    <div class="input-group">
+      <input type="text" id="alStaffName" class="form-control" placeholder="Enter Full Name">
+      <div class="input-group-append">
+        <button class="btn" style="background:var(--navy);color:#fff;border-radius:0 6px 6px 0;font-weight:600;" onclick="alVerify()">Verify</button>
+      </div>
+    </div>
+    <div id="alVbadge" style="color:#16a34a;font-size:.74rem;font-weight:600;margin-top:4px;display:none;">✅ Verified & Locked</div>
+    <input type="hidden" id="alVerified" value="false">
+    <label class="form-label">Email *</label>
+    <input type="email" id="alEmail" class="form-control" readonly style="background:var(--bg-subtle);">
+    <label class="form-label">Leave Type *</label>
+    <select id="alType" class="form-control">
+      <option value="Annual Leave">Annual Leave</option>
+      <option value="Medical Leave (MC)">Medical Leave (MC)</option>
+      <option value="Emergency Leave">Emergency Leave</option>
+      <option value="Unpaid Leave">Unpaid Leave</option>
+    </select>
+    <div class="form-row-2 mt-2">
+      <div>
+        <label class="form-label">Start Date</label>
+        <input type="date" id="alStartDate" class="form-control" onchange="alCalcDur()">
+      </div>
+      <div>
+        <label class="form-label">End Date</label>
+        <input type="date" id="alEndDate" class="form-control" onchange="alCalcDur()">
+      </div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-left:3px solid #003366;border-radius:6px;padding:12px;text-align:center;margin-top:12px;">
+      <div style="font-size:.68rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">Total Working Days</div>
+      <div id="alDurDisp" style="font-family:monospace;font-size:1.8rem;font-weight:700;color:#003366;line-height:1.2;">0</div>
+      <input type="hidden" id="alDuration">
+    </div>
+    <label class="form-label">Reason *</label>
+    <textarea id="alReason" class="form-control" rows="2" placeholder="Brief explanation…"></textarea>
+    <label class="form-label">Signature *</label>
+    <canvas id="alSigPad" class="sig-canvas"></canvas>
+    <button type="button" onclick="alPad&&alPad.clear()" style="background:none;border:none;color:#9ca3af;font-size:.74rem;cursor:pointer;padding:4px 0;">✕ Clear</button>
+    <div class="form-row-2 mt-3">
+      <button onclick="document.getElementById('applyLeaveModal').style.display='none'" class="btn btn-light border">Cancel</button>
+      <button onclick="alSubmit()" class="btn" style="background:#003366;color:#fff;font-weight:600;">Submit Application</button>
+    </div>
+  </div>
+</div>
+
+<!-- Submit OT Modal -->
+<div id="submitOTModal" class="modal-ov">
+  <div class="modal-box" style="max-width:560px;">
+    <h4>⏱ Submit Overtime Application</h4>
+    <label class="form-label">Application Type *</label>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <div id="sotTypePre" onclick="sotSetType('Pre')" style="flex:1;padding:9px;border:1px solid #003366;border-radius:6px;background:#eff6ff;font-weight:500;font-size:.78rem;cursor:pointer;color:#003366;text-align:center;">Pre-Application</div>
+      <div id="sotTypePost" onclick="sotSetType('Post')" style="flex:1;padding:9px;border:1px solid #e5e9ef;border-radius:6px;background:#f8fafc;font-weight:500;font-size:.78rem;cursor:pointer;color:#6b7280;text-align:center;">Post-Application</div>
+    </div>
+    <input type="hidden" id="sotType" value="Pre">
+    <label class="form-label">Employee Name *</label>
+    <div class="input-group">
+      <input type="text" id="sotEmpName" class="form-control" placeholder="Enter Full Name">
+      <div class="input-group-append">
+        <button class="btn" style="background:#16a34a;color:#fff;border-radius:0 6px 6px 0;font-weight:600;" onclick="sotVerify()">Verify</button>
+      </div>
+    </div>
+    <div id="sotVbadge" style="color:#16a34a;font-size:.74rem;font-weight:600;margin-top:4px;display:none;">✅ Verified & Locked</div>
+    <input type="hidden" id="sotVerified" value="false">
+    <div class="form-row-2">
+      <div>
+        <label class="form-label">Department *</label>
+        <select id="sotDept" class="form-control">
+          <option value="Office">Office</option>
+          <option value="Workshop">Workshop</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">OT Date *</label>
+        <input type="date" id="sotDate" class="form-control">
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div>
+        <label class="form-label">Reason / Unit No *</label>
+        <input type="text" id="sotReason" class="form-control" placeholder="e.g. BL149 — servicing">
+      </div>
+      <div>
+        <label class="form-label">Est. OT Hours *</label>
+        <select id="sotEstHours" class="form-control">
+          <option value="0.5">0.5 hr</option><option value="1">1 hr</option>
+          <option value="1.5">1.5 hr</option><option value="2">2 hr</option>
+          <option value="2.5">2.5 hr</option><option value="3">3 hr</option>
+          <option value="4">4 hr</option><option value="5">5 hr</option>
+          <option value="6">6 hr</option>
+        </select>
+      </div>
+    </div>
+    <label class="form-label">Job Location *</label>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <label style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #e5e9ef;border-radius:6px;cursor:pointer;" id="sotLocOfficeLabel">
+        <input type="radio" name="sotLoc" value="Office" checked onchange="sotSetLoc(this)"> Office
+      </label>
+      <label style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #e5e9ef;border-radius:6px;cursor:pointer;" id="sotLocWorkshopLabel">
+        <input type="radio" name="sotLoc" value="Workshop" onchange="sotSetLoc(this)"> Workshop
+      </label>
+    </div>
+    <input type="hidden" id="sotLocVal" value="Office">
+    <label class="form-label">Requested By *</label>
+    <input type="text" id="sotReqBy" class="form-control" placeholder="Requester name / company">
+    <label class="form-label">Signature *</label>
+    <canvas id="sotSigPad" class="sig-canvas"></canvas>
+    <button type="button" onclick="sotPad&&sotPad.clear()" style="background:none;border:none;color:#9ca3af;font-size:.74rem;cursor:pointer;padding:4px 0;">✕ Clear</button>
+    <div class="form-row-2 mt-3">
+      <button onclick="document.getElementById('submitOTModal').style.display='none'" class="btn btn-light border">Cancel</button>
+      <button onclick="sotSubmit()" class="btn" style="background:#16a34a;color:#fff;font-weight:600;">Submit OT</button>
     </div>
   </div>
 </div>
@@ -3764,14 +3898,14 @@ function ordRenderTblWithRoles(){
       actions+='<button class="ab ab-del" onclick="ordDel('+o.rowIndex+',\''+o.orderId+'\')" >Del</button>';
     }
     return '<tr>'+
-      '<td style="font-size:.72rem;font-family:monospace;white-space:nowrap;width:1%;padding-right:8px;">'+o.orderId+'</td>'+
+      '<td style="font-size:.72rem;font-family:monospace;white-space:nowrap;max-width:140px;">'+o.orderId+'</td>'+
       '<td style="font-weight:600;min-width:120px;">'+o.machineType+'<br><span style="font-size:.72rem;color:var(--text-secondary);font-weight:400;">'+o.specValue+' '+o.specUnit+'</span></td>'+
       '<td style="text-align:center;width:40px;">'+o.unitQty+'</td>'+
-      '<td style="white-space:nowrap;font-size:.8rem;min-width:90px;">'+o.deliveryDate+'</td>'+
+      '<td style="white-space:nowrap;font-size:.8rem;">'+o.deliveryDate+'</td>'+
       '<td style="font-size:.8rem;min-width:100px;">'+o.location+'</td>'+
       '<td style="font-size:.8rem;min-width:110px;">'+o.requestedBy+'</td>'+
       '<td style="min-width:100px;">'+unitCell+'</td>'+
-      '<td style="font-size:.75rem;color:var(--text-secondary);white-space:nowrap;">'+subName+'</td>'+
+      '<td style="font-size:.72rem;color:var(--text-secondary);">'+subName+'<br><span style="font-size:.68rem;color:var(--text-tertiary);">'+o.timestamp+'</span></td>'+
       '<td><div class="act">'+actions+'</div></td></tr>';
   }).join('');
 }
@@ -4010,6 +4144,7 @@ function handleSignOut() {
 // ═══════════════════════════════════════════════════════════════
 function dashboardRefresh() {
   initNotices();
+  startClock();
   // KPIs from cached data
   var activeRentals = allOrders.filter(function(o){ return o.selectedUnit && o.selectedUnit.length > 0; }).length;
   var readyFleet    = allMachines.filter(function(m){ return m.status === 'READY'; }).length;
@@ -4395,6 +4530,210 @@ function kpiNavMachinePending(){
       btns.forEach(function(b){ if(b.textContent.trim()==='Pending') b.click(); });
     },200);
   }, 400);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// APPLY LEAVE MODAL (Admin quick apply)
+// ═══════════════════════════════════════════════════════════════
+var alPad = null;
+
+function openApplyLeaveModal() {
+  document.getElementById('applyLeaveModal').style.display = 'flex';
+  document.getElementById('alEmail').value = myEmail;
+  document.getElementById('alVerified').value = 'false';
+  document.getElementById('alVbadge').style.display = 'none';
+  document.getElementById('alStaffName').value = '';
+  document.getElementById('alStaffName').readOnly = false;
+  document.getElementById('alReason').value = '';
+  document.getElementById('alDurDisp').textContent = '0';
+  document.getElementById('alDuration').value = '';
+  if (!alPad) {
+    alPad = new SignaturePad(document.getElementById('alSigPad'));
+  } else {
+    alPad.clear();
+    setTimeout(function(){ resizePad(alPad,'alSigPad'); }, 80);
+  }
+}
+
+async function alVerify() {
+  var name = document.getElementById('alStaffName').value.trim().toLowerCase();
+  if (!name) { Swal.fire('Error','Enter your name first.','error'); return; }
+  if (!staffNames.includes(name)) { Swal.fire('Unknown','Name not in staff list.','warning'); return; }
+  var r = await Swal.fire({title:'Verify Identity',input:'password',inputLabel:'Personal Passcode',inputPlaceholder:'••••',showCancelButton:true,confirmButtonColor:'#003366'});
+  if (!r.value) return;
+  Swal.fire({title:'Checking…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+  apiPost('checkPersonalCode',{name:name,code:r.value}).then(function(res){
+    Swal.close();
+    if (res && res.valid) {
+      document.getElementById('alVerified').value = 'true';
+      document.getElementById('alVbadge').style.display = 'block';
+      document.getElementById('alStaffName').readOnly = true;
+    } else Swal.fire('Failed','Incorrect passcode.','error');
+  });
+}
+
+function alCalcDur() {
+  var sD = document.getElementById('alStartDate').value;
+  var eD = document.getElementById('alEndDate').value;
+  if (!sD || !eD) return;
+  var start = new Date(sD+'T08:00'), end = new Date(eD+'T17:00');
+  if (end < start) { document.getElementById('alDurDisp').textContent='0'; return; }
+  var hrs = 0, cur = new Date(start);
+  while (cur < end) {
+    var ds = cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
+    if (cur.getDay() !== 0 && !holidays.includes(ds)) hrs += 8;
+    cur.setDate(cur.getDate()+1);
+  }
+  var d = Math.round(hrs/8*10)/10;
+  document.getElementById('alDurDisp').textContent = d;
+  document.getElementById('alDuration').value = d;
+}
+
+function alSubmit() {
+  if (document.getElementById('alVerified').value !== 'true') { Swal.fire('Not Verified','Please verify first.','info'); return; }
+  if (!document.getElementById('alStartDate').value || !document.getElementById('alEndDate').value) { Swal.fire('Missing','Select dates.','warning'); return; }
+  if (!document.getElementById('alReason').value.trim()) { Swal.fire('Missing','Enter reason.','warning'); return; }
+  if (!alPad || alPad.isEmpty()) { Swal.fire('Missing','Please sign.','warning'); return; }
+  Swal.fire({title:'Submitting…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+  apiPost('submitLeave',{
+    staffName: document.getElementById('alStaffName').value,
+    email: myEmail,
+    leaveType: document.getElementById('alType').value,
+    startDate: document.getElementById('alStartDate').value,
+    startTime: '08:00',
+    endDate: document.getElementById('alEndDate').value,
+    endTime: '17:00',
+    duration: document.getElementById('alDuration').value,
+    reason: document.getElementById('alReason').value,
+    signatureData: alPad.toDataURL()
+  }).then(function(res){
+    Swal.close();
+    if (res.ok) {
+      Swal.fire('Submitted!','ID: '+res.id,'success');
+      document.getElementById('applyLeaveModal').style.display = 'none';
+      lAdminRefresh();
+    } else Swal.fire('Error',res.error||'Error','error');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUBMIT OT MODAL
+// ═══════════════════════════════════════════════════════════════
+var sotPad = null;
+
+function openSubmitOTModal() {
+  document.getElementById('submitOTModal').style.display = 'flex';
+  document.getElementById('sotVerified').value = 'false';
+  document.getElementById('sotVbadge').style.display = 'none';
+  document.getElementById('sotEmpName').value = '';
+  document.getElementById('sotEmpName').readOnly = false;
+  document.getElementById('sotReason').value = '';
+  document.getElementById('sotReqBy').value = '';
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('sotDate').value = today;
+  sotSetType('Pre');
+  if (!sotPad) {
+    sotPad = new SignaturePad(document.getElementById('sotSigPad'));
+  } else {
+    sotPad.clear();
+    setTimeout(function(){ resizePad(sotPad,'sotSigPad'); }, 80);
+  }
+}
+
+function sotSetType(type) {
+  document.getElementById('sotType').value = type;
+  var preEl  = document.getElementById('sotTypePre');
+  var postEl = document.getElementById('sotTypePost');
+  if (preEl) {
+    preEl.style.borderColor  = type==='Pre' ? '#003366' : '#e5e9ef';
+    preEl.style.background   = type==='Pre' ? '#eff6ff' : '#f8fafc';
+    preEl.style.color        = type==='Pre' ? '#003366' : '#6b7280';
+  }
+  if (postEl) {
+    postEl.style.borderColor = type==='Post' ? '#003366' : '#e5e9ef';
+    postEl.style.background  = type==='Post' ? '#eff6ff' : '#f8fafc';
+    postEl.style.color       = type==='Post' ? '#003366' : '#6b7280';
+  }
+}
+
+function sotSetLoc(radio) {
+  document.getElementById('sotLocVal').value = radio.value;
+}
+
+async function sotVerify() {
+  var name = document.getElementById('sotEmpName').value.trim().toLowerCase();
+  if (!name) { Swal.fire('Error','Enter name first.','error'); return; }
+  if (!staffNames.includes(name)) { Swal.fire('Unknown','Name not in staff list.','warning'); return; }
+  var r = await Swal.fire({title:'Verify Identity',input:'password',inputLabel:'Personal Passcode',inputPlaceholder:'••••',showCancelButton:true,confirmButtonColor:'#16a34a'});
+  if (!r.value) return;
+  Swal.fire({title:'Checking…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+  apiPost('checkPersonalCode',{name:name,code:r.value}).then(function(res){
+    Swal.close();
+    if (res&&res.valid) {
+      document.getElementById('sotVerified').value='true';
+      document.getElementById('sotVbadge').style.display='block';
+      document.getElementById('sotEmpName').readOnly=true;
+    } else Swal.fire('Failed','Incorrect passcode.','error');
+  });
+}
+
+function sotSubmit() {
+  if (document.getElementById('sotVerified').value !== 'true') { Swal.fire('Not Verified','Please verify first.','info'); return; }
+  if (!document.getElementById('sotDate').value) { Swal.fire('Missing','Select OT date.','warning'); return; }
+  if (!document.getElementById('sotReason').value.trim()) { Swal.fire('Missing','Enter reason/unit no.','warning'); return; }
+  if (!document.getElementById('sotReqBy').value.trim()) { Swal.fire('Missing','Enter requester.','warning'); return; }
+  if (!sotPad || sotPad.isEmpty()) { Swal.fire('Missing','Please sign.','warning'); return; }
+  Swal.fire({title:'Submitting…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+  apiPost('submitOT',{
+    submittedBy: myEmail,
+    applicationType: document.getElementById('sotType').value,
+    employeeName: document.getElementById('sotEmpName').value,
+    department: document.getElementById('sotDept').value,
+    otDate: document.getElementById('sotDate').value,
+    reason: document.getElementById('sotReason').value,
+    unitNo: document.getElementById('sotReason').value,
+    vehiclePlate: '',
+    estimatedHours: document.getElementById('sotEstHours').value,
+    clockOutTime: '',
+    jobLocation: document.getElementById('sotLocVal').value,
+    locationDetail: '',
+    partner: 'No', partnerName: '',
+    requestedBy: document.getElementById('sotReqBy').value,
+    signatureData: sotPad.toDataURL()
+  }).then(function(res){
+    Swal.close();
+    if (res.ok) {
+      Swal.fire('OT Submitted!','ID: '+res.id,'success');
+      document.getElementById('submitOTModal').style.display = 'none';
+      if (myOTRole==='admin'||myOTRole==='superadmin') otAdminRefresh();
+    } else Swal.fire('Error',res.error||'Error','error');
+  });
+}
+
+// Update qaSubmitOT to open modal
+function qaSubmitOT() { openSubmitOTModal(); }
+// Update qaApplyLeave to open modal directly if admin
+function qaApplyLeave() { openApplyLeaveModal(); }
+
+// ── Digital Clock ──
+function startClock() {
+  function tick() {
+    var now = new Date();
+    var h = String(now.getHours()).padStart(2,'0');
+    var m = String(now.getMinutes()).padStart(2,'0');
+    var s = String(now.getSeconds()).padStart(2,'0');
+    var ce = document.getElementById('digitalClock');
+    var de = document.getElementById('digitalDate');
+    var nd = document.getElementById('noticeDate');
+    if (ce) ce.textContent = h + ':' + m + ':' + s;
+    var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dateStr = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+    if (de) de.textContent = dateStr;
+    if (nd) nd.textContent = dateStr;
+  }
+  tick();
+  setInterval(tick, 1000);
 }
 </script>
 </body>
