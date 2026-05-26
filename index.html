@@ -139,7 +139,7 @@ body {
   position: fixed; inset: 0; z-index: 9999;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  background: var(--sidebar-bg);
+  background: #ffffff;
 }
 #ls .ls-logo {
   width: 220px; margin-bottom: 20px;
@@ -318,9 +318,9 @@ body {
   flex: 1; overflow-y: auto; padding: 10px 8px;
 }
 .sidebar-section-label {
-  font-size: .58rem; font-weight: 600; color: rgba(255,255,255,0.25);
+  font-size: .6rem; font-weight: 600; color: rgba(255,255,255,0.3);
   text-transform: uppercase; letter-spacing: 1px;
-  padding: 10px 10px 6px;
+  padding: 12px 14px 6px;
 }
 .sidebar-nav-item {
   display: flex; align-items: center; gap: 10px;
@@ -964,7 +964,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 <div id="ls">
   <div style="background:#fff;border-radius:16px;padding:12px 20px;margin-bottom:20px;">
     <img class="ls-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
-         style="width:200px;display:block;margin-bottom:0;"
+         style="width:280px;display:block;margin-bottom:0;"
          onerror="this.style.display='none'" alt="PMP">
   </div>
   <div class="ls-sub">Operations Platform</div>
@@ -980,7 +980,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   <div class="signin-brand">
     <div style="background:#fff;border-radius:12px;padding:10px 16px;margin-bottom:24px;display:inline-block;align-self:flex-start;">
       <img class="brand-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
-           style="width:180px;display:block;margin-bottom:0;"
+           style="width:260px;display:block;margin-bottom:0;"
            onerror="this.style.display='none'" alt="PMP">
     </div>
     <h1>Industrial Operations Platform</h1>
@@ -1026,7 +1026,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   <!-- ── SIDEBAR ── -->
   <nav id="pmpSidebar">
     <div class="sidebar-header" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 16px 18px;width:100%;">
-      <div style="background:#fff;border-radius:12px;padding:10px 16px;margin-bottom:10px;display:inline-block;">
+      <div style="background:#fff;border-radius:12px;padding:10px 16px;margin-bottom:10px;display:flex;justify-content:center;">
         <img class="sidebar-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
              style="width:140px;display:block;"
              onerror="this.style.display='none'" alt="PMP">
@@ -4182,7 +4182,7 @@ function dashboardRefresh() {
         var shortReq = o.requestedBy ? (o.requestedBy.length>18?o.requestedBy.substring(0,18)+'…':o.requestedBy) : '—';
         return '<div class="ops-row">' +
           '<div style="min-width:0;">' +
-            '<div class="ops-name" style="font-family:monospace;font-size:.74rem;">' + o.machineType + (spec?' · <span style="color:var(--text-secondary);">'+spec+'</span>':'') + '</div>' +
+            '<div class="ops-name" style="font-size:.88rem;font-weight:600;">' + o.machineType + (spec?' · <span style="color:var(--text-secondary);">'+spec+'</span>':'') + '</div>' +
             '<div class="ops-meta">' + shortReq + ' · ' + shortLoc + '</div>' +
             '<div class="ops-meta" style="font-family:monospace;">' + o.orderId + ' · 🗓 ' + o.deliveryDate + '</div>' +
           '</div>' +
