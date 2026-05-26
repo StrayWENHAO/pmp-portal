@@ -115,7 +115,7 @@ html { height: 100%; }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--text-primary);
   background: var(--bg-app);
@@ -192,11 +192,11 @@ body {
   border-radius: 10px; padding: 10px 16px;
 }
 #expiredView .signin-brand h1 {
-  font-size: 1.8rem; font-weight: 700; color: #fff;
-  line-height: 1.2; margin-bottom: 12px; letter-spacing: -.3px;
+  font-size: 2.4rem; font-weight: 700; color: #fff;
+  line-height: 1.2; margin-bottom: 16px; letter-spacing: -.5px;
 }
 #expiredView .signin-brand p {
-  color: rgba(255,255,255,0.5); font-size: .88rem; line-height: 1.7;
+  color: rgba(255,255,255,0.55); font-size: 1rem; line-height: 1.8;
 }
 #expiredView .signin-brand .brand-features {
   margin-top: 40px; display: flex; flex-direction: column; gap: 14px;
@@ -234,13 +234,13 @@ body {
 .exp-card .signin-logo { width: 260px; margin-bottom: 12px; display: none; }
 @media(max-width: 799px) { .exp-card .signin-logo { display: block; margin: 0 auto 12px; } }
 .exp-card .signin-title {
-  font-size: 1.4rem; font-weight: 700; color: var(--text-primary);
-  margin-bottom: 4px; letter-spacing: -.3px;
+  font-size: 2rem; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 6px; letter-spacing: -.4px;
 }
 .exp-card .signin-sub {
-  font-size: .84rem; color: var(--text-secondary); margin-bottom: 32px;
+  font-size: 1rem; color: var(--text-secondary); margin-bottom: 36px;
 }
-.exp-card p { color: var(--text-secondary); font-size: .85rem; line-height: 1.6; margin-bottom: 16px; }
+.exp-card p { color: var(--text-secondary); font-size: .95rem; line-height: 1.7; margin-bottom: 18px; }
 
 /* ════════════════════════════════════════════
    APP SHELL — SIDEBAR LAYOUT
@@ -323,9 +323,9 @@ body {
 }
 .sidebar-nav-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px; border-radius: var(--r-sm);
+  padding: 10px 14px; border-radius: var(--r-sm);
   cursor: pointer; transition: all .15s;
-  color: var(--sidebar-text); font-size: .82rem; font-weight: 500;
+  color: var(--sidebar-text); font-size: .88rem; font-weight: 500;
   border: none; background: transparent; width: 100%; text-align: left;
   margin-bottom: 2px; user-select: none;
 }
@@ -399,8 +399,8 @@ body {
 }
 @media(max-width: 991px) { .page-header { display: none; } }
 .page-header-left { display: flex; flex-direction: column; }
-.page-header-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); letter-spacing: -.2px; }
-.page-header-sub { font-size: .72rem; color: var(--text-secondary); margin-top: 1px; }
+.page-header-title { font-size: .88rem; font-weight: 600; color: var(--text-primary); letter-spacing: -.1px; }
+.page-header-sub { font-size: .7rem; color: var(--text-secondary); margin-top: 1px; }
 .page-header-actions { display: flex; gap: 8px; align-items: center; }
 
 /* ── PAGE CONTENT ── */
@@ -507,8 +507,8 @@ body {
 
 .ops-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px; border-bottom: 1px solid var(--border);
-  font-size: .8rem; transition: background .1s; cursor: default;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  font-size: .84rem; transition: background .1s; cursor: default;
 }
 .ops-row:last-child { border-bottom: none; }
 .ops-row:hover { background: var(--bg-hover); }
@@ -740,7 +740,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
    TABLE SYSTEM
 ════════════════════════════════════════════ */
 .tbl-wrap { overflow-x: auto; }
-.ptbl { width: 100%; border-collapse: collapse; font-size: .8rem; table-layout: auto; }
+.ptbl { width: 100%; border-collapse: collapse; font-size: .84rem; table-layout: auto; }
 .ptbl td, .ptbl th { overflow: hidden; }
 .ptbl th {
   background: var(--bg-subtle); padding: 9px 12px; text-align: left;
@@ -1018,10 +1018,11 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
   <!-- ── SIDEBAR ── -->
   <nav id="pmpSidebar">
-    <div class="sidebar-header">
+    <div class="sidebar-header" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 12px 18px;width:100%;">
       <img class="sidebar-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
+           style="width:160px;display:block;margin:0 auto;"
            onerror="this.style.display='none'" alt="PMP">
-      <div class="sidebar-tagline">Operations Platform</div>
+      <div class="sidebar-tagline" style="text-align:center;width:100%;margin-top:8px;">Operations Platform</div>
     </div>
 
     <div class="sidebar-user">
@@ -4210,15 +4211,23 @@ function dashboardRefresh() {
       pll.innerHTML = '<div class="ops-row"><span class="ops-meta">No pending requests</span></div>';
     } else {
       pll.innerHTML = pendingList.map(function(r){
-        var period = r.startDate + (r.endDate && r.endDate!==r.startDate ? ' → '+r.endDate : '');
-        var timeInfo = (r.startTime&&r.endTime) ? ' (' + r.startTime + '–' + r.endTime + ')' : '';
+        var sD = r.startDate || '';
+        var eD = r.endDate   || '';
+        var sT = r.startTime || '';
+        var eT = r.endTime   || '';
+        var period = '';
+        if (sD) {
+          period = sD + (sT ? ' ' + sT : '');
+          if (eD && eD !== sD) period += ' → ' + eD + (eT ? ' ' + eT : '');
+          else if (eT)         period += ' → ' + eT;
+        }
         return '<div class="ops-row">' +
-          '<div style="min-width:0;">' +
+          '<div style="min-width:0;flex:1;">' +
             '<div class="ops-name">' + r.name + '</div>' +
-            '<div class="ops-meta">' + r.leaveType.replace(' Leave','').replace(' (MC)','') + ' · ' + r.duration + ' day(s)</div>' +
-            '<div class="ops-meta" style="font-family:monospace;font-size:.68rem;">' + period + timeInfo + '</div>' +
+            '<div class="ops-meta">' + (r.leaveType||'').replace(' Leave','').replace(' (MC)','') + ' · ' + (r.duration||'') + ' day(s)</div>' +
+            (period ? '<div style="font-size:.72rem;color:#6b7280;">' + period + '</div>' : '') +
           '</div>' +
-          '<div class="ops-right"><span class="bs bs-pending">Pending</span></div>' +
+          '<div class="ops-right" style="flex-shrink:0;"><span class="bs bs-pending">Pending</span></div>' +
           '</div>';
       }).join('');
     }
