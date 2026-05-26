@@ -249,6 +249,9 @@ body {
 #pmpShell {
   display: flex; min-height: 100vh;
 }
+/* Hide mobile topbar when shell not visible */
+#pmpShell.hidden ~ * #mobileTopbar,
+body:not(.shell-visible) #mobileTopbar { display: none !important; }
 
 /* ── SIDEBAR ── */
 #pmpSidebar {
@@ -369,7 +372,7 @@ body {
   border-radius: var(--r-xs); padding: 6px 10px;
   color: rgba(255,255,255,0.7); cursor: pointer; font-size: 1rem;
 }
-.mobile-logo { width: 80px; }
+.mobile-logo { width: 70px; background:#fff; border-radius:6px; padding:3px 6px; }
 .mobile-topbar-title { font-size: .82rem; font-weight: 600; color: rgba(255,255,255,0.8); }
 
 /* Sidebar overlay for mobile */
@@ -1014,11 +1017,14 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Mobile topbar -->
-<div id="mobileTopbar">
+<div id="mobileTopbar" style="display:none;">
   <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-  <img class="mobile-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
-       onerror="this.style.display='none'" alt="PMP">
-  <span class="mobile-topbar-title" id="mobilePageTitle">Dashboard</span>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <img class="mobile-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
+         onerror="this.style.display='none'" alt="PMP">
+    <span class="mobile-topbar-title" id="mobilePageTitle" style="font-size:.6rem;color:rgba(255,255,255,0.55);margin-top:1px;letter-spacing:.3px;"></span>
+  </div>
+  <div style="width:44px;"></div>
 </div>
 
 <div id="pmpShell" class="hidden">
@@ -1970,7 +1976,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     <label class="form-label">Specification *</label>
     <div style="display:flex;gap:8px;align-items:center;">
       <input type="number" id="ordCrSpecVal" class="form-control" placeholder="Value" min="0" step="0.1" style="flex:1;">
-      <select id="ordCrSpecUnit" class="form-control" style="width:100px;">
+      <select id="ordCrSpecUnit" class="form-control" style="width:90px;">
         <option value="FT">FT</option>
         <option value="M">M</option>
         <option value="Ton">Ton</option>
@@ -1978,6 +1984,12 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <option value="AMP">AMP</option>
         <option value="KG">KG</option>
       </select>
+    </div>
+    <div id="ordCrFtMSwitch" style="display:none;margin-top:6px;">
+      <button id="ordCrFtMBtn" onclick="ordCrToggleFtM()" type="button"
+        style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;padding:4px 12px;font-size:.74rem;font-weight:500;cursor:pointer;">
+        Switch to M
+      </button>
     </div>
 
     <label class="form-label">Power Type *</label>
@@ -2786,7 +2798,7 @@ function lFilt(filter,btn){
       '<td style="font-family:\'DM Mono\',monospace;font-size:.7rem;color:#bbb;">'+r.id+'</td>'+
       '<td style="font-weight:700;">'+r.name+'</td>'+
       '<td><span style="font-size:.72rem;">'+r.leaveType.replace(' Leave','').replace(' (MC)','')+'</span></td>'+
-      '<td style="font-size:.78rem;">'+r.startDate+'<br><span style="color:#bbb;">→'+r.endDate+'</span></td>'+
+      '<td style="font-size:.78rem;white-space:nowrap;">'+(r.startDate||'')+(r.startTime?' <span style="font-size:.68rem;color:#9ca3af;">'+r.startTime+'</span>':'')+'<br><span style="color:#9ca3af;">→ '+(r.endDate||'')+(r.endTime?' <span style="font-size:.68rem;">'+r.endTime+'</span>':'')+'</span></td>'+
       '<td style="font-weight:800;color:var(--blue);text-align:center;">'+r.duration+'</td>'+
       '<td><span class="bs '+sc+'">'+r.status+'</span></td>'+
       '<td style="font-size:.72rem;color:#bbb;">'+r.submitted+'</td>'+
@@ -4064,6 +4076,9 @@ function lShowConfirm2(){
 // SIDEBAR NAVIGATION SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function navTo(section) {
+  // Show mobile topbar when navigating (means shell is visible)
+  var mtb = document.getElementById('mobileTopbar');
+  if (mtb) mtb.style.display = '';
   // Hide all views
   document.getElementById('homeView').style.display = 'none';
   document.getElementById('appView').style.display = 'none';
@@ -4350,12 +4365,20 @@ function lRenderPage(list, tbodyId, renderFn) {
 // ── Machine type unit mapping ──
 var MACHINE_UNIT_MAP = {
   'SCISSOR LIFT': 'FT', 'BOOM LIFT': 'FT', 'VERTICAL LIFT': 'FT',
-  'FORKLIFT': 'TON', 'TELEFORKLIFT': 'TON', 'REACH STACKER': 'TON',
-  'BATTERY TELEHANDLER': 'TON', 'TELEHANDLER': 'TON',
+  'FORKLIFT': 'Ton', 'TELEFORKLIFT': 'Ton', 'REACH STACKER': 'Ton',
+  'BATTERY TELEHANDLER': 'Ton', 'TELEHANDLER': 'Ton',
   'GENERATOR': 'KVA', 'TRANSFORMER': 'KVA',
   'WELDING SET': 'AMP', 'LIGHTING TOWER': 'KW',
-  'ATTACHMENT': 'TON'
+  'ATTACHMENT': 'Ton'
 };
+// Helper to get unit for machine type
+function ordCrGetUnit(typeStr) {
+  var upper = (typeStr||'').toUpperCase();
+  for (var key in MACHINE_UNIT_MAP) {
+    if (upper.indexOf(key) > -1) return MACHINE_UNIT_MAP[key];
+  }
+  return 'FT';
+}
 
 var _ordCrTypes = [];
 
@@ -4403,18 +4426,36 @@ function ordCrSelectType(type, unit) {
   document.getElementById('ordCrMachTypeInput').value = type;
   document.getElementById('ordCrMachType').value = type;
   document.getElementById('ordCrTypeDropdown').style.display = 'none';
-  // Auto-set spec unit
-  var autoUnit = MACHINE_UNIT_MAP[type.toUpperCase()] || unit || 'FT';
+  // Auto-set spec unit based on machine type
+  var typeUpper = type.toUpperCase();
+  var autoUnit = MACHINE_UNIT_MAP[typeUpper] || unit || 'FT';
   ordCrSetSpecUnit(autoUnit);
+  // Show FT/M switch for aerial work platforms
+  var ftmTypes = ['SCISSOR LIFT','BOOM LIFT','VERTICAL LIFT','TELEHANDLER','BATTERY TELEHANDLER'];
+  var isFtM = ftmTypes.some(function(t){ return typeUpper.indexOf(t) > -1; });
+  var switchEl = document.getElementById('ordCrFtMSwitch');
+  if (switchEl) switchEl.style.display = isFtM ? 'flex' : 'none';
+}
+
+function ordCrToggleFtM() {
+  var sel = document.getElementById('ordCrSpecUnit');
+  if (!sel) return;
+  var cur = sel.value;
+  if (cur === 'FT') {
+    ordCrSetSpecUnit('M');
+    document.getElementById('ordCrFtMBtn').textContent = 'Switch to FT';
+  } else {
+    ordCrSetSpecUnit('FT');
+    document.getElementById('ordCrFtMBtn').textContent = 'Switch to M';
+  }
 }
 
 function ordCrSetSpecUnit(unit) {
   var sel = document.getElementById('ordCrSpecUnit');
   if (!sel) return;
-  // Set the select to the right unit
+  var unitLower = (unit||'').toLowerCase();
   for (var i = 0; i < sel.options.length; i++) {
-    if (sel.options[i].value.toUpperCase() === unit.toUpperCase() ||
-        sel.options[i].value === unit) {
+    if (sel.options[i].value.toLowerCase() === unitLower) {
       sel.selectedIndex = i; return;
     }
   }
