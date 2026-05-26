@@ -343,12 +343,14 @@
       <p>Machine rental orders</p>
       <span class="hc-arrow">›</span>
     </div>
-  </div>
-  <!-- Log button - superadmin only -->
-  <div id="homeLogBtn" style="display:none;text-align:center;padding:0 16px 32px;">
-    <button onclick="openApp('log')" style="background:none;border:1px solid rgba(255,255,255,.2);color:#aaa;border-radius:20px;padding:6px 18px;font-size:.74rem;cursor:pointer;">
-      📋 Activity Log
-    </button>
+    <!-- Log card - superadmin only, hidden by default -->
+    <div id="homeLogBtn" class="home-card hidden" style="grid-column:1/-1;" onclick="openApp('log')">
+      <div class="hc-stripe" style="background:linear-gradient(90deg,#374151,#6b7280);"></div>
+      <span class="hc-icon">📋</span>
+      <h3>Activity Log</h3>
+      <p>System audit trail</p>
+      <span class="hc-arrow">›</span>
+    </div>
   </div>
 </div>
 
@@ -445,6 +447,7 @@
           <button class="stab on leave" onclick="lAdminTab('records',this)">📋 Records</button>
           <button class="stab" onclick="lAdminTab('schedule',this)">🗓 Schedule</button>
           <button class="stab" onclick="lAdminTab('calendar',this)">📅 Calendar</button>
+          <button class="stab" onclick="lAdminTab('apply',this)">✏️ Apply Leave</button>
         </div>
 
         <!-- Records -->
@@ -490,6 +493,62 @@
                 <button class="btn-reset" onclick="lResetDF()">↺ Reset</button>
               </div>
               <div id="lSchedGroups"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Apply Leave (admin self-apply) -->
+        <div id="lTabApply" class="hidden">
+          <div class="pcard">
+            <div class="pcard-hdr"><h4>✏️ Apply Leave</h4></div>
+            <div class="pcard-body">
+              <label class="form-label">Staff Name *</label>
+              <div class="input-group">
+                <input type="text" id="lStaffName2" class="form-control" placeholder="Enter Full Name">
+                <div class="input-group-append">
+                  <button class="btn" style="background:var(--blue);color:#fff;border-radius:0 9px 9px 0;font-weight:700;"
+                          onclick="leaveVerify2()">Verify</button>
+                </div>
+              </div>
+              <div id="lVbadge2" class="vbadge">✅ Verified &amp; Locked</div>
+              <input type="hidden" id="lVerified2" value="false">
+              <label class="form-label">Email *</label>
+              <input type="email" id="lEmail2" class="form-control" readonly style="background:#f0f2f5;">
+              <label class="form-label">Leave Type *</label>
+              <select id="lType2" class="form-control" onchange="lToggleMC2()">
+                <option value="Annual Leave">Annual Leave</option>
+                <option value="Medical Leave (MC)">Medical Leave (MC)</option>
+                <option value="Emergency Leave">Emergency Leave</option>
+                <option value="Unpaid Leave">Unpaid Leave</option>
+              </select>
+              <div id="lMCSec2" class="hidden mt-2">
+                <label class="form-label" style="color:var(--red);">MC Attachment *</label>
+                <input type="file" id="lMCFile2" class="form-control-file" accept="image/*,.pdf">
+              </div>
+              <div class="form-row-2 mt-2">
+                <div>
+                  <label class="form-label">Start Date</label>
+                  <input type="date" id="lStartDate2" class="form-control" onchange="lOnSD2()">
+                  <select id="lStartTime2" class="form-control mt-1" onchange="lCalcDur2()"></select>
+                </div>
+                <div>
+                  <label class="form-label">End Date</label>
+                  <input type="date" id="lEndDate2" class="form-control" onchange="lCalcDur2()">
+                  <select id="lEndTime2" class="form-control mt-1" onchange="lCalcDur2()"></select>
+                </div>
+              </div>
+              <div class="dur-box">
+                <div style="font-size:.7rem;font-weight:700;color:#777;">TOTAL WORKING DAYS</div>
+                <div id="lDurDisp2" class="dur-val">0</div>
+                <input type="hidden" id="lDuration2">
+                <div id="lExclDates2"></div>
+              </div>
+              <label class="form-label">Reason *</label>
+              <textarea id="lReason2" class="form-control" rows="2" placeholder="Brief explanation…"></textarea>
+              <label class="form-label">Signature *</label>
+              <canvas id="lSigPad2" class="sig-canvas"></canvas>
+              <button type="button" class="sig-clear" onclick="lPad2&&lPad2.clear()">✕ Clear</button>
+              <button class="btn-submit leave ready" onclick="lShowConfirm2()">SUBMIT APPLICATION</button>
             </div>
           </div>
         </div>
@@ -816,9 +875,13 @@
 
       <!-- Admin Order dashboard -->
       <div id="orderAdminView" class="hidden">
-        <div class="stabs">
-          <button class="stab on order" onclick="ordAdminTab('orders',this)">📋 Orders</button>
-          <button class="stab" onclick="ordAdminTab('machines',this)">🚗 Machines</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="stabs" style="margin-bottom:0;">
+            <button class="stab on order" onclick="ordAdminTab('orders',this)">📋 Orders</button>
+            <button class="stab" onclick="ordAdminTab('machines',this)">🚗 Machines</button>
+          </div>
+          <button id="ordCreateBtn" class="ab" style="background:#d97706;color:#fff;padding:8px 16px;font-size:.8rem;display:none;"
+            onclick="ordShowCreateForm()">+ New Order</button>
         </div>
 
         <!-- Orders panel -->
@@ -826,11 +889,7 @@
           <div class="pcard">
             <div class="pcard-hdr">
               <h4>Order List</h4>
-              <div style="display:flex;gap:6px;">
-                <button id="ordCreateBtn" class="ab" style="background:#d97706;color:#fff;display:none;"
-                  onclick="ordShowCreateForm()">+ New Order</button>
-                <button class="ab ab-edit" onclick="ordAdminRefresh()">↻</button>
-              </div>
+              <button class="ab ab-edit" onclick="ordAdminRefresh()">↻</button>
             </div>
             <div class="pcard-body">
               <div class="fbar">
@@ -1270,7 +1329,7 @@ window.onload=function(){
       var savedApp = _loadCurrentApp();
       document.getElementById('homeView').classList.remove('hidden');
       if(myLeaveRole==='superadmin'||myOTRole==='superadmin'||myOrderRole==='superadmin'){
-        var lb=document.getElementById('homeLogBtn'); if(lb)lb.style.display='block';
+        var lb=document.getElementById('homeLogBtn'); if(lb)lb.classList.remove('hidden');
       }
       initPads();
       if (savedApp) setTimeout(function(){ openApp(savedApp); }, 100);
@@ -1329,6 +1388,7 @@ function onGoogleSignIn(resp) {
     technicians  = b.technicians  || [];
     machineTypes = b.machineTypes || [];
 
+    document.getElementById('ls').style.display='none';
     document.getElementById('expiredView').classList.add('hidden');
     document.getElementById('homeEmail').textContent = myEmail;
     var rp = document.getElementById('homeRolePill');
@@ -1666,13 +1726,18 @@ function lBuildNF(selId){
 }
 
 function lAdminTab(tab,btn){
-  ['records','schedule','calendar'].forEach(function(t){
-    document.getElementById('lTab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('hidden',t!==tab);
+  ['records','schedule','calendar','apply'].forEach(function(t){
+    var el=document.getElementById('lTab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(el) el.classList.toggle('hidden',t!==tab);
   });
   document.querySelectorAll('#leaveAdminView .stab').forEach(function(b){b.classList.remove('on','leave');});
   btn.classList.add('on','leave');
-  // Load holidays when calendar tab is opened
   if(tab==='calendar') lRenderHols();
+  if(tab==='apply'){
+    document.getElementById('lEmail2').value=myEmail;
+    lInitTimes2();
+    setTimeout(function(){if(lPad2)resizePad(lPad2,'lSigPad2');},80);
+  }
 }
 
 function lFilt(filter,btn){
@@ -1761,13 +1826,26 @@ function lViewAtt(ri){
   var r=leaveRecords.find(function(x){return x.rowIndex===ri;});
   if(!r)return;
   var html='';
-  if(r.mcUrl&&r.mcUrl.length>4) html+='<p><a href="'+r.mcUrl+'" target="_blank" class="btn btn-sm" style="background:#003366;color:#fff;">Open MC File</a></p>';
-  if(r.signUrl&&r.signUrl.length>4) html+='<p style="margin-top:8px;"><b>Signature:</b></p><img src="'+r.signUrl+'" style="max-width:100%;border-radius:8px;border:1px solid #eee;" onerror="this.style.display=\'none\'">';
-  if(!html) html='<p style="color:#aaa;">No attachments found.</p>';
-  Swal.fire({title:'📎 Attachments',html:html,showConfirmButton:false,showCloseButton:true,width:380});
+  if(r.mcUrl&&r.mcUrl.length>4){
+    html+='<div style="margin-bottom:12px;"><b style="font-size:.82rem;">MC File:</b><br>';
+    html+='<a href="'+r.mcUrl+'" target="_blank" style="background:#003366;color:#fff;border-radius:8px;padding:6px 14px;display:inline-block;text-decoration:none;margin-top:4px;font-size:.82rem;">📄 Open MC File</a></div>';
+  }
+  if(r.signUrl&&r.signUrl.length>4){
+    // Convert Google Drive URL to embeddable format
+    var sigSrc=r.signUrl;
+    if(sigSrc.indexOf('drive.google.com')>-1){
+      var idM=sigSrc.match(/id=([^&]+)/)||sigSrc.match(/\/d\/([^\/]+)/);
+      if(idM) sigSrc='https://drive.google.com/uc?export=view&id='+idM[1];
+    }
+    html+='<div><b style="font-size:.82rem;">Signature:</b><br>';
+    html+='<img src="'+sigSrc+'" style="max-width:100%;border-radius:8px;border:1px solid #eee;margin-top:6px;display:block;">';
+    html+='<a href="'+r.signUrl+'" target="_blank" style="font-size:.75rem;color:#003366;display:block;margin-top:4px;">Open in new tab</a>';
+    html+='</div>';
+  }
+  if(!html) html='<p style="color:#aaa;font-size:.85rem;">No attachments found.</p>';
+  Swal.fire({title:'📎 Attachments',html:html,showConfirmButton:false,showCloseButton:true,width:420});
 }
 
-// Leave schedule (admin grouped view)
 function lBuildMonthPills(){
   var cont=document.getElementById('lSchedMonths');
   if(!cont)return;
@@ -2455,21 +2533,27 @@ function ordDel(ri,id){
 
 // Assign unit modal
 function openReassign(orderId,machType,qty,rowIndex,currentUnits){
-  // Cancel current assignment first, then reassign
-  var units=(currentUnits||'').split(',').map(function(u){return u.trim();}).filter(Boolean);
-  Swal.fire({
-    title:'Reassign Units?',
-    html:'Current units: <b>'+(currentUnits||'none')+'</b><br>This will cancel current assignment and allow you to pick new units.',
-    showCancelButton:true,confirmButtonColor:'#6d28d9',confirmButtonText:'Continue'
-  }).then(function(r){
-    if(!r.isConfirmed)return;
-    // Cancel each current unit then open assign modal
-    var cancelPromises=units.map(function(uid){
-      return apiPost('cancelOrdered',{unitId:uid,orderId:orderId});
-    });
-    Promise.all(cancelPromises).then(function(){
-      openAssign(orderId,machType,qty,rowIndex);
-    });
+  var curUnits=(currentUnits||'').split(',').map(function(u){return u.trim();}).filter(Boolean);
+  assignOrderData={orderId:orderId,machType:machType,qty:parseInt(qty),rowIndex:parseInt(rowIndex),currentUnits:curUnits};
+  document.getElementById('assignOrderInfo').textContent='Order: '+orderId+' | Type: '+machType+' | Qty: '+qty+' | Current: '+currentUnits;
+  var slots=document.getElementById('assignSlots');
+  slots.innerHTML='<div class="empty">Loading available units…</div>';
+  document.getElementById('assignModal').style.display='flex';
+  api('getReadyMachinesForType',{machineType:machType}).then(function(res){
+    var readyUnits=res.data||[];
+    var html='';
+    for(var i=0;i<assignOrderData.qty;i++){
+      var curVal=curUnits[i]||'';
+      html+='<div style="margin-bottom:12px;"><label class="form-label">Unit '+(i+1)+(curVal?' (Current: '+curVal+')':'')+'</label>'+
+        '<select class="form-control assign-slot" data-idx="'+i+'" data-current="'+curVal+'" onchange="onAssignSelect()">'+
+        '<option value="">Select unit…</option>'+
+        // Add current unit as first option if exists
+        (curVal?'<option value="'+curVal+'" selected>'+curVal+' (Current)</option>':'')+
+        readyUnits.filter(function(u){return u.unitId!==curVal;})
+          .map(function(u){return'<option value="'+u.unitId+'">'+u.label+' (H/M: '+u.hmReading+')</option>';}).join('')+
+        '</select></div>';
+    }
+    slots.innerHTML=html||'<div class="empty">No READY units available.</div>';
   });
 }
 
@@ -2839,6 +2923,108 @@ function logRender(){
       '<td style="font-size:.75rem;color:#666;">'+l.details+'</td>'+
     '</tr>';
   }).join('');
+}
+
+// ── Admin self-apply leave ──
+var lPad2 = null;
+function lInitTimes2(){
+  var s=document.getElementById('lStartTime2'),e=document.getElementById('lEndTime2');
+  if(!s||s.options.length>1)return;
+  for(var h=8;h<=17;h++){
+    ['00','30'].forEach(function(m){
+      if(h===17&&m==='30')return;
+      var v=(h<10?'0'+h:h)+':'+m;
+      var l=(h>12?h-12:h)+':'+m+(h>=12?' PM':' AM');
+      s.options.add(new Option(l,v)); e.options.add(new Option(l,v));
+    });
+  }
+  e.value='17:00';
+  if(!lPad2) lPad2=new SignaturePad(document.getElementById('lSigPad2'));
+}
+function lToggleMC2(){
+  document.getElementById('lMCSec2').classList.toggle('hidden',document.getElementById('lType2').value!=='Medical Leave (MC)');
+}
+function lOnSD2(){
+  var sD=document.getElementById('lStartDate2').value;
+  var eD=document.getElementById('lEndDate2');
+  if(sD){eD.min=sD;if(eD.value&&eD.value<sD)eD.value=sD;}
+  lCalcDur2();
+}
+function lCalcDur2(){
+  var sD=document.getElementById('lStartDate2').value,eD=document.getElementById('lEndDate2').value;
+  var sT=document.getElementById('lStartTime2').value,eT=document.getElementById('lEndTime2').value;
+  if(!sD||!eD)return;
+  var start=new Date(sD+'T'+sT),end=new Date(eD+'T'+eT);
+  if(end<=start){document.getElementById('lDurDisp2').textContent='0';return;}
+  var hrs=0,cur=new Date(start);
+  while(cur<end){
+    var ds=cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
+    if(cur.getDay()!==0&&!holidays.includes(ds)){
+      var wS=new Date(cur);wS.setHours(8,0,0,0);
+      var wE=new Date(cur);wE.setHours(17,0,0,0);
+      var aS=cur>wS?cur:wS,aE=end<wE?end:wE;
+      if(aE>aS){var h=(aE-aS)/36e5;if(aS.getHours()<12&&aE.getHours()>=13)h-=1;if(h>0)hrs+=h;}
+    }
+    cur.setDate(cur.getDate()+1);cur.setHours(8,0,0,0);
+  }
+  var d=Math.round((hrs/8)*1000)/1000;
+  document.getElementById('lDurDisp2').textContent=d;
+  document.getElementById('lDuration2').value=d;
+  var excl=[];
+  var cur2=new Date(start);
+  while(cur2<end){
+    var ds2=cur2.getFullYear()+'-'+String(cur2.getMonth()+1).padStart(2,'0')+'-'+String(cur2.getDate()).padStart(2,'0');
+    if(cur2.getDay()===0) excl.push({date:ds2,reason:'Sunday'});
+    else if(holidays.includes(ds2)) excl.push({date:ds2,reason:'Public Holiday'});
+    cur2.setDate(cur2.getDate()+1);cur2.setHours(8,0,0,0);
+  }
+  var exclEl=document.getElementById('lExclDates2');
+  if(exclEl){
+    exclEl.innerHTML=excl.length?'<div style="margin-top:6px;font-size:.72rem;color:#888;">Excluded:</div>'+
+      excl.map(function(e){return'<div style="font-size:.72rem;color:#aaa;">• '+e.date+' ('+e.reason+')</div>';}).join(''):'';
+  }
+}
+async function leaveVerify2(){
+  var name=document.getElementById('lStaffName2').value.trim().toLowerCase();
+  if(!name){Swal.fire('Error','Enter your name first.','error');return;}
+  if(!staffNames.includes(name)){Swal.fire('Unknown','Name not in staff list.','warning');return;}
+  var r=await Swal.fire({title:'Verify Identity',input:'password',inputLabel:'Personal Passcode',inputPlaceholder:'••••',showCancelButton:true,confirmButtonColor:'#003366'});
+  if(!r.value)return;
+  Swal.fire({title:'Checking…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+  apiPost('checkPersonalCode',{name:name,code:r.value}).then(function(res){
+    Swal.close();
+    if(res&&res.valid){
+      document.getElementById('lVerified2').value='true';
+      document.getElementById('lVbadge2').style.display='block';
+      document.getElementById('lStaffName2').readOnly=true;
+    } else Swal.fire('Failed','Incorrect passcode.','error');
+  });
+}
+function lShowConfirm2(){
+  if(document.getElementById('lVerified2').value!=='true'){Swal.fire('Not Verified','Please verify first.','info');return;}
+  var sD=document.getElementById('lStartDate2').value,eD=document.getElementById('lEndDate2').value;
+  var sT=document.getElementById('lStartTime2').value,eT=document.getElementById('lEndTime2').value;
+  if(!sD||!eD){Swal.fire('Missing','Select dates.','warning');return;}
+  if(!document.getElementById('lReason2').value.trim()){Swal.fire('Missing','Enter reason.','warning');return;}
+  if(!lPad2||lPad2.isEmpty()){Swal.fire('Missing','Please sign.','warning');return;}
+  Swal.fire({title:'Confirm Submit?',text:'Submit leave application for '+document.getElementById('lStaffName2').value+'?',
+    showCancelButton:true,confirmButtonColor:'#003366'}).then(function(r){
+    if(!r.isConfirmed)return;
+    var data={
+      staffName:document.getElementById('lStaffName2').value,
+      email:myEmail,leaveType:document.getElementById('lType2').value,
+      startDate:sD,startTime:sT,endDate:eD,endTime:eT,
+      duration:document.getElementById('lDuration2').value,
+      reason:document.getElementById('lReason2').value,
+      signatureData:lPad2.toDataURL()
+    };
+    Swal.fire({title:'Submitting…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+    apiPost('submitLeave',data).then(function(res){
+      Swal.close();
+      if(res.ok){Swal.fire('Submitted!','ID: '+res.id,'success');lAdminRefresh();}
+      else Swal.fire('Error',res.error||'Error','error');
+    });
+  });
 }
 </script>
 </body>
