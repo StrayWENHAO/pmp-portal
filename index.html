@@ -701,7 +701,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 ════════════════════════════════════════════ */
 .stats-row {
   display: grid; grid-template-columns: repeat(4,1fr);
-  gap: 10px; margin-bottom: 16px;
+  gap: 10px; margin-bottom: 16px; margin-top: 8px;
 }
 @media(max-width: 560px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
 
@@ -961,7 +961,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   <img class="ls-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
        onerror="this.style.display='none'" alt="PMP">
   <div class="ls-sub">Operations Platform</div>
-  <div class="ring"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <div class="ring"></div>
+    <div id="lsStatus" style="font-size:.64rem;color:rgba(255,255,255,0.3);letter-spacing:1px;font-family:'JetBrains Mono',monospace;">Initialising…</div>
+  </div>
 </div>
 
 <!-- SIGN IN / ACCESS REQUIRED -->
@@ -1077,25 +1080,25 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <div id="homeAppContent">
         <!-- KPI Overview -->
         <div class="overview-grid" id="kpiGrid">
-          <div class="kpi-card kpi-navy" onclick="navTo('order')">
+          <div class="kpi-card kpi-navy" onclick="kpiNavOrderAll()" style="cursor:pointer;">
             <span class="kpi-icon">🚧</span>
             <div class="kpi-val" id="kpiActiveRentals">—</div>
             <div class="kpi-label">Active Rentals</div>
             <div class="kpi-sub">Machines on site</div>
           </div>
-          <div class="kpi-card kpi-green" onclick="navTo('order')">
+          <div class="kpi-card kpi-green" onclick="kpiNavMachineReady()" style="cursor:pointer;">
             <span class="kpi-icon">✅</span>
             <div class="kpi-val" id="kpiReadyFleet">—</div>
             <div class="kpi-label">Fleet Ready</div>
             <div class="kpi-sub">Available for dispatch</div>
           </div>
-          <div class="kpi-card kpi-amber" onclick="navTo('leave')">
+          <div class="kpi-card kpi-amber" onclick="kpiNavLeavePending()" style="cursor:pointer;">
             <span class="kpi-icon">⏳</span>
             <div class="kpi-val" id="kpiPendingOps">—</div>
             <div class="kpi-label">Pending Approvals</div>
             <div class="kpi-sub">Leave & OT requests</div>
           </div>
-          <div class="kpi-card kpi-red" onclick="navTo('order')">
+          <div class="kpi-card kpi-red" onclick="kpiNavMachinePending()" style="cursor:pointer;">
             <span class="kpi-icon">🔧</span>
             <div class="kpi-val" id="kpiPendingMach">—</div>
             <div class="kpi-label">In Maintenance</div>
@@ -1104,6 +1107,36 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
 
         <!-- Quick Actions -->
+        <!-- Notice Banner -->
+        <div id="noticeBanner" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-md);padding:0;margin-bottom:16px;overflow:hidden;display:none;">
+          <div style="display:flex;align-items:stretch;">
+            <div style="background:#003366;width:4px;flex-shrink:0;"></div>
+            <div style="flex:1;padding:12px 16px;min-height:52px;display:flex;align-items:center;">
+              <div style="flex:1;">
+                <div id="noticeText" style="font-size:.84rem;color:var(--text-primary);font-weight:500;"></div>
+                <div id="noticeTime" style="font-size:.68rem;color:var(--text-tertiary);margin-top:2px;font-family:monospace;"></div>
+              </div>
+              <div id="noticeDots" style="display:flex;gap:5px;margin-left:12px;flex-shrink:0;"></div>
+            </div>
+            <div id="noticeEditBtn" style="display:none;padding:12px;">
+              <button onclick="openNoticeEditor()" style="background:none;border:1px solid var(--border);border-radius:var(--r-xs);padding:4px 10px;font-size:.7rem;color:var(--text-secondary);cursor:pointer;">Edit</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notice Editor Modal (superadmin) -->
+        <div id="noticeModal" class="modal-ov">
+          <div class="modal-box" style="max-width:500px;">
+            <h4>📢 Edit Announcements</h4>
+            <p style="font-size:.76rem;color:var(--text-secondary);margin-bottom:14px;">Up to 5 rotating announcements. Leave blank to skip.</p>
+            <div id="noticeEditorFields"></div>
+            <div class="form-row-2 mt-3">
+              <button onclick="document.getElementById('noticeModal').style.display='none'" class="btn btn-light border">Cancel</button>
+              <button onclick="saveNotices()" class="btn" style="background:#003366;color:#fff;">Save</button>
+            </div>
+          </div>
+        </div>
+
         <div class="quick-actions">
           <div class="quick-actions-title">Quick Actions</div>
           <div class="quick-actions-row">
@@ -1244,7 +1277,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <button class="stab on leave" onclick="lAdminTab('records',this)">📋 Records</button>
           <button class="stab" onclick="lAdminTab('schedule',this)">🗓 Schedule</button>
           <button class="stab" onclick="lAdminTab('calendar',this)">📅 Calendar</button>
-          <button class="stab" onclick="lAdminTab('apply',this)">✏️ Apply Leave</button>
+          <button class="stab stab-action" onclick="lAdminTab('apply',this)">✏️ Apply Leave</button>
         </div>
 
         <!-- Records -->
@@ -1491,6 +1524,15 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="stat-card"><div class="stat-val" id="otsApproved" style="color:var(--green);">—</div><div class="stat-lbl">Approved</div></div>
           <div class="stat-card"><div class="stat-val" id="otsRejected" style="color:var(--red);">—</div><div class="stat-lbl">Rejected</div></div>
         </div>
+        <!-- OT admin tabs-like header -->
+        <div style="display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);margin-bottom:20px;padding-bottom:0;">
+          <div style="padding:9px 16px;border-bottom:2px solid var(--ot-color);color:var(--ot-color);font-size:.78rem;font-weight:600;margin-bottom:-1px;">📋 Records</div>
+          <div style="flex:1;"></div>
+          <button onclick="otAdminRefresh()" style="background:none;border:none;color:var(--text-secondary);font-size:.76rem;cursor:pointer;padding:6px 10px;">↻ Refresh</button>
+          <button onclick="qaSubmitOT()" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:.76rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+            ⏱ Submit OT
+          </button>
+        </div>
         <div class="pcard">
           <div class="pcard-hdr">
             <h4>OT Records</h4>
@@ -1672,12 +1714,18 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
       <!-- Admin Order dashboard -->
       <div id="orderAdminView" class="hidden">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div class="stabs" style="margin-bottom:0;">
-            <button class="stab on order" onclick="ordAdminTab('orders',this)">📋 Orders</button>
-            <button class="stab" onclick="ordAdminTab('machines',this)">🚗 Machines</button>
-          </div>
-          <button id="ordCreateBtn" class="ab" style="background:#d97706;color:#fff;padding:8px 16px;font-size:.8rem;display:none;"
+        <!-- Order Stats Row -->
+        <div class="stats-row" id="ordStatsRow">
+          <div class="stat-card"><div class="stat-val" id="ordStTotal" style="color:var(--navy);">—</div><div class="stat-lbl">Total Orders</div></div>
+          <div class="stat-card"><div class="stat-val" id="ordStPending" style="color:var(--order-color);">—</div><div class="stat-lbl">Unassigned</div></div>
+          <div class="stat-card"><div class="stat-val" id="ordStAssigned" style="color:var(--ot-color);">—</div><div class="stat-lbl">Assigned</div></div>
+          <div class="stat-card"><div class="stat-val" id="ordStMachines" style="color:var(--navy);">—</div><div class="stat-lbl">Total Fleet</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);margin-bottom:20px;padding-bottom:0;">
+          <button class="stab on order" id="ordTabBtn1" onclick="ordAdminTab('orders',this)" style="border-bottom:2px solid var(--order-color);color:var(--order-color);margin-bottom:-1px;">📋 Orders</button>
+          <button class="stab" id="ordTabBtn2" onclick="ordAdminTab('machines',this)">🚗 Machines</button>
+          <div style="flex:1;"></div>
+          <button id="ordCreateBtn" style="display:none;background:#d97706;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:.76rem;font-weight:600;cursor:pointer;margin-bottom:2px;"
             onclick="ordShowCreateForm()">+ New Order</button>
         </div>
 
@@ -1884,9 +1932,15 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     <h4>🚧 New Machine Order</h4>
 
     <label class="form-label">Machine Type *</label>
-    <select id="ordCrMachType" class="form-control" onchange="ordCrTypeChange()">
-      <option value="">Select machine type…</option>
-    </select>
+    <div style="position:relative;">
+      <input type="text" id="ordCrMachTypeInput" class="form-control" 
+        placeholder="Search machine type…" autocomplete="off"
+        oninput="ordCrFilterTypes()" onfocus="ordCrShowDropdown()" 
+        onblur="setTimeout(ordCrHideDropdown,200)">
+      <input type="hidden" id="ordCrMachType">
+      <div id="ordCrTypeDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-sm);z-index:100;max-height:200px;overflow-y:auto;box-shadow:var(--shadow-md);">
+      </div>
+    </div>
 
     <label class="form-label">Specification *</label>
     <div style="display:flex;gap:8px;align-items:center;">
@@ -1934,19 +1988,21 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     <label class="form-label">Location / Project Name *</label>
     <input type="text" id="ordCrLocation" class="form-control" placeholder="Project site / company name">
 
-    <label class="form-label">Job Type *</label>
-    <select id="ordCrJobType" class="form-control">
-      <option value="SL">SL — Scissor Lift</option>
-      <option value="BL">BL — Boom Lift</option>
-      <option value="FL">FL — Forklift</option>
-      <option value="TF">TF — Teleforklift / Reach Stacker</option>
-      <option value="BTL">BTL — Battery Telehandler</option>
-      <option value="GT">GT — Generator / Transformer</option>
-      <option value="WS">WS — Welding Set</option>
-      <option value="VL">VL — Vertical Lift</option>
-      <option value="LT">LT — Lighting Tower</option>
-      <option value="ATCH">ATCH — Attachment</option>
-    </select>
+    <label class="form-label">Job Type</label>
+    <input type="text" id="ordCrJobType" class="form-control" 
+      placeholder="e.g. SL, BL, FL (optional)" list="jobTypeList">
+    <datalist id="jobTypeList">
+      <option value="SL — Scissor Lift">
+      <option value="BL — Boom Lift">
+      <option value="FL — Forklift">
+      <option value="TF — Teleforklift / Reach Stacker">
+      <option value="BTL — Battery Telehandler">
+      <option value="GT — Generator / Transformer">
+      <option value="WS — Welding Set">
+      <option value="VL — Vertical Lift">
+      <option value="LT — Lighting Tower">
+      <option value="ATCH — Attachment">
+    </datalist>
 
     <label class="form-label">Requested By (Company) *</label>
     <input type="text" id="ordCrReqBy" class="form-control" placeholder="Company / client name">
@@ -2099,7 +2155,10 @@ window.onload=function(){
       initGSI();
     }, 12000);
 
-    api('getBootBundle').then(function(res) {
+    var _lss=document.getElementById('lsStatus');
+  if(_lss)_lss.textContent='Authenticating…';
+  api('getBootBundle').then(function(res) {
+    if(_lss)_lss.textContent='Loading data…';
       clearTimeout(sessionTimer);
       if (!res.ok) {
         _clearSession();
@@ -2207,6 +2266,8 @@ function onGoogleSignIn(resp) {
     var rp = document.getElementById('homeRolePill');
     rp.textContent = myRole.toUpperCase();
     rp.className = 'role-pill ' + (myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');
+    var _lsStatus=document.getElementById('lsStatus');
+    if(_lsStatus)_lsStatus.textContent='Loading complete';
     document.getElementById('pmpShell').classList.remove('hidden');
     var _sE3=document.getElementById('sidebarEmail');if(_sE3)_sE3.textContent=myEmail;
     var _sR3=document.getElementById('sidebarRole');if(_sR3)_sR3.textContent=myLeaveRole.toUpperCase();
@@ -3301,7 +3362,7 @@ function machRenderTbl(){
       actions='<button class="ab" style="background:#ffedd5;color:#9a3412;" onclick="doCancelOrdered(\''+m.unitId+'\',\''+m.orderId+'\')">🚫 Cancel</button>';
     }
     return '<tr>'+
-      '<td style="font-family:\'DM Mono\',monospace;font-weight:700;">'+m.unitId+'</td>'+
+      '<td style="font-family:\'DM Mono\',monospace;font-family:monospace;font-weight:700;white-space:nowrap;font-size:.78rem;">'+m.unitId+'</td>'+
       '<td>'+(m.label||m.brand+' '+m.model)+'</td>'+
       '<td style="font-size:.78rem;">'+m.machineType+'</td>'+
       '<td style="font-size:.78rem;">'+m.hmReading+'</td>'+
@@ -3555,13 +3616,17 @@ function techMachRender(){
 // ORDER CREATE (Admin/Superadmin)
 // ═══════════════════════════════════════════════════════════════
 function ordShowCreateForm(){
-  var sel=document.getElementById('ordCrMachType');
-  sel.innerHTML='<option value="">Select machine type…</option>';
-  machineTypes.forEach(function(t){sel.add(new Option(t.type,t.type));});
+  // Populate searchable dropdown
+  _ordCrTypes = machineTypes.slice();
+  ordCrPopulateTypes();
+  document.getElementById('ordCrMachTypeInput').value = '';
+  document.getElementById('ordCrMachType').value = '';
   var tsel=document.getElementById('ordCrTech');
   tsel.innerHTML='<option value="">— Select Technician —</option>';
   technicians.forEach(function(t){
-    tsel.add(new Option(t.name+(t.department?' ('+t.department+')':''), t.name+'|'+t.phone+'|'+t.department));
+    var phone = t.phone ? ' · '+t.phone : '';
+    var dept  = t.department ? ' ('+t.department+')' : '';
+    tsel.add(new Option(t.name + phone + dept, t.name+'|'+t.phone+'|'+t.department));
   });
   // Clear form
   document.getElementById('ordCrSpecVal').value='';
@@ -3616,9 +3681,9 @@ function ordDoCreate(){
   var rental=rentalNum?(rentalNum+' '+rentalUnit):'';
   var loc=document.getElementById('ordCrLocation').value.trim();
   var req=document.getElementById('ordCrReqBy').value.trim();
-  var techVal=document.getElementById('ordCrTech').value;
-  if(!type||!spec||!del||!rental||!loc||!req||!techVal){
-    Swal.fire('Incomplete','Fill all required fields including Technician.','warning');return;
+  var techVal=document.getElementById('ordCrTech')?document.getElementById('ordCrTech').value:'';
+  if(!type||!spec||!del||!rental||!loc||!req){
+    Swal.fire('Incomplete','Fill all required fields.','warning');return;
   }
 
   var techVal=document.getElementById('ordCrTech').value;
@@ -3699,14 +3764,14 @@ function ordRenderTblWithRoles(){
       actions+='<button class="ab ab-del" onclick="ordDel('+o.rowIndex+',\''+o.orderId+'\')" >Del</button>';
     }
     return '<tr>'+
-      '<td style="font-size:.72rem;font-family:monospace;white-space:nowrap;">'+o.orderId+'</td>'+
-      '<td style="font-weight:700;">'+o.machineType+'<br><span style="font-size:.7rem;color:#aaa;">'+o.specValue+' '+o.specUnit+'</span></td>'+
-      '<td style="text-align:center;">'+o.unitQty+'</td>'+
-      '<td style="font-size:.78rem;">'+o.deliveryDate+'</td>'+
-      '<td style="font-size:.78rem;">'+o.location+'</td>'+
-      '<td style="font-size:.78rem;">'+o.requestedBy+'</td>'+
-      '<td>'+unitCell+'</td>'+
-      '<td style="font-size:.75rem;color:#888;">'+subName+'</td>'+
+      '<td style="font-size:.72rem;font-family:monospace;white-space:nowrap;width:1%;padding-right:8px;">'+o.orderId+'</td>'+
+      '<td style="font-weight:600;min-width:120px;">'+o.machineType+'<br><span style="font-size:.72rem;color:var(--text-secondary);font-weight:400;">'+o.specValue+' '+o.specUnit+'</span></td>'+
+      '<td style="text-align:center;width:40px;">'+o.unitQty+'</td>'+
+      '<td style="white-space:nowrap;font-size:.8rem;min-width:90px;">'+o.deliveryDate+'</td>'+
+      '<td style="font-size:.8rem;min-width:100px;">'+o.location+'</td>'+
+      '<td style="font-size:.8rem;min-width:110px;">'+o.requestedBy+'</td>'+
+      '<td style="min-width:100px;">'+unitCell+'</td>'+
+      '<td style="font-size:.75rem;color:var(--text-secondary);white-space:nowrap;">'+subName+'</td>'+
       '<td><div class="act">'+actions+'</div></td></tr>';
   }).join('');
 }
@@ -3944,6 +4009,7 @@ function handleSignOut() {
 // DASHBOARD KPI + PANELS
 // ═══════════════════════════════════════════════════════════════
 function dashboardRefresh() {
+  initNotices();
   // KPIs from cached data
   var activeRentals = allOrders.filter(function(o){ return o.selectedUnit && o.selectedUnit.length > 0; }).length;
   var readyFleet    = allMachines.filter(function(m){ return m.status === 'READY'; }).length;
@@ -4126,6 +4192,209 @@ function lRenderPage(list, tbodyId, renderFn) {
       pgBtns2.forEach(function(b){pgDiv.appendChild(b);});;
     tb.parentNode.after(pgDiv);
   }
+}
+
+// ── Machine type unit mapping ──
+var MACHINE_UNIT_MAP = {
+  'SCISSOR LIFT': 'FT', 'BOOM LIFT': 'FT', 'VERTICAL LIFT': 'FT',
+  'FORKLIFT': 'TON', 'TELEFORKLIFT': 'TON', 'REACH STACKER': 'TON',
+  'BATTERY TELEHANDLER': 'TON', 'TELEHANDLER': 'TON',
+  'GENERATOR': 'KVA', 'TRANSFORMER': 'KVA',
+  'WELDING SET': 'AMP', 'LIGHTING TOWER': 'KW',
+  'ATTACHMENT': 'TON'
+};
+
+var _ordCrTypes = [];
+
+function ordCrPopulateTypes() {
+  _ordCrTypes = machineTypes.slice();
+}
+
+function ordCrShowDropdown() {
+  ordCrFilterTypes();
+  document.getElementById('ordCrTypeDropdown').style.display = 'block';
+}
+
+function ordCrHideDropdown() {
+  document.getElementById('ordCrTypeDropdown').style.display = 'none';
+}
+
+function ordCrFilterTypes() {
+  var q = (document.getElementById('ordCrMachTypeInput').value || '').toLowerCase();
+  var items = _ordCrTypes.filter(function(t){ return t.type.toLowerCase().indexOf(q) > -1; });
+  var dd = document.getElementById('ordCrTypeDropdown');
+  dd.innerHTML = '';
+  if (!items.length) {
+    dd.innerHTML = '<div style="padding:10px 12px;color:#6b7280;font-size:.8rem;">No results</div>';
+  } else {
+    items.forEach(function(t){
+      var div = document.createElement('div');
+      div.style.cssText = 'padding:9px 14px;cursor:pointer;font-size:.82rem;border-bottom:1px solid #e5e9ef;display:flex;justify-content:space-between;align-items:center;';
+      var nameEl = document.createElement('span');
+      nameEl.textContent = t.type;
+      var unitEl = document.createElement('span');
+      unitEl.textContent = t.unit;
+      unitEl.style.cssText = 'color:#9ca3af;font-size:.72rem;font-family:monospace;';
+      div.appendChild(nameEl);
+      div.appendChild(unitEl);
+      div.onmouseover = function(){ this.style.background='#f4f6f9'; };
+      div.onmouseout  = function(){ this.style.background=''; };
+      (function(tp, un){ div.onclick = function(){ ordCrSelectType(tp, un); }; })(t.type, t.unit);
+      dd.appendChild(div);
+    });
+  }
+  dd.style.display = 'block';
+}
+
+function ordCrSelectType(type, unit) {
+  document.getElementById('ordCrMachTypeInput').value = type;
+  document.getElementById('ordCrMachType').value = type;
+  document.getElementById('ordCrTypeDropdown').style.display = 'none';
+  // Auto-set spec unit
+  var autoUnit = MACHINE_UNIT_MAP[type.toUpperCase()] || unit || 'FT';
+  ordCrSetSpecUnit(autoUnit);
+}
+
+function ordCrSetSpecUnit(unit) {
+  var sel = document.getElementById('ordCrSpecUnit');
+  if (!sel) return;
+  // Set the select to the right unit
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value.toUpperCase() === unit.toUpperCase() ||
+        sel.options[i].value === unit) {
+      sel.selectedIndex = i; return;
+    }
+  }
+}
+
+// Override ordCrTypeChange to handle hidden input
+function ordCrTypeChange() {
+  var type = document.getElementById('ordCrMachType').value;
+  var found = machineTypes.find(function(t){ return t.type === type; });
+  if (found) {
+    var autoUnit = MACHINE_UNIT_MAP[type.toUpperCase()] || found.unit || 'FT';
+    ordCrSetSpecUnit(autoUnit);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NOTICE / ANNOUNCEMENT SYSTEM
+// ═══════════════════════════════════════════════════════════════
+var _notices = [
+  'Welcome to PMP Operations Platform. Have a productive day!',
+  'Safety First — Always conduct pre-start checks before operating equipment.',
+  'Reminder: Submit your overtime applications before end of day.'
+];
+var _noticeIdx = 0;
+var _noticeTimer = null;
+
+function initNotices() {
+  // Load from localStorage if saved
+  try {
+    var saved = localStorage.getItem('pmp_notices');
+    if (saved) _notices = JSON.parse(saved).filter(function(n){ return n && n.trim(); });
+  } catch(e) {}
+  if (!_notices.length) return;
+  var banner = document.getElementById('noticeBanner');
+  if (banner) banner.style.display = '';
+  // Show edit button for superadmin
+  if (myLeaveRole === 'superadmin' || myOrderRole === 'superadmin') {
+    var eb = document.getElementById('noticeEditBtn');
+    if (eb) eb.style.display = '';
+  }
+  renderNotice(0);
+  // Build dots
+  var dots = document.getElementById('noticeDots');
+  if (dots) {
+    dots.innerHTML = _notices.map(function(_,i){
+      return '<div onclick="renderNotice('+i+')" style="width:6px;height:6px;border-radius:50%;cursor:pointer;transition:.2s;background:'+(i===0?'#003366':'#d1d5db')+'" id="noticeDot'+i+'"></div>';
+    }).join('');
+  }
+  // Auto-rotate every 5 seconds
+  if (_noticeTimer) clearInterval(_noticeTimer);
+  _noticeTimer = setInterval(function(){
+    _noticeIdx = (_noticeIdx + 1) % _notices.length;
+    renderNotice(_noticeIdx);
+  }, 5000);
+}
+
+function renderNotice(idx) {
+  if (idx < 0 || idx >= _notices.length) return;
+  _noticeIdx = idx;
+  var el = document.getElementById('noticeText');
+  var tEl = document.getElementById('noticeTime');
+  if (el) el.textContent = _notices[idx];
+  if (tEl) {
+    var now = new Date();
+    tEl.textContent = now.toLocaleDateString('en-MY',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  }
+  // Update dots
+  for (var i = 0; i < _notices.length; i++) {
+    var dot = document.getElementById('noticeDot'+i);
+    if (dot) dot.style.background = i === idx ? '#003366' : '#d1d5db';
+  }
+}
+
+function openNoticeEditor() {
+  var fields = document.getElementById('noticeEditorFields');
+  if (!fields) return;
+  var html = '';
+  for (var i = 0; i < 5; i++) {
+    html += '<div style="margin-bottom:10px;">' +
+      '<label class="form-label">Notice ' + (i+1) + '</label>' +
+      '<input type="text" class="form-control notice-field" value="' + (_notices[i]||'').replace(/"/g,'&quot;') + '" placeholder="Leave blank to skip">' +
+      '</div>';
+  }
+  fields.innerHTML = html;
+  document.getElementById('noticeModal').style.display = 'flex';
+}
+
+function saveNotices() {
+  var inputs = document.querySelectorAll('.notice-field');
+  _notices = Array.from(inputs).map(function(i){ return i.value.trim(); }).filter(Boolean);
+  try { localStorage.setItem('pmp_notices', JSON.stringify(_notices)); } catch(e) {}
+  document.getElementById('noticeModal').style.display = 'none';
+  if (_noticeTimer) clearInterval(_noticeTimer);
+  initNotices();
+}
+
+function kpiNavOrderAll(){
+  navTo('order');
+  setTimeout(function(){
+    // Click All filter
+    var btns=document.querySelectorAll('#ordAdminOrders .fbar .fbtn');
+    btns.forEach(function(b){ if(b.textContent.trim()==='All') b.click(); });
+  }, 400);
+}
+function kpiNavMachineReady(){
+  navTo('order');
+  setTimeout(function(){
+    // Switch to machines tab
+    var mBtn=document.getElementById('ordTabBtn2');
+    if(mBtn) mBtn.click();
+    setTimeout(function(){
+      var btns=document.querySelectorAll('#ordAdminMachines .fbar .fbtn');
+      btns.forEach(function(b){ if(b.textContent.trim()==='Ready') b.click(); });
+    },200);
+  }, 400);
+}
+function kpiNavLeavePending(){
+  navTo('leave');
+  setTimeout(function(){
+    var btns=document.querySelectorAll('#lTabRecords .fbar .fbtn');
+    btns.forEach(function(b){ if(b.textContent.trim()==='Pending') b.click(); });
+  }, 400);
+}
+function kpiNavMachinePending(){
+  navTo('order');
+  setTimeout(function(){
+    var mBtn=document.getElementById('ordTabBtn2');
+    if(mBtn) mBtn.click();
+    setTimeout(function(){
+      var btns=document.querySelectorAll('#ordAdminMachines .fbar .fbtn');
+      btns.forEach(function(b){ if(b.textContent.trim()==='Pending') b.click(); });
+    },200);
+  }, 400);
 }
 </script>
 </body>
