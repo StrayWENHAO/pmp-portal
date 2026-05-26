@@ -251,7 +251,7 @@ body {
 }
 /* Hide mobile topbar when shell not visible */
 #pmpShell.hidden ~ * #mobileTopbar,
-body:not(.shell-visible) #mobileTopbar { display: none !important; }
+body:not(.shell-visible) #mobileTopbar { display: none; }
 
 /* ── SIDEBAR ── */
 #pmpSidebar {
@@ -367,7 +367,7 @@ body:not(.shell-visible) #mobileTopbar { display: none !important; }
   box-shadow: var(--shadow-sm);
 }
 @media(max-width: 991px) { #mobileTopbar { display: flex; }
-  #pmpShell.hidden #mobileTopbar { display: none !important; }
+  #pmpShell.hidden #mobileTopbar { display: none; }
 }
 .mobile-menu-btn {
   background: rgba(255,255,255,0.08); border: none;
@@ -2216,12 +2216,10 @@ var myLeaveRole='staff', myOTRole='staff', myOrderRole='staff', myDepartment='';
 // ── SESSION STORAGE ──────────────────────────────────────────
 function _saveSession(token, email, role) {
   try {
-    // Save to BOTH storages for maximum persistence
-    var data = { token: token, email: email, role: role, ts: Date.now() };
-    var str = JSON.stringify(data);
-    localStorage.setItem('pmp_session', str);
-    sessionStorage.setItem('pmp_session', str);
-    // Legacy keys
+    sessionStorage.setItem('pmp_token', token);
+    sessionStorage.setItem('pmp_email', email);
+    sessionStorage.setItem('pmp_role', role);
+    sessionStorage.setItem('pmp_ts', Date.now().toString());
     localStorage.setItem('pmp_token', token);
     localStorage.setItem('pmp_email', email);
     localStorage.setItem('pmp_role', role);
@@ -2236,18 +2234,9 @@ function _loadCurrentApp() {
 }
 function _loadSession() {
   try {
-    // Try JSON session first (new format)
-    var str = sessionStorage.getItem('pmp_session') || localStorage.getItem('pmp_session');
-    if (str) {
-      var d = JSON.parse(str);
-      if (d && d.token && d.email && d.role) {
-        return { token: d.token, email: d.email, role: d.role };
-      }
-    }
-    // Fallback to legacy keys
-    var token = localStorage.getItem('pmp_token') || sessionStorage.getItem('pmp_token');
-    var email = localStorage.getItem('pmp_email') || sessionStorage.getItem('pmp_email');
-    var role  = localStorage.getItem('pmp_role')  || sessionStorage.getItem('pmp_role');
+    var token = sessionStorage.getItem('pmp_token') || localStorage.getItem('pmp_token');
+    var email = sessionStorage.getItem('pmp_email') || localStorage.getItem('pmp_email');
+    var role  = sessionStorage.getItem('pmp_role')  || localStorage.getItem('pmp_role');
     if (token && email && role) {
       return { token: token, email: email, role: role };
     }
