@@ -2227,13 +2227,18 @@ function _loadCurrentApp() {
 }
 function _loadSession() {
   try {
+    // Try localStorage first (persistent)
     var token = localStorage.getItem('pmp_token');
     var email = localStorage.getItem('pmp_email');
     var role  = localStorage.getItem('pmp_role');
-    var ts    = parseInt(localStorage.getItem('pmp_ts') || '0');
-    // localStorage persists longer — refresh token if > 50 min old
+    // Fallback to sessionStorage (old version)
+    if (!token) {
+      token = sessionStorage.getItem('pmp_token');
+      email = sessionStorage.getItem('pmp_email');
+      role  = sessionStorage.getItem('pmp_role');
+    }
     if (token && email && role) {
-      return { token: token, email: email, role: role, needsRefresh: (Date.now() - ts) > 50 * 60 * 1000 };
+      return { token: token, email: email, role: role };
     }
   } catch(e) {}
   return null;
