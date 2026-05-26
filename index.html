@@ -344,6 +344,12 @@
       <span class="hc-arrow">›</span>
     </div>
   </div>
+  <!-- Log button - superadmin only -->
+  <div id="homeLogBtn" style="display:none;text-align:center;padding:0 16px 32px;">
+    <button onclick="openApp('log')" style="background:none;border:1px solid rgba(255,255,255,.2);color:#aaa;border-radius:20px;padding:6px 18px;font-size:.74rem;cursor:pointer;">
+      📋 Activity Log
+    </button>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════ APP VIEW ══════════════════════════════════ -->
@@ -828,8 +834,8 @@
             </div>
             <div class="pcard-body">
               <div class="fbar">
-                <button class="fbtn on" onclick="ordFilt('',this)">All</button>
-                <button class="fbtn" onclick="ordFilt('pending',this)">Pending</button>
+                <button class="fbtn" onclick="ordFilt('',this)">All</button>
+                <button class="fbtn on" onclick="ordFilt('pending',this)">Pending</button>
                 <button class="fbtn" onclick="ordFilt('assigned',this)">Assigned</button>
                 <input type="text" id="ordSearch" placeholder="Search…" oninput="ordRenderTbl()">
               </div>
@@ -867,6 +873,27 @@
                 </table>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── LOG SYSTEM ─── -->
+    <div id="logApp" class="hidden">
+      <div class="pcard">
+        <div class="pcard-hdr">
+          <h4>📋 Activity Log</h4>
+          <button class="ab ab-edit" onclick="logRefresh()">↻ Refresh</button>
+        </div>
+        <div class="pcard-body">
+          <div class="fbar">
+            <input type="text" id="logSearch" placeholder="Search by user, action…" oninput="logRender()" style="flex:1;">
+          </div>
+          <div class="tbl-wrap">
+            <table class="ptbl">
+              <thead><tr><th>Time</th><th>Performed By</th><th>Action</th><th>Details</th></tr></thead>
+              <tbody id="logTbody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -993,62 +1020,102 @@
 
 <!-- Create Order Modal -->
 <div id="ordCreateModal" class="modal-ov">
-  <div class="modal-box" style="max-width:560px;">
+  <div class="modal-box" style="max-width:600px;">
     <h4>🚧 New Machine Order</h4>
+
     <label class="form-label">Machine Type *</label>
     <select id="ordCrMachType" class="form-control" onchange="ordCrTypeChange()">
       <option value="">Select machine type…</option>
     </select>
+
     <label class="form-label">Specification *</label>
-    <div class="spec-row">
-      <input type="number" id="ordCrSpecVal" class="form-control" placeholder="Value" min="0" step="0.1">
-      <div class="unit-badge" id="ordCrSpecUnit">—</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="number" id="ordCrSpecVal" class="form-control" placeholder="Value" min="0" step="0.1" style="flex:1;">
+      <select id="ordCrSpecUnit" class="form-control" style="width:100px;">
+        <option value="FT">FT</option>
+        <option value="M">M</option>
+        <option value="Ton">Ton</option>
+        <option value="KVA">KVA</option>
+        <option value="AMP">AMP</option>
+        <option value="KG">KG</option>
+      </select>
     </div>
+
+    <label class="form-label">Power Type *</label>
+    <select id="ordCrPower" class="form-control">
+      <option value="AC (Site Power Supply TNB)">AC (Site Power Supply TNB)</option>
+      <option value="DC (Site Power Supply TNB)">DC (Site Power Supply TNB)</option>
+      <option value="AC (Generator)">AC (Generator)</option>
+      <option value="DC (Battery)">DC (Battery)</option>
+      <option value="Diesel">Diesel</option>
+    </select>
+
     <div class="form-row-2">
       <div>
-        <label class="form-label">Power Type *</label>
-        <select id="ordCrPower" class="form-control">
-          <option value="AC (Site Power Supply TNB)">AC (TNB)</option>
-          <option value="DC (Site Power Supply TNB)">DC (TNB)</option>
-          <option value="AC (Generator)">AC (Generator)</option>
-          <option value="DC (Battery)">DC (Battery)</option>
-        </select>
+        <label class="form-label">Delivery Date *</label>
+        <input type="date" id="ordCrDelDate" class="form-control">
       </div>
       <div>
         <label class="form-label">Unit Qty *</label>
         <input type="number" id="ordCrQty" class="form-control" value="1" min="1">
       </div>
     </div>
-    <label class="form-label">Delivery Date *</label>
-    <input type="date" id="ordCrDelDate" class="form-control">
+
     <label class="form-label">Rental Period *</label>
-    <input type="text" id="ordCrRental" class="form-control" placeholder="e.g. 1 Month">
+    <div style="display:flex;gap:8px;">
+      <input type="number" id="ordCrRentalNum" class="form-control" placeholder="e.g. 1" min="1" style="width:80px;">
+      <select id="ordCrRentalUnit" class="form-control">
+        <option value="Day(s)">Day(s)</option>
+        <option value="Week(s)">Week(s)</option>
+        <option value="Month(s)" selected>Month(s)</option>
+      </select>
+    </div>
+
     <label class="form-label">Location / Project Name *</label>
-    <input type="text" id="ordCrLocation" class="form-control" placeholder="Project site name">
+    <input type="text" id="ordCrLocation" class="form-control" placeholder="Project site / company name">
+
     <label class="form-label">Job Type *</label>
     <select id="ordCrJobType" class="form-control">
       <option value="SL">SL — Scissor Lift</option>
       <option value="BL">BL — Boom Lift</option>
       <option value="FL">FL — Forklift</option>
-      <option value="TF">TF — Teleforklift</option>
+      <option value="TF">TF — Teleforklift / Reach Stacker</option>
       <option value="BTL">BTL — Battery Telehandler</option>
-      <option value="GT">GT — Generator</option>
+      <option value="GT">GT — Generator / Transformer</option>
       <option value="WS">WS — Welding Set</option>
       <option value="VL">VL — Vertical Lift</option>
       <option value="LT">LT — Lighting Tower</option>
       <option value="ATCH">ATCH — Attachment</option>
     </select>
+
     <label class="form-label">Requested By (Company) *</label>
     <input type="text" id="ordCrReqBy" class="form-control" placeholder="Company / client name">
-    <label class="form-label">Notify Technician (WhatsApp)</label>
+
+    <label class="form-label">Send to Technician (WhatsApp) *</label>
     <select id="ordCrTech" class="form-control">
-      <option value="">— None —</option>
+      <option value="">— Select Technician —</option>
     </select>
+
     <label class="form-label">Special Requirements</label>
-    <textarea id="ordCrSpecReq" class="form-control" rows="2" placeholder="e.g. Good Tire, Motion Alarm…"></textarea>
+    <div id="ordCrSRList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;margin-bottom:6px;"></div>
+    <div style="display:flex;gap:6px;">
+      <select id="ordCrSRSel" class="form-control" style="flex:1;">
+        <option value="">+ Add requirement…</option>
+        <option value="Good Tire">Good Tire</option>
+        <option value="Motion Alarm">Motion Alarm</option>
+        <option value="Foam Fill Tire">Foam Fill Tire</option>
+        <option value="Basket Extension">Basket Extension</option>
+        <option value="Non-Marking Tire">Non-Marking Tire</option>
+        <option value="AC Power">AC Power</option>
+        <option value="DC Power">DC Power</option>
+      </select>
+      <button onclick="ordCrAddSR()" class="btn" style="background:#003366;color:#fff;border-radius:9px;white-space:nowrap;">Add</button>
+    </div>
+    <input type="hidden" id="ordCrSpecReq" value="">
+
     <div class="form-row-2 mt-3">
       <button onclick="document.getElementById('ordCreateModal').style.display='none'" class="btn btn-light border">Cancel</button>
-      <button onclick="ordDoCreate()" class="btn" style="background:#d97706;color:#fff;">Submit Order</button>
+      <button onclick="ordDoCreate()" class="btn" style="background:#d97706;color:#fff;font-weight:700;">Submit Order</button>
     </div>
   </div>
 </div>
@@ -1078,6 +1145,12 @@ function _saveSession(token, email, role) {
     sessionStorage.setItem('pmp_role', role);
     sessionStorage.setItem('pmp_ts', Date.now().toString());
   } catch(e) {}
+}
+function _saveCurrentApp(app) {
+  try { sessionStorage.setItem('pmp_app', app); } catch(e) {}
+}
+function _loadCurrentApp() {
+  try { return sessionStorage.getItem('pmp_app') || ''; } catch(e) { return ''; }
 }
 function _loadSession() {
   try {
@@ -1194,8 +1267,13 @@ window.onload=function(){
       var rp=document.getElementById('homeRolePill');
       rp.textContent=myRole.toUpperCase();
       rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');
+      var savedApp = _loadCurrentApp();
       document.getElementById('homeView').classList.remove('hidden');
+      if(myLeaveRole==='superadmin'||myOTRole==='superadmin'||myOrderRole==='superadmin'){
+        var lb=document.getElementById('homeLogBtn'); if(lb)lb.style.display='block';
+      }
       initPads();
+      if (savedApp) setTimeout(function(){ openApp(savedApp); }, 100);
     }).catch(function(){
       clearTimeout(sessionTimer);
       _clearSession();
@@ -1215,6 +1293,10 @@ window.onload=function(){
 // Called by Google Sign-In SDK after user signs in
 function onGoogleSignIn(resp) {
   __idToken = resp.credential;
+  // Show loading screen while fetching data
+  document.getElementById('expiredView').classList.add('hidden');
+  document.getElementById('ls').style.display='flex';
+  document.getElementById('ls').style.opacity='1';
   // Single call: verify token + get role + load ALL data at once
   api('getBootBundle').then(function(res) {
     if (!res.ok) {
@@ -1338,10 +1420,23 @@ function resizePad(pad,canvasId){
 function goHome(){
   document.getElementById('appView').classList.add('hidden');
   document.getElementById('homeView').classList.remove('hidden');
+  // Hide all app sections
+  ['leaveApp','otApp','orderApp','logApp'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.classList.add('hidden');
+  });
+  // Also hide sub-views
+  ['leaveStaffView','leaveAdminView','otStaffView','otAdminView',
+   'orderStaffView','orderAdminView','orderTechView','orderNoAccess',
+   'lSuccessView','otSuccessView'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.classList.add('hidden');
+  });
 }
 
 function openApp(app){
   currentApp=app;
+  _saveCurrentApp(app);
   document.getElementById('homeView').classList.add('hidden');
   document.getElementById('appView').classList.remove('hidden');
   document.getElementById('leaveApp').classList.add('hidden');
@@ -1350,15 +1445,18 @@ function openApp(app){
   document.getElementById('lSuccessView').classList.add('hidden');
   document.getElementById('otSuccessView').classList.add('hidden');
 
-  var titles={leave:'🏖️ Leave System',ot:'⏰ Overtime System',order:'🚧 Order System'};
+  var titles={leave:'🏖️ Leave System',ot:'⏰ Overtime System',order:'🚧 Order System',log:'📋 Activity Log'};
   document.getElementById('appTitle').textContent=titles[app]||app;
   document.getElementById('appRoleLbl').textContent=myEmail+' · '+myRole;
 
-  document.getElementById(app+'App').classList.remove('hidden');
+  var appEl = document.getElementById(app+'App');
+  if(appEl) appEl.classList.remove('hidden');
+  else { var logEl=document.getElementById('logApp'); if(logEl)logEl.classList.remove('hidden'); }
 
   if(app==='leave') loadLeaveApp();
   else if(app==='ot') loadOTApp();
   else if(app==='order') loadOrderApp();
+  else if(app==='log') loadLogApp();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1600,10 +1698,11 @@ function lFilt(filter,btn){
       '<td style="font-size:.72rem;color:#bbb;">'+r.submitted+'</td>'+
       '<td><div class="act">'+
         '<button class="ab ab-edit" onclick="lOpenEdit('+r.rowIndex+')">Edit</button>'+
-        (r.status==='Pending'?'<button class="ab ab-ok" onclick="lQuick('+r.rowIndex+',\'Approved\')">✓</button>'+
-          '<button class="ab ab-rej" onclick="lQuick('+r.rowIndex+',\'Rejected\')">✗</button>':'')+
+        (r.status==='Pending'?
+          '<button class="ab ab-ok" onclick="lQuick('+r.rowIndex+',\'Approved\')">✓ Approve</button>'+
+          '<button class="ab ab-rej" onclick="lQuick('+r.rowIndex+',\'Rejected\')">✗ Reject</button>':'')+
         (hasAtt?'<button class="ab" style="background:#f0f4ff;color:#3730a3;" onclick="lViewAtt('+r.rowIndex+')">📎</button>':'')+
-        '<button class="ab ab-del" onclick="lDel('+r.rowIndex+',\''+r.id+'\',\''+r.name+'\')">Del</button>'+
+        (myLeaveRole==='superadmin'?'<button class="ab ab-del" onclick="lDel('+r.rowIndex+',\''+r.id+'\',\''+r.name+'\')">Del</button>':'')+
       '</div></td></tr>';
   }).join('');
 }
@@ -1672,16 +1771,54 @@ function lViewAtt(ri){
 function lBuildMonthPills(){
   var cont=document.getElementById('lSchedMonths');
   if(!cont)return;
-  var ms={};
-  leaveRecords.forEach(function(r){if(r.startDate){var p=r.startDate.split('-');if(p.length>=2)ms[p[0]+'-'+p[1]]=true;}});
   var now=new Date();
-  for(var i=0;i<3;i++){var d=new Date(now.getFullYear(),now.getMonth()+i,1);ms[d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')]=true;}
+  var curYr=now.getFullYear();
+  var ms={};
+  leaveRecords.forEach(function(r){
+    if(r.startDate){var p=r.startDate.split('-');if(p.length>=2)ms[p[0]+'-'+p[1]]=true;}
+  });
+  for(var i=0;i<3;i++){
+    var d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    ms[d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')]=true;
+  }
   var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  cont.innerHTML=Object.keys(ms).sort().map(function(m){
+  var byYear={};
+  Object.keys(ms).sort().forEach(function(m){
     var p=m.split('-'),yr=p[0],mo=parseInt(p[1]);
-    return '<button class="mpill" data-m="'+m+'" onclick="lSelMonth(\''+m+'\')">'+(MN[mo-1]||mo)+' '+yr+'</button>';
-  }).join('');
+    if(!byYear[yr])byYear[yr]=[];
+    byYear[yr].push({key:m,mo:mo});
+  });
+  var html='';
+  Object.keys(byYear).sort().forEach(function(yr){
+    var isCurrentYr=parseInt(yr)===curYr;
+    var months=byYear[yr];
+    if(parseInt(yr)<curYr){
+      html+='<button class="mpill" onclick="lExpandYear(''+yr+'',this)" data-year="'+yr+'" style="background:#f3f4f6;color:#9ca3af;">'+yr+' ▸</button>';
+      html+='<span id="yr-'+yr+'" style="display:none;">'+months.map(function(m){
+        return '<button class="mpill" data-m="'+m.key+'" onclick="lSelMonth(''+m.key+'')">'+(MN[m.mo-1]||m.mo)+'</button>';
+      }).join('')+'</span>';
+    } else if(isCurrentYr){
+      html+=months.map(function(m){
+        return '<button class="mpill" data-m="'+m.key+'" onclick="lSelMonth(''+m.key+'')">'+(MN[m.mo-1]||m.mo)+'</button>';
+      }).join('');
+    } else {
+      html+=months.map(function(m){
+        return '<button class="mpill" data-m="'+m.key+'" onclick="lSelMonth(''+m.key+'')">'+(MN[m.mo-1]||m.mo)+' '+yr+'</button>';
+      }).join('');
+    }
+  });
+  cont.innerHTML=html;
 }
+
+function lExpandYear(yr,btn){
+  var el=document.getElementById('yr-'+yr);
+  if(!el)return;
+  var expanded=el.style.display!=='none';
+  el.style.display=expanded?'none':'inline';
+  btn.textContent=yr+(expanded?' ▸':' ▾');
+}
+
+
 function lSelMonth(ym){
   var p=ym.split('-'),yr=parseInt(p[0]),mo=parseInt(p[1])-1;
   var last=new Date(yr,mo+1,0);
@@ -1800,19 +1937,30 @@ function lRenderCal(){
     calInfo.style.cssText='margin-top:14px;';
     document.getElementById('lCalGrid').parentNode.appendChild(calInfo);
   }
-  var infoHtml='';
+  var today2=new Date(); today2.setHours(0,0,0,0);
+  var pastHtml='', futureHtml='';
   Object.keys(leaveMap).sort(function(a,b){return a-b;}).forEach(function(d){
     var pad=function(n){return String(n).padStart(2,'0');};
     var ds=lCalYear+'-'+pad(lCalMonth+1)+'-'+pad(d);
-    var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(lCalYear,lCalMonth,parseInt(d)).getDay()];
+    var dateObj=new Date(lCalYear,lCalMonth,parseInt(d)); dateObj.setHours(0,0,0,0);
+    var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dateObj.getDay()];
+    var isPast=dateObj<today2;
     var names=leaveMap[d].map(function(n){
-      return '<span style="background:#dbeafe;color:#1e40af;border-radius:12px;padding:2px 8px;font-size:.7rem;font-weight:600;">'+n+'</span>';
+      return '<span style="background:'+(isPast?'#f3f4f6':'#dbeafe')+';color:'+(isPast?'#9ca3af':'#1e40af')+';border-radius:12px;padding:2px 8px;font-size:.7rem;font-weight:600;">'+n+'</span>';
     }).join('');
-    infoHtml+='<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid #f3f3f3;">'
-      +'<div style="font-size:.73rem;color:var(--blue);min-width:90px;font-weight:600;">'+ds+' '+dow+'</div>'
+    var row='<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid #f3f3f3;">'
+      +'<div style="font-size:.73rem;color:'+(isPast?'#9ca3af':'var(--blue)')+';min-width:90px;font-weight:600;">'+ds+' '+dow+'</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+names+'</div>'
       +'</div>';
+    if(isPast) pastHtml+=row; else futureHtml+=row;
   });
+  var infoHtml='';
+  if(pastHtml){
+    infoHtml+='<div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.querySelector('.ptoggle').textContent=this.nextElementSibling.style.display==='none'?'▸':'▾'" style="cursor:pointer;padding:6px 8px;background:#f9fafb;border-radius:8px;margin-bottom:4px;font-size:.74rem;color:#9ca3af;display:flex;align-items:center;gap:6px;">'
+      +'<span class="ptoggle">▸</span> Past dates (click to expand)</div>'
+      +'<div style="display:none;">'+pastHtml+'</div>';
+  }
+  infoHtml+=futureHtml;
   calInfo.innerHTML=infoHtml?infoHtml:'<div style="color:#ccc;font-size:.8rem;text-align:center;padding:12px;">No leave records this month.</div>';
 }
 
@@ -2173,7 +2321,7 @@ function ordAdminRefresh(){
   });
 }
 
-var ordStatusFilt='';
+var ordStatusFilt='pending';
 function ordFilt(f,btn){
   ordStatusFilt=f;
   document.querySelectorAll('#ordAdminOrders .fbar .fbtn').forEach(function(b){b.classList.remove('on');});
@@ -2246,7 +2394,7 @@ function machRenderTbl(){
     }
     return '<tr>'+
       '<td style="font-family:\'DM Mono\',monospace;font-weight:700;">'+m.unitId+'</td>'+
-      '<td>'+m.brand+' '+m.model+'</td>'+
+      '<td>'+(m.label||m.brand+' '+m.model)+'</td>'+
       '<td style="font-size:.78rem;">'+m.machineType+'</td>'+
       '<td style="font-size:.78rem;">'+m.hmReading+'</td>'+
       '<td><span class="bs '+sc+'">'+m.status+'</span></td>'+
@@ -2300,6 +2448,25 @@ function ordDel(ri,id){
 }
 
 // Assign unit modal
+function openReassign(orderId,machType,qty,rowIndex,currentUnits){
+  // Cancel current assignment first, then reassign
+  var units=(currentUnits||'').split(',').map(function(u){return u.trim();}).filter(Boolean);
+  Swal.fire({
+    title:'Reassign Units?',
+    html:'Current units: <b>'+(currentUnits||'none')+'</b><br>This will cancel current assignment and allow you to pick new units.',
+    showCancelButton:true,confirmButtonColor:'#6d28d9',confirmButtonText:'Continue'
+  }).then(function(r){
+    if(!r.isConfirmed)return;
+    // Cancel each current unit then open assign modal
+    var cancelPromises=units.map(function(uid){
+      return apiPost('cancelOrdered',{unitId:uid,orderId:orderId});
+    });
+    Promise.all(cancelPromises).then(function(){
+      openAssign(orderId,machType,qty,rowIndex);
+    });
+  });
+}
+
 function openAssign(orderId,machType,qty,rowIndex){
   assignOrderData={orderId:orderId,machType:machType,qty:parseInt(qty),rowIndex:parseInt(rowIndex)};
   document.getElementById('assignOrderInfo').textContent='Order: '+orderId+' | Type: '+machType+' | Qty: '+qty;
@@ -2461,7 +2628,7 @@ function techMachRender(){
     }
     return '<tr>'+
       '<td style="font-weight:700;">'+m.unitId+'</td>'+
-      '<td>'+m.brand+' '+m.model+'</td>'+
+      '<td>'+(m.label||m.brand+' '+m.model)+'</td>'+
       '<td style="font-size:.78rem;">'+m.machineType+'</td>'+
       '<td style="font-size:.78rem;">'+m.hmReading+'</td>'+
       '<td><span class="bs '+sc+'">'+m.status+'</span></td>'+
@@ -2474,31 +2641,71 @@ function techMachRender(){
 // ORDER CREATE (Admin/Superadmin)
 // ═══════════════════════════════════════════════════════════════
 function ordShowCreateForm(){
-  // Populate machine types
   var sel=document.getElementById('ordCrMachType');
   sel.innerHTML='<option value="">Select machine type…</option>';
   machineTypes.forEach(function(t){sel.add(new Option(t.type,t.type));});
-  // Populate technicians
   var tsel=document.getElementById('ordCrTech');
-  tsel.innerHTML='<option value="">— None —</option>';
-  technicians.forEach(function(t){tsel.add(new Option(t.name+' ('+t.department+')', t.name+'|'+t.phone+'|'+t.department));});
+  tsel.innerHTML='<option value="">— Select Technician —</option>';
+  technicians.forEach(function(t){
+    tsel.add(new Option(t.name+(t.department?' ('+t.department+')':''), t.name+'|'+t.phone+'|'+t.department));
+  });
+  // Clear form
+  document.getElementById('ordCrSpecVal').value='';
+  document.getElementById('ordCrSRList').innerHTML='';
+  document.getElementById('ordCrSpecReq').value='';
+  document.getElementById('ordCrRentalNum').value='';
+  document.getElementById('ordCrLocation').value='';
+  document.getElementById('ordCrReqBy').value='';
   document.getElementById('ordCreateModal').style.display='flex';
 }
 
 function ordCrTypeChange(){
   var type=document.getElementById('ordCrMachType').value;
   var found=machineTypes.find(function(t){return t.type===type;});
-  document.getElementById('ordCrSpecUnit').textContent=found?found.unit:'—';
+  if(found&&found.unit){
+    var sel=document.getElementById('ordCrSpecUnit');
+    for(var i=0;i<sel.options.length;i++){
+      if(sel.options[i].value===found.unit){sel.selectedIndex=i;break;}
+    }
+  }
+}
+
+function ordCrAddSR(){
+  var sel=document.getElementById('ordCrSRSel');
+  var val=sel.value.trim();
+  if(!val)return;
+  var list=document.getElementById('ordCrSRList');
+  // Check not duplicate
+  var existing=Array.from(list.querySelectorAll('span')).map(function(s){return s.dataset.val;});
+  if(existing.includes(val))return;
+  var span=document.createElement('span');
+  span.dataset.val=val;
+  span.style.cssText='background:#f0f4ff;color:#003366;border-radius:12px;padding:3px 10px;font-size:.74rem;display:inline-flex;align-items:center;gap:4px;cursor:pointer;';
+  span.innerHTML=val+' <b onclick="this.parentNode.remove();ordCrUpdateSR()">×</b>';
+  list.appendChild(span);
+  sel.selectedIndex=0;
+  ordCrUpdateSR();
+}
+
+function ordCrUpdateSR(){
+  var list=document.getElementById('ordCrSRList');
+  var vals=Array.from(list.querySelectorAll('span')).map(function(s){return s.dataset.val;});
+  document.getElementById('ordCrSpecReq').value=vals.join(', ');
 }
 
 function ordDoCreate(){
   var type=document.getElementById('ordCrMachType').value;
   var spec=document.getElementById('ordCrSpecVal').value;
   var del=document.getElementById('ordCrDelDate').value;
-  var rental=document.getElementById('ordCrRental').value.trim();
+  var rentalNum=document.getElementById('ordCrRentalNum').value.trim();
+  var rentalUnit=document.getElementById('ordCrRentalUnit').value;
+  var rental=rentalNum?(rentalNum+' '+rentalUnit):'';
   var loc=document.getElementById('ordCrLocation').value.trim();
   var req=document.getElementById('ordCrReqBy').value.trim();
-  if(!type||!spec||!del||!rental||!loc||!req){Swal.fire('Incomplete','Fill all required fields.','warning');return;}
+  var techVal=document.getElementById('ordCrTech').value;
+  if(!type||!spec||!del||!rental||!loc||!req||!techVal){
+    Swal.fire('Incomplete','Fill all required fields including Technician.','warning');return;
+  }
 
   var techVal=document.getElementById('ordCrTech').value;
   var dept='';
@@ -2568,7 +2775,11 @@ function ordRenderTblWithRoles(){
   tb.innerHTML=list.map(function(o){
     var unitCell=o.selectedUnit?'<span class="bs bs-ordered">'+o.selectedUnit+'</span>':'<span class="bs bs-pending">Unassigned</span>';
     var subName=o.submittedBy.replace(/\s*\(.*?\)/g,'');
-    var actions='<button class="ab ab-assign" onclick="openAssign(\''+o.orderId+'\',\''+o.machineType+'\','+o.unitQty+',\''+o.rowIndex+'\')" >Assign</button>'+
+    var hasUnit=!!o.selectedUnit;
+    var assignBtn=hasUnit
+      ?'<button class="ab" style="background:#ede9fe;color:#6d28d9;" onclick="openReassign(\''+o.orderId+'\',\''+o.machineType+'\','+o.unitQty+',\''+o.rowIndex+'\',\''+o.selectedUnit+'\')" >✎ Reassign</button>'
+      :'<button class="ab ab-assign" onclick="openAssign(\''+o.orderId+'\',\''+o.machineType+'\','+o.unitQty+',\''+o.rowIndex+'\')" >Assign</button>';
+    var actions=assignBtn+
       '<button class="ab ab-wa" onclick="openWA(\''+o.orderId+'\',\''+o.machineType+'\',\''+o.deliveryDate+'\',\''+o.location+'\',\''+o.requestedBy+'\',\''+o.unitQty+'\',\''+o.rentalPeriod+'\',\''+o.powerType+'\',\''+o.jobType+'\',\''+o.specialReq+'\')" >WA</button>';
     if(isSuperAdmin){
       actions+='<button class="ab ab-del" onclick="ordDel('+o.rowIndex+',\''+o.orderId+'\')" >Del</button>';
@@ -2583,6 +2794,44 @@ function ordRenderTblWithRoles(){
       '<td>'+unitCell+'</td>'+
       '<td style="font-size:.75rem;color:#888;">'+subName+'</td>'+
       '<td><div class="act">'+actions+'</div></td></tr>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACTIVITY LOG (Superadmin only)
+// ═══════════════════════════════════════════════════════════════
+var allLogs = [];
+
+function loadLogApp(){
+  logRefresh();
+}
+
+function logRefresh(){
+  document.getElementById('logTbody').innerHTML='<tr><td colspan="4" class="empty">Loading…</td></tr>';
+  api('getActivityLog').then(function(res){
+    allLogs = res.data || [];
+    logRender();
+  });
+}
+
+function logRender(){
+  var search = document.getElementById('logSearch').value.toLowerCase();
+  var list = allLogs.filter(function(l){
+    return !search || (l.performedBy+l.action+l.details).toLowerCase().indexOf(search) > -1;
+  });
+  var tb = document.getElementById('logTbody');
+  if(!list.length){ tb.innerHTML='<tr><td colspan="4" class="empty">No records.</td></tr>'; return; }
+  tb.innerHTML = list.map(function(l){
+    var actionColor = {
+      'LEAVE_SUBMIT':'#1e40af','LEAVE_STATUS_CHANGE':'#065f46','LEAVE_DELETE':'#991b1b',
+      'OT_STATUS_CHANGE':'#065f46','MACHINE_ASSIGN':'#6d28d9','MACHINE_MARK_READY':'#065f46'
+    }[l.action] || '#555';
+    return '<tr>'+
+      '<td style="font-size:.72rem;white-space:nowrap;">'+l.timestamp+'</td>'+
+      '<td style="font-size:.76rem;">'+l.performedBy+'</td>'+
+      '<td><span style="background:#f0f4ff;color:'+actionColor+';border-radius:8px;padding:2px 8px;font-size:.68rem;font-weight:700;">'+l.action+'</span></td>'+
+      '<td style="font-size:.75rem;color:#666;">'+l.details+'</td>'+
+    '</tr>';
   }).join('');
 }
 </script>
