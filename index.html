@@ -1793,21 +1793,29 @@ function lBuildMonthPills(){
     var isCurrentYr=parseInt(yr)===curYr;
     var months=byYear[yr];
     if(parseInt(yr)<curYr){
-      html+='<button class="mpill" onclick="lExpandYear(''+yr+'',this)" data-year="'+yr+'" style="background:#f3f4f6;color:#9ca3af;">'+yr+' ▸</button>';
+      html+='<button class="mpill" onclick="lExpandYear(\''+yr+'\',this)" data-year="'+yr+'" style="background:#f3f4f6;color:#9ca3af;">'+yr+' ▸</button>';
       html+='<span id="yr-'+yr+'" style="display:none;">'+months.map(function(m){
-        return '<button class="mpill" data-m="'+m.key+'" onclick="lSelMonth(''+m.key+'')">'+(MN[m.mo-1]||m.mo)+'</button>';
+        return '<button class="mpill" data-m="'+m.key+'" onclick="lSelMonth(\''+m.key+'\')">'+(MN[m.mo-1]||m.mo)+'</button>';
       }).join('')+'</span>';
     } else if(isCurrentYr){
       html+=months.map(function(m){
-        return '<button class="mpill" data-m="'+m.key+'" onclick="lSelMonth(''+m.key+'')">'+(MN[m.mo-1]||m.mo)+'</button>';
+        return '<button class="mpill" data-m="'+m.key+'" onclick="lSelMonth(\''+m.key+'\')">'+(MN[m.mo-1]||m.mo)+'</button>';
       }).join('');
     } else {
       html+=months.map(function(m){
-        return '<button class="mpill" data-m="'+m.key+'" onclick="lSelMonth(''+m.key+'')">'+(MN[m.mo-1]||m.mo)+' '+yr+'</button>';
+        return '<button class="mpill" data-m="'+m.key+'" onclick="lSelMonth(\''+m.key+'\')">'+(MN[m.mo-1]||m.mo)+' '+yr+'</button>';
       }).join('');
     }
   });
   cont.innerHTML=html;
+}
+
+function lCalTogglePast(btn){
+  var next=btn.nextElementSibling;
+  if(!next)return;
+  var hidden=next.style.display==='none';
+  next.style.display=hidden?'':'none';
+  btn.querySelector('.ptoggle').textContent=hidden?'▾':'▸';
 }
 
 function lExpandYear(yr,btn){
@@ -1956,9 +1964,7 @@ function lRenderCal(){
   });
   var infoHtml='';
   if(pastHtml){
-    infoHtml+='<div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.querySelector('.ptoggle').textContent=this.nextElementSibling.style.display==='none'?'▸':'▾'" style="cursor:pointer;padding:6px 8px;background:#f9fafb;border-radius:8px;margin-bottom:4px;font-size:.74rem;color:#9ca3af;display:flex;align-items:center;gap:6px;">'
-      +'<span class="ptoggle">▸</span> Past dates (click to expand)</div>'
-      +'<div style="display:none;">'+pastHtml+'</div>';
+    infoHtml+='<div onclick="lCalTogglePast(this)" style="cursor:pointer;padding:6px 8px;background:#f9fafb;border-radius:8px;margin-bottom:4px;font-size:.74rem;color:#9ca3af;display:flex;align-items:center;gap:6px;"><span class="ptoggle">▸</span>&nbsp;Past dates (click to expand)</div><div style="display:none;">'+pastHtml+'</div>';
   }
   infoHtml+=futureHtml;
   calInfo.innerHTML=infoHtml?infoHtml:'<div style="color:#ccc;font-size:.8rem;text-align:center;padding:12px;">No leave records this month.</div>';
