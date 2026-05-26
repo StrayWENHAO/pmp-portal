@@ -366,7 +366,9 @@ body:not(.shell-visible) #mobileTopbar { display: none !important; }
   position: sticky; top: 0; z-index: 150;
   box-shadow: var(--shadow-sm);
 }
-@media(max-width: 991px) { #mobileTopbar { display: flex; } }
+@media(max-width: 991px) { #mobileTopbar { display: flex; }
+  #pmpShell.hidden #mobileTopbar { display: none !important; }
+}
 .mobile-menu-btn {
   background: rgba(255,255,255,0.08); border: none;
   border-radius: var(--r-xs); padding: 6px 10px;
@@ -1016,16 +1018,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 <!-- Mobile overlay -->
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- Mobile topbar -->
-<div id="mobileTopbar" style="display:none;">
-  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-    <img class="mobile-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
-         onerror="this.style.display='none'" alt="PMP">
-    <span class="mobile-topbar-title" id="mobilePageTitle" style="font-size:.6rem;color:rgba(255,255,255,0.55);margin-top:1px;letter-spacing:.3px;"></span>
-  </div>
-  <div style="width:44px;"></div>
-</div>
+
 
 <div id="pmpShell" class="hidden">
 
@@ -1082,6 +1075,17 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
   <!-- ── MAIN CONTENT ── -->
   <main id="pmpMain">
+
+    <!-- Mobile topbar -->
+<div id="mobileTopbar">
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <img class="mobile-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
+         onerror="this.style.display='none'" alt="PMP">
+    <span class="mobile-topbar-title" id="mobilePageTitle" style="font-size:.6rem;color:rgba(255,255,255,0.55);margin-top:1px;letter-spacing:.3px;"></span>
+  </div>
+  <div style="width:44px;"></div>
+</div>
 
     <!-- ─── DASHBOARD / HOME ─── -->
     <div id="homeView">
@@ -2212,7 +2216,12 @@ var myLeaveRole='staff', myOTRole='staff', myOrderRole='staff', myDepartment='';
 // ── SESSION STORAGE ──────────────────────────────────────────
 function _saveSession(token, email, role) {
   try {
-    // Use localStorage for persistence across browser close
+    // Save to BOTH storages for maximum persistence
+    var data = { token: token, email: email, role: role, ts: Date.now() };
+    var str = JSON.stringify(data);
+    localStorage.setItem('pmp_session', str);
+    sessionStorage.setItem('pmp_session', str);
+    // Legacy keys
     localStorage.setItem('pmp_token', token);
     localStorage.setItem('pmp_email', email);
     localStorage.setItem('pmp_role', role);
@@ -2227,16 +2236,18 @@ function _loadCurrentApp() {
 }
 function _loadSession() {
   try {
-    // Try localStorage first (persistent)
-    var token = localStorage.getItem('pmp_token');
-    var email = localStorage.getItem('pmp_email');
-    var role  = localStorage.getItem('pmp_role');
-    // Fallback to sessionStorage (old version)
-    if (!token) {
-      token = sessionStorage.getItem('pmp_token');
-      email = sessionStorage.getItem('pmp_email');
-      role  = sessionStorage.getItem('pmp_role');
+    // Try JSON session first (new format)
+    var str = sessionStorage.getItem('pmp_session') || localStorage.getItem('pmp_session');
+    if (str) {
+      var d = JSON.parse(str);
+      if (d && d.token && d.email && d.role) {
+        return { token: d.token, email: d.email, role: d.role };
+      }
     }
+    // Fallback to legacy keys
+    var token = localStorage.getItem('pmp_token') || sessionStorage.getItem('pmp_token');
+    var email = localStorage.getItem('pmp_email') || sessionStorage.getItem('pmp_email');
+    var role  = localStorage.getItem('pmp_role')  || sessionStorage.getItem('pmp_role');
     if (token && email && role) {
       return { token: token, email: email, role: role };
     }
@@ -2245,8 +2256,9 @@ function _loadSession() {
 }
 function _clearSession() {
   try {
-    ['pmp_token','pmp_email','pmp_role','pmp_ts','pmp_app'].forEach(function(k){
+    ['pmp_session','pmp_token','pmp_email','pmp_role','pmp_ts','pmp_app'].forEach(function(k){
       localStorage.removeItem(k);
+      sessionStorage.removeItem(k);
     });
   } catch(e) {}
 }
@@ -2353,7 +2365,6 @@ window.onload=function(){
       rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');
       var savedApp = _loadCurrentApp();
       document.getElementById('pmpShell').classList.remove('hidden');
-    var _mtb=document.getElementById('mobileTopbar');if(_mtb)_mtb.style.display='';
       var _sE=document.getElementById('sidebarEmail'); if(_sE)_sE.textContent=myEmail;
       var _sR=document.getElementById('sidebarRole');  if(_sR)_sR.textContent=myLeaveRole.toUpperCase();
       var _sA=document.getElementById('sidebarAvatar');if(_sA)_sA.textContent=myEmail.charAt(0).toUpperCase();
@@ -2431,7 +2442,6 @@ function onGoogleSignIn(resp) {
     var _lsStatus=document.getElementById('lsStatus');
     if(_lsStatus)_lsStatus.textContent='Loading complete';
     document.getElementById('pmpShell').classList.remove('hidden');
-    var _mtb=document.getElementById('mobileTopbar');if(_mtb)_mtb.style.display='';
     var _sE3=document.getElementById('sidebarEmail');if(_sE3)_sE3.textContent=myEmail;
     var _sR3=document.getElementById('sidebarRole');if(_sR3)_sR3.textContent=myLeaveRole.toUpperCase();
     var _sA3=document.getElementById('sidebarAvatar');if(_sA3)_sA3.textContent=myEmail.charAt(0).toUpperCase();
@@ -4083,9 +4093,6 @@ function lShowConfirm2(){
 // SIDEBAR NAVIGATION SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function navTo(section) {
-  // Show mobile topbar when navigating (means shell is visible)
-  var mtb = document.getElementById('mobileTopbar');
-  if (mtb) mtb.style.display = '';
   // Hide all views
   document.getElementById('homeView').style.display = 'none';
   document.getElementById('appView').style.display = 'none';
