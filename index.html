@@ -141,7 +141,11 @@ body {
   align-items: center; justify-content: center;
   background: var(--sidebar-bg);
 }
-#ls .ls-logo { width: 160px; margin-bottom: 16px; }
+#ls .ls-logo {
+  width: 220px; margin-bottom: 20px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 12px; padding: 12px 20px;
+}
 #ls .ls-sub {
   color: rgba(255,255,255,0.35); font-size: .64rem;
   letter-spacing: 3px; text-transform: uppercase; margin-bottom: 32px;
@@ -182,7 +186,11 @@ body {
 @media(min-width: 800px) {
   #expiredView .signin-brand { display: flex; }
 }
-#expiredView .signin-brand .brand-logo { width: 140px; margin-bottom: 32px; }
+#expiredView .signin-brand .brand-logo {
+  width: 160px; margin-bottom: 32px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px; padding: 10px 16px;
+}
 #expiredView .signin-brand h1 {
   font-size: 1.8rem; font-weight: 700; color: #fff;
   line-height: 1.2; margin-bottom: 12px; letter-spacing: -.3px;
@@ -223,7 +231,7 @@ body {
 .exp-card .signin-form-inner {
   width: 100%; max-width: 360px;
 }
-.exp-card .signin-logo { width: 120px; margin-bottom: 8px; display: none; }
+.exp-card .signin-logo { width: 180px; margin-bottom: 8px; display: none; }
 @media(max-width: 799px) { .exp-card .signin-logo { display: block; margin: 0 auto 8px; } }
 .exp-card .signin-title {
   font-size: 1.4rem; font-weight: 700; color: var(--text-primary);
@@ -263,11 +271,16 @@ body {
 }
 
 .sidebar-header {
-  padding: 20px 20px 16px;
+  padding: 20px 24px 16px;
   border-bottom: 1px solid var(--sidebar-border);
   flex-shrink: 0;
 }
-.sidebar-logo { width: 110px; display: block; }
+.sidebar-logo {
+  width: 150px; display: block;
+  background: rgba(255,255,255,0.92);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
 .sidebar-tagline {
   font-size: .58rem; color: rgba(255,255,255,0.3);
   letter-spacing: 2px; text-transform: uppercase;
@@ -405,16 +418,17 @@ body {
 
 /* Operations overview layout */
 #homeAppContent {
-  padding: 20px 24px;
+  padding: 28px 24px 24px;
   max-width: 1280px; margin: 0 auto; width: 100%;
 }
-@media(max-width: 991px) { #homeAppContent { padding: 16px; } }
+@media(max-width: 991px) { #homeAppContent { padding: 20px 16px; } }
 
 .overview-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-bottom: 20px;
+  margin-top: 8px;
 }
 @media(min-width: 640px) { .overview-grid { grid-template-columns: repeat(4, 1fr); } }
 
@@ -1054,9 +1068,9 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="page-header-title">Operations Dashboard</div>
           <div class="page-header-sub">Real-time overview — PMP Equipments Sdn Bhd</div>
         </div>
-        <div class="page-header-actions">
-          <span style="font-size:.72rem;color:var(--text-tertiary);" id="homeEmail"></span>
-          <span class="role-pill" id="homeRolePill"></span>
+        <div class="page-header-actions" style="display:none;">
+          <span id="homeEmail" style="display:none;"></span>
+          <span class="role-pill" id="homeRolePill" style="display:none;"></span>
         </div>
       </div>
 
@@ -1093,17 +1107,14 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <div class="quick-actions">
           <div class="quick-actions-title">Quick Actions</div>
           <div class="quick-actions-row">
-            <button class="quick-action-btn" onclick="navTo('leave')">
+            <button class="quick-action-btn" onclick="qaApplyLeave()">
               <span class="qa-icon">📅</span> Apply Leave
             </button>
-            <button class="quick-action-btn" onclick="navTo('ot')">
+            <button class="quick-action-btn" onclick="qaSubmitOT()">
               <span class="qa-icon">⏱</span> Submit OT
             </button>
-            <button class="quick-action-btn" id="qaNewOrder" style="display:none;" onclick="navTo('order')">
+            <button class="quick-action-btn" id="qaNewOrder" style="display:none;" onclick="qaNewOrderForm()">
               <span class="qa-icon">🚧</span> New Order
-            </button>
-            <button class="quick-action-btn" id="qaViewSchedule" onclick="navTo('leave')">
-              <span class="qa-icon">🗓</span> View Schedule
             </button>
           </div>
         </div>
@@ -1114,7 +1125,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="ops-panel" id="opsPendingOrders">
             <div class="ops-panel-hdr">
               <h4>⚠ Unassigned Orders</h4>
-              <a onclick="navTo('order')">View all →</a>
+              <a onclick="navToPendingOrders()">View all →</a>
             </div>
             <div class="ops-panel-body" id="opsPendingOrdersList">
               <div class="ops-row"><span class="ops-meta">Loading…</span></div>
@@ -1125,7 +1136,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="ops-panel" id="opsOnLeave">
             <div class="ops-panel-hdr">
               <h4>🏖 On Leave Today</h4>
-              <a onclick="navTo('leave')">Schedule →</a>
+              <a onclick="navToLeaveSchedule()">Schedule →</a>
             </div>
             <div class="ops-panel-body" id="opsOnLeaveList">
               <div class="ops-row"><span class="ops-meta">Loading…</span></div>
@@ -1136,7 +1147,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="ops-panel" id="opsPendingLeave">
             <div class="ops-panel-hdr">
               <h4>📋 Pending Approvals</h4>
-              <a onclick="navTo('leave')">Review →</a>
+              <a onclick="navToLeavePending()">Review →</a>
             </div>
             <div class="ops-panel-body" id="opsPendingLeaveList">
               <div class="ops-row"><span class="ops-meta">Loading…</span></div>
@@ -1989,34 +2000,38 @@ var myLeaveRole='staff', myOTRole='staff', myOrderRole='staff', myDepartment='';
 // ── SESSION STORAGE ──────────────────────────────────────────
 function _saveSession(token, email, role) {
   try {
-    sessionStorage.setItem('pmp_token', token);
-    sessionStorage.setItem('pmp_email', email);
-    sessionStorage.setItem('pmp_role', role);
-    sessionStorage.setItem('pmp_ts', Date.now().toString());
+    // Use localStorage for persistence across browser close
+    localStorage.setItem('pmp_token', token);
+    localStorage.setItem('pmp_email', email);
+    localStorage.setItem('pmp_role', role);
+    localStorage.setItem('pmp_ts', Date.now().toString());
   } catch(e) {}
 }
 function _saveCurrentApp(app) {
-  try { sessionStorage.setItem('pmp_app', app); } catch(e) {}
+  try { localStorage.setItem('pmp_app', app); } catch(e) {}
 }
 function _loadCurrentApp() {
-  try { return sessionStorage.getItem('pmp_app') || ''; } catch(e) { return ''; }
+  try { return localStorage.getItem('pmp_app') || ''; } catch(e) { return ''; }
 }
 function _loadSession() {
   try {
-    var token = sessionStorage.getItem('pmp_token');
-    var email = sessionStorage.getItem('pmp_email');
-    var role  = sessionStorage.getItem('pmp_role');
-    var ts    = parseInt(sessionStorage.getItem('pmp_ts') || '0');
-    // Session valid for 55 minutes (JWT expires in 60)
-    if (token && email && role && (Date.now() - ts) < 55 * 60 * 1000) {
-      return { token: token, email: email, role: role };
+    var token = localStorage.getItem('pmp_token');
+    var email = localStorage.getItem('pmp_email');
+    var role  = localStorage.getItem('pmp_role');
+    var ts    = parseInt(localStorage.getItem('pmp_ts') || '0');
+    // localStorage persists longer — refresh token if > 50 min old
+    if (token && email && role) {
+      return { token: token, email: email, role: role, needsRefresh: (Date.now() - ts) > 50 * 60 * 1000 };
     }
   } catch(e) {}
   return null;
 }
 function _clearSession() {
-  try { sessionStorage.removeItem('pmp_token'); sessionStorage.removeItem('pmp_email');
-    sessionStorage.removeItem('pmp_role'); sessionStorage.removeItem('pmp_ts'); } catch(e) {}
+  try {
+    ['pmp_token','pmp_email','pmp_role','pmp_ts','pmp_app'].forEach(function(k){
+      localStorage.removeItem(k);
+    });
+  } catch(e) {}
 }
 var lPad, otPad;
 var holidays=[], staffNames=[], leaveRecords=[], otRecords=[], allOrders=[], allMachines=[], technicians=[], machineTypes=[];
@@ -3492,7 +3507,7 @@ function ordTechRender(){
     var unit=o.selectedUnit?'<span class="bs bs-ordered">'+o.selectedUnit+'</span>':'<span class="bs bs-pending">Unassigned</span>';
     var canAssign=!o.selectedUnit;
     return '<tr>'+
-      '<td style="font-size:.75rem;font-weight:700;">'+o.orderId+'</td>'+
+      '<td style="font-size:.72rem;font-weight:700;font-family:monospace;white-space:nowrap;">'+o.orderId+'</td>'+
       '<td>'+o.machineType+'<br><span style="font-size:.7rem;color:#aaa;">'+o.specValue+' '+o.specUnit+'</span></td>'+
       '<td style="text-align:center;">'+o.unitQty+'</td>'+
       '<td style="font-size:.78rem;">'+o.deliveryDate+'</td>'+
@@ -3684,7 +3699,7 @@ function ordRenderTblWithRoles(){
       actions+='<button class="ab ab-del" onclick="ordDel('+o.rowIndex+',\''+o.orderId+'\')" >Del</button>';
     }
     return '<tr>'+
-      '<td style="font-size:.75rem;">'+o.orderId+'</td>'+
+      '<td style="font-size:.72rem;font-family:monospace;white-space:nowrap;">'+o.orderId+'</td>'+
       '<td style="font-weight:700;">'+o.machineType+'<br><span style="font-size:.7rem;color:#aaa;">'+o.specValue+' '+o.specUnit+'</span></td>'+
       '<td style="text-align:center;">'+o.unitQty+'</td>'+
       '<td style="font-size:.78rem;">'+o.deliveryDate+'</td>'+
@@ -3951,8 +3966,15 @@ function dashboardRefresh() {
       pol.innerHTML = '<div class="ops-row"><span class="ops-meta">No unassigned orders</span></div>';
     } else {
       pol.innerHTML = unassigned.map(function(o){
+        var spec = o.specValue ? o.specValue+' '+o.specUnit : '';
+        var shortLoc = o.location ? (o.location.length>20?o.location.substring(0,20)+'…':o.location) : '—';
+        var shortReq = o.requestedBy ? (o.requestedBy.length>18?o.requestedBy.substring(0,18)+'…':o.requestedBy) : '—';
         return '<div class="ops-row">' +
-          '<div><div class="ops-name">' + o.machineType + '</div><div class="ops-meta">' + o.orderId + ' · ' + o.deliveryDate + '</div></div>' +
+          '<div style="min-width:0;">' +
+            '<div class="ops-name" style="font-family:monospace;font-size:.74rem;">' + o.machineType + (spec?' · <span style="color:var(--text-secondary);">'+spec+'</span>':'') + '</div>' +
+            '<div class="ops-meta">' + shortReq + ' · ' + shortLoc + '</div>' +
+            '<div class="ops-meta" style="font-family:monospace;">' + o.orderId + ' · 🗓 ' + o.deliveryDate + '</div>' +
+          '</div>' +
           '<div class="ops-right"><span class="bs bs-pending">Unassigned</span></div>' +
           '</div>';
       }).join('');
@@ -3987,8 +4009,14 @@ function dashboardRefresh() {
       pll.innerHTML = '<div class="ops-row"><span class="ops-meta">No pending requests</span></div>';
     } else {
       pll.innerHTML = pendingList.map(function(r){
+        var period = r.startDate + (r.endDate && r.endDate!==r.startDate ? ' → '+r.endDate : '');
+        var timeInfo = (r.startTime&&r.endTime) ? ' (' + r.startTime + '–' + r.endTime + ')' : '';
         return '<div class="ops-row">' +
-          '<div><div class="ops-name">' + r.name + '</div><div class="ops-meta">' + r.leaveType.replace(' Leave','') + ' · ' + r.startDate + '</div></div>' +
+          '<div style="min-width:0;">' +
+            '<div class="ops-name">' + r.name + '</div>' +
+            '<div class="ops-meta">' + r.leaveType.replace(' Leave','').replace(' (MC)','') + ' · ' + r.duration + ' day(s)</div>' +
+            '<div class="ops-meta" style="font-family:monospace;font-size:.68rem;">' + period + timeInfo + '</div>' +
+          '</div>' +
           '<div class="ops-right"><span class="bs bs-pending">Pending</span></div>' +
           '</div>';
       }).join('');
@@ -4007,6 +4035,98 @@ function dashboardRefresh() {
 }
 
 // Update boot to show shell and init dashboard
+
+// ═══════════════════════════════════════════════════════════════
+// QUICK ACTION POPOUTS
+// ═══════════════════════════════════════════════════════════════
+function qaApplyLeave(){
+  // If staff, go to leave form directly
+  // If admin/superadmin, show the apply leave modal
+  if(myLeaveRole==='superadmin'||myLeaveRole==='admin'){
+    navTo('leave');
+    setTimeout(function(){
+      // Click the Apply Leave tab
+      var tabs=document.querySelectorAll('#leaveAdminView .stab');
+      tabs.forEach(function(t){
+        if(t.textContent.indexOf('Apply')>-1){ t.click(); }
+      });
+    },300);
+  } else {
+    navTo('leave');
+  }
+}
+
+function qaSubmitOT(){
+  navTo('ot');
+}
+
+function qaNewOrderForm(){
+  navTo('order');
+  setTimeout(function(){ ordShowCreateForm(); }, 400);
+}
+
+function navToPendingOrders(){
+  navTo('order');
+  setTimeout(function(){
+    // Click pending filter
+    var btns=document.querySelectorAll('#ordAdminOrders .fbtn');
+    btns.forEach(function(b){ if(b.textContent.indexOf('Pending')>-1) b.click(); });
+  }, 400);
+}
+
+function navToLeaveSchedule(){
+  navTo('leave');
+  setTimeout(function(){
+    var tabs=document.querySelectorAll('#leaveAdminView .stab');
+    tabs.forEach(function(t){
+      if(t.textContent.indexOf('Schedule')>-1){ t.click(); }
+    });
+  }, 300);
+}
+
+function navToLeavePending(){
+  navTo('leave');
+  setTimeout(function(){
+    // Click Pending filter in records
+    var btns=document.querySelectorAll('#lTabRecords .fbtn');
+    btns.forEach(function(b){ if(b.textContent.trim()==='Pending') b.click(); });
+  }, 400);
+}
+
+// ── Simple pagination helper ──
+var _leaveRecordsPage = 1;
+var _leavePageSize = 50;
+
+function lRenderPage(list, tbodyId, renderFn) {
+  var total = list.length;
+  var pages = Math.ceil(total / _leavePageSize);
+  if (_leaveRecordsPage > pages) _leaveRecordsPage = 1;
+  var start = (_leaveRecordsPage - 1) * _leavePageSize;
+  var pageItems = list.slice(start, start + _leavePageSize);
+  var tb = document.getElementById(tbodyId);
+  if (!tb) return;
+  tb.innerHTML = pageItems.map(renderFn).join('');
+  // Render pagination
+  var pgId = tbodyId + '_pg';
+  var existing = document.getElementById(pgId);
+  if (existing) existing.remove();
+  if (pages > 1) {
+    var pgDiv = document.createElement('div');
+    pgDiv.id = pgId;
+    pgDiv.style.cssText = 'display:flex;gap:4px;padding:10px 12px;align-items:center;border-top:1px solid var(--border);';
+    var pgBtns2=Array.from({length:pages},function(_,i){
+        var isA=(i+1===_leaveRecordsPage);
+        var btn=document.createElement('button');
+        btn.textContent=i+1;
+        btn.style.cssText='padding:3px 8px;border-radius:4px;border:1px solid #e5e9ef;background:'+(isA?'#003366':'#fff')+';color:'+(isA?'#fff':'#6b7280')+';font-size:.7rem;cursor:pointer;';
+        (function(p){btn.onclick=function(){_leaveRecordsPage=p;lFilt(lCurFilt,document.querySelector('.fbtn.on'));};})(i+1);
+        return btn;
+      });
+      pgDiv.innerHTML='<span style="font-size:.72rem;color:#6b7280;flex:1;">Showing '+(start+1)+'-'+Math.min(start+_leavePageSize,total)+' of '+total+'</span>';
+      pgBtns2.forEach(function(b){pgDiv.appendChild(b);});;
+    tb.parentNode.after(pgDiv);
+  }
+}
 </script>
 </body>
 </html>
