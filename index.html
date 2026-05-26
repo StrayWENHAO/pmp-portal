@@ -147,14 +147,14 @@ body {
   border-radius: 12px; padding: 12px 20px;
 }
 #ls .ls-sub {
-  color: rgba(255,255,255,0.35); font-size: .64rem;
+  color: #9ca3af; font-size: .64rem;
   letter-spacing: 3px; text-transform: uppercase; margin-bottom: 32px;
   font-family: 'JetBrains Mono', monospace;
 }
 .ring {
-  width: 24px; height: 24px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.12);
-  border-top-color: rgba(255,255,255,0.7);
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2.5px solid #e5e9ef;
+  border-top-color: #003366;
   animation: spin .7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -164,11 +164,15 @@ body {
 ════════════════════════════════════════════ */
 #expiredView {
   min-height: 100vh; display: flex;
-  background: #ffffff;
+  background: var(--sidebar-bg);
   position: relative; overflow: hidden;
 }
 #expiredView::before {
-  content: none;
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%, rgba(0,68,136,0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 30%, rgba(0,34,68,0.6) 0%, transparent 60%);
+  pointer-events: none;
 }
 /* Sign-in left brand panel */
 #expiredView .signin-brand {
@@ -966,7 +970,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   <div class="ls-sub">Operations Platform</div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
     <div class="ring"></div>
-    <div id="lsStatus" style="font-size:.64rem;color:rgba(255,255,255,0.3);letter-spacing:1px;font-family:'JetBrains Mono',monospace;">Initialising…</div>
+    <div id="lsStatus" style="font-size:.64rem;color:#9ca3af;letter-spacing:1px;font-family:'JetBrains Mono',monospace;">Initialising…</div>
   </div>
 </div>
 
