@@ -2348,6 +2348,7 @@ window.onload=function(){
       rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');
       var savedApp = _loadCurrentApp();
       document.getElementById('pmpShell').classList.remove('hidden');
+    var _mtb=document.getElementById('mobileTopbar');if(_mtb)_mtb.style.display='';
       var _sE=document.getElementById('sidebarEmail'); if(_sE)_sE.textContent=myEmail;
       var _sR=document.getElementById('sidebarRole');  if(_sR)_sR.textContent=myLeaveRole.toUpperCase();
       var _sA=document.getElementById('sidebarAvatar');if(_sA)_sA.textContent=myEmail.charAt(0).toUpperCase();
@@ -2425,6 +2426,7 @@ function onGoogleSignIn(resp) {
     var _lsStatus=document.getElementById('lsStatus');
     if(_lsStatus)_lsStatus.textContent='Loading complete';
     document.getElementById('pmpShell').classList.remove('hidden');
+    var _mtb=document.getElementById('mobileTopbar');if(_mtb)_mtb.style.display='';
     var _sE3=document.getElementById('sidebarEmail');if(_sE3)_sE3.textContent=myEmail;
     var _sR3=document.getElementById('sidebarRole');if(_sR3)_sR3.textContent=myLeaveRole.toUpperCase();
     var _sA3=document.getElementById('sidebarAvatar');if(_sA3)_sA3.textContent=myEmail.charAt(0).toUpperCase();
