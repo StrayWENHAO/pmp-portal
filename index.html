@@ -2672,6 +2672,19 @@ function loadLeaveApp(){
   // Debug: show role info
   console.log('[PMP] loadLeaveApp effLR='+effLR+' myLeaveRole='+myLeaveRole+' myRole='+myRole);
   if(la){
+    // Log entire parent chain
+    var _p=la, _chain=[];
+    while(_p){ _chain.push(_p.id||_p.className||_p.tagName); _p=_p.parentElement; }
+    console.log('[PMP] parent chain: '+_chain.join(' > '));
+    // Check each parent's display
+    var _pp=la.parentElement;
+    while(_pp){
+      var _cs=window.getComputedStyle(_pp);
+      if(_cs.display==='none'){
+        console.log('[PMP] HIDDEN PARENT: id='+_pp.id+' class='+_pp.className+' computedDisplay='+_cs.display);
+      }
+      _pp=_pp.parentElement;
+    }
     console.log('[PMP] leaveApp offsetHeight='+la.offsetHeight+' offsetParent='+la.offsetParent);
     var dbg=document.createElement('div');
     dbg.id='leaveDebug';
@@ -4932,6 +4945,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.5.4</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.5.5</div>
 </body>
 </html>
