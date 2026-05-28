@@ -2309,17 +2309,12 @@ function api(action, params) {
     // Use session token if available (persistent), fallback to Google JWT
     var _st = '';
     try { _st = localStorage.getItem('pmp_st') || sessionStorage.getItem('pmp_st') || ''; } catch(e){}
-    var url;
-    if (_st) {
-      url = GAS_API_URL + '?action=' + encodeURIComponent(action)
-              + '&sessionToken=' + encodeURIComponent(_st)
-              + '&cb=' + cbName;
-    } else {
-      var safeToken = btoa(__idToken);
-      url = GAS_API_URL + '?action=' + encodeURIComponent(action)
-              + '&token=' + encodeURIComponent(safeToken)
-              + '&cb=' + cbName;
-    }
+    var safeToken = '';
+    try { safeToken = __idToken ? btoa(__idToken) : ''; } catch(e){}
+    var url = GAS_API_URL + '?action=' + encodeURIComponent(action)
+            + '&cb=' + cbName;
+    if (_st) url += '&sessionToken=' + encodeURIComponent(_st);
+    if (safeToken) url += '&token=' + encodeURIComponent(safeToken);
     if (params && typeof params === 'object') {
       Object.keys(params).forEach(function(k){
         url += '&' + k + '=' + encodeURIComponent(
@@ -4290,7 +4285,7 @@ function dashboardRefresh() {
           '<div style="min-width:0;">' +
             '<div class="ops-name" style="font-size:.88rem;font-weight:600;">' + o.machineType + (spec?' · <span style="color:var(--text-secondary);">'+spec+'</span>':'') + '</div>' +
             '<div class="ops-meta">' + shortReq + ' · ' + shortLoc + '</div>' +
-            '<div class="ops-meta" style="font-family:monospace;">' + o.orderId + ' · 🗓 ' + o.deliveryDate + '</div>' +
+            '<div class="ops-meta">' + o.orderId + ' · ' + o.deliveryDate + '</div>' +
           '</div>' +
           '<div class="ops-right"><span class="bs bs-pending">Unassigned</span></div>' +
           '</div>';
