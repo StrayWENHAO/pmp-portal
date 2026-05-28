@@ -391,7 +391,7 @@ body {
   flex: 1;
   margin-left: var(--sidebar-width);
   display: flex; flex-direction: column;
-  height: 100vh; overflow: hidden;
+  height: 100vh;
   min-width: 0;
 }
 @media(max-width: 991px) { #pmpMain { margin-left: 0; } }
@@ -577,8 +577,10 @@ body {
    APP VIEW — MODULE PAGES
 ════════════════════════════════════════════ */
 #appView { display: block; flex: 1; overflow-y: auto; }
+@media(max-width:991px){ #appView, #homeView { padding-top: 8px; } }
 .app-topbar { display: none; } /* Replaced by sidebar */
-.app-content { padding: 0; max-width: none; margin: 0; width: 100%; }
+.app-content { padding: 20px 24px; max-width: none; margin: 0; width: 100%; box-sizing: border-box; }
+@media(max-width:991px){ .app-content { padding: 16px; } }
 
 /* ════════════════════════════════════════════
    PANELS / CARDS
@@ -4913,6 +4915,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.5.1</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.5.2</div>
 </body>
 </html>
