@@ -2401,48 +2401,30 @@ window.onload=function(){
         initGSI();
         return;
       }
-      myEmail      = res.email;myEmail      = res.email;
+      myEmail      = res.email;
       myRole       = res.role;
-      // Read flat structure from GAS bundle
-      // GAS returns roles in res.data bundle
-      var _bd2     = res.data || {};
-      myLeaveRole  = _bd2.leaveRole  || res.role || 'staff';
-      myOTRole     = _bd2.otRole     || res.role || 'staff';
-      myOrderRole  = _bd2.orderRole  || res.role || 'staff';
-      myDepartment = _bd2.department || '';
-      holidays     = _bd2.holidays     || [];
-      staffNames   = _bd2.staffNames   || [];
-      leaveRecords = _bd2.leaveRecords || [];
-      otRecords    = _bd2.otRecords    || [];
-      allOrders    = _bd2.orders       || [];
-      allMachines  = _bd2.machines     || [];
-      machineTypes = _bd2.machineTypes || [];
-      technicians  = _bd2.technicians  || [];
-
-      document.getElementById('ls').style.display='none';
-      document.getElementById('expiredView').classList.add('hidden');
-      document.getElementById('homeEmail').textContent=myEmail;
-      var rp=document.getElementById('homeRolePill');
-      rp.textContent=myRole.toUpperCase();
-      rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');
-      var savedApp = _loadCurrentApp();
-      document.getElementById('pmpShell').classList.remove('hidden');
-      var _sE=document.getElementById('sidebarEmail'); if(_sE)_sE.textContent=myEmail;
-      var _sR=document.getElementById('sidebarRole');  if(_sR)_sR.textContent=myLeaveRole.toUpperCase();
-      var _sA=document.getElementById('sidebarAvatar');if(_sA)_sA.textContent=myEmail.charAt(0).toUpperCase();
-      // Always show OT nav
-      var _no=document.getElementById('nav-ot');if(_no)_no.style.display='';
-      // Show order nav if has order role
-      var _nord=document.getElementById('nav-order');
-      if(_nord)_nord.style.display=(myOrderRole&&myOrderRole!=='')?'':'none';
-      if(myLeaveRole==='superadmin'||myOTRole==='superadmin'||myOrderRole==='superadmin'){
-        var _ls=document.getElementById('logNavSection');if(_ls)_ls.style.display='';
-        var _ln=document.getElementById('nav-log');if(_ln)_ln.style.display='';
+      var _b       = res.data || {};
+      myLeaveRole  = _b.leaveRole  || res.role || 'staff';
+      myOTRole     = _b.otRole     || res.role || 'staff';
+      myOrderRole  = _b.orderRole  || res.role || 'staff';
+      myDepartment = _b.department || '';
+      holidays     = _b.holidays     || [];
+      staffNames   = _b.staffNames   || [];
+      leaveRecords = _b.leaveRecords || [];
+      otRecords    = _b.otRecords    || [];
+      allOrders    = _b.orders       || [];
+      allMachines  = _b.machines     || [];
+      machineTypes = _b.machineTypes || [];
+      technicians  = _b.technicians  || [];
+      if (_b.sessionToken || res.sessionToken) {
+        try {
+          var _st = _b.sessionToken || res.sessionToken;
+          localStorage.setItem('pmp_st', _st);
+          sessionStorage.setItem('pmp_st', _st);
+        } catch(e){}
       }
-      document.getElementById('homeEmail').textContent=myEmail;
-      var _rp=document.getElementById('homeRolePill');
-      if(_rp){_rp.textContent=myRole.toUpperCase();_rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');}
-      initPads();
+      _saveSession(__idToken, myEmail, myRole);
+            initPads();
       navTo('home');
       if (savedApp) setTimeout(function(){ navTo(savedApp); }, 300);
     }).catch(function(){
@@ -2477,18 +2459,12 @@ function onGoogleSignIn(resp) {
     }
     myEmail      = res.email;
     myRole       = res.role; // backward compat (leaveRole)
-    var ar       = res.authRec || {};
-    myLeaveRole  = ar.leaveRole  || res.role || 'staff';
-    myOTRole     = ar.otRole     || res.role || 'staff';
-    myOrderRole  = ar.orderRole  || res.role || 'staff';
-    myDepartment = ar.department || '';
-    _saveSession(__idToken, myEmail, myRole);
-    var b   = res.data || {};
-    // Also get roles from data bundle
-    if (b.leaveRole)  myLeaveRole  = b.leaveRole;
-    if (b.otRole)     myOTRole     = b.otRole;
-    if (b.orderRole)  myOrderRole  = b.orderRole;
-    if (b.department) myDepartment = b.department;
+    var _b2      = res.data || {};
+    myLeaveRole  = _b2.leaveRole  || res.role || 'staff';
+    myOTRole     = _b2.otRole     || res.role || 'staff';
+    myOrderRole  = _b2.orderRole  || res.role || 'staff';
+    myDepartment = _b2.department || '';
+    // Roles already loaded from res.data above
 
     // Store all pre-loaded data
     holidays     = b.holidays     || [];
