@@ -2346,6 +2346,17 @@ function apiPost(action, data) {
 window.onload=function(){
   var now=new Date(); lCalYear=now.getFullYear(); lCalMonth=now.getMonth();
 
+  // Hard timeout: if still on loading screen after 8s, show sign-in
+  setTimeout(function(){
+    var ls=document.getElementById('ls');
+    if(ls && ls.style.display!=='none'){
+      ls.style.display='none';
+      var ev=document.getElementById('expiredView');
+      if(ev)ev.classList.remove('hidden');
+      initGSI();
+    }
+  }, 8000);
+
   // Try session token first (persistent, no JWT expiry)
   var savedST = null;
   try { savedST = localStorage.getItem('pmp_st') || sessionStorage.getItem('pmp_st'); } catch(e){}
