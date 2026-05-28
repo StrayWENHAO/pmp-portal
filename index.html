@@ -391,8 +391,7 @@ body {
   flex: 1;
   margin-left: var(--sidebar-width);
   display: flex; flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
+  height: 100vh; overflow: hidden;
   min-width: 0;
 }
 @media(max-width: 991px) { #pmpMain { margin-left: 0; } }
@@ -422,7 +421,7 @@ body {
 /* ════════════════════════════════════════════
    HOMEPAGE — OPERATIONS OVERVIEW
 ════════════════════════════════════════════ */
-#homeView { display: block; flex: 1; overflow-y: auto; padding: 20px 24px; box-sizing: border-box; }
+#homeView { display: block; flex: 1; overflow-y: auto; }
 
 /* Old home-header hidden (user info moved to sidebar) */
 .home-header { display: none; }
@@ -577,10 +576,9 @@ body {
 /* ════════════════════════════════════════════
    APP VIEW — MODULE PAGES
 ════════════════════════════════════════════ */
-#appView { display: block; flex: 1; overflow-y: auto; padding: 20px 24px; box-sizing: border-box; }
+#appView { display: block; flex: 1; overflow-y: auto; }
 .app-topbar { display: none; } /* Replaced by sidebar */
 .app-content { padding: 0; max-width: none; margin: 0; width: 100%; }
-#leaveApp, #otApp, #orderApp, #logApp { display: block; width: 100%; }
 
 /* ════════════════════════════════════════════
    PANELS / CARDS
@@ -2250,28 +2248,12 @@ function apiWithToken(action, sessionToken) {
   return new Promise(function(resolve, reject) {
     var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     var url = GAS_API_URL + '?action=' + action + '&sessionToken=' + encodeURIComponent(sessionToken) + '&cb=' + cb;
+    window[cb] = function(data) { delete window[cb]; resolve(data); };
     var s = document.createElement('script');
-    var done = false;
-    window[cb] = function(data) {
-      if (done) return; done = true;
-      delete window[cb];
-      try { document.head.removeChild(s); } catch(e) {}
-      resolve(data);
-    };
     s.src = url;
-    s.onerror = function() {
-      if (done) return; done = true;
-      delete window[cb];
-      try { document.head.removeChild(s); } catch(e) {}
-      reject(new Error('Network error'));
-    };
+    s.onerror = function() { delete window[cb]; reject(new Error('Network error')); };
     document.head.appendChild(s);
-    setTimeout(function() {
-      if (done) return; done = true;
-      delete window[cb];
-      try { document.head.removeChild(s); } catch(e) {}
-      reject(new Error('Timeout'));
-    }, 20000);
+    setTimeout(function() { delete window[cb]; reject(new Error('Timeout')); }, 15000);
   });
 }
 
@@ -2364,17 +2346,6 @@ function apiPost(action, data) {
 window.onload=function(){
   var now=new Date(); lCalYear=now.getFullYear(); lCalMonth=now.getMonth();
 
-  // Hard timeout: if still on loading screen after 8s, show sign-in
-  setTimeout(function(){
-    var ls=document.getElementById('ls');
-    if(ls && ls.style.display!=='none'){
-      ls.style.display='none';
-      var ev=document.getElementById('expiredView');
-      if(ev)ev.classList.remove('hidden');
-      initGSI();
-    }
-  }, 8000);
-
   // Try session token first (persistent, no JWT expiry)
   var savedST = null;
   try { savedST = localStorage.getItem('pmp_st') || sessionStorage.getItem('pmp_st'); } catch(e){}
@@ -2425,38 +2396,56 @@ window.onload=function(){
       clearTimeout(sessionTimer);
       if (!res.ok) {
         _gsiReady = false;
-        // JWT expired - show login screen
-        _clearSession();
-        try { localStorage.removeItem('pmp_st'); sessionStorage.removeItem('pmp_st'); } catch(e){}
-        document.getElementById('ls').style.display = 'none';
-        document.getElementById('expiredView').classList.remove('hidden');
+        var lsSt = document.getElementById('lsStatus');
+        if(lsSt) lsSt.textContent = 'Re-authenticating…';
         initGSI();
         return;
       }
-      myEmail      = res.email;
+      myEmail      = res.email;myEmail      = res.email;
       myRole       = res.role;
-      var _b       = res.data || {};
-      myLeaveRole  = _b.leaveRole  || res.role || 'staff';
-      myOTRole     = _b.otRole     || res.role || 'staff';
-      myOrderRole  = _b.orderRole  || res.role || 'staff';
-      myDepartment = _b.department || '';
-      holidays     = _b.holidays     || [];
-      staffNames   = _b.staffNames   || [];
-      leaveRecords = _b.leaveRecords || [];
-      otRecords    = _b.otRecords    || [];
-      allOrders    = _b.orders       || [];
-      allMachines  = _b.machines     || [];
-      machineTypes = _b.machineTypes || [];
-      technicians  = _b.technicians  || [];
-      if (_b.sessionToken || res.sessionToken) {
-        try {
-          var _st = _b.sessionToken || res.sessionToken;
-          localStorage.setItem('pmp_st', _st);
-          sessionStorage.setItem('pmp_st', _st);
-        } catch(e){}
+      // Read flat structure from GAS bundle
+      // GAS returns roles in res.data bundle
+      var _bd2     = res.data || {};
+      myLeaveRole  = _bd2.leaveRole  || res.role || 'staff';
+      myOTRole     = _bd2.otRole     || res.role || 'staff';
+      myOrderRole  = _bd2.orderRole  || res.role || 'staff';
+      myDepartment = _bd2.department || '';
+      holidays     = _bd2.holidays     || [];
+      staffNames   = _bd2.staffNames   || [];
+      leaveRecords = _bd2.leaveRecords || [];
+      otRecords    = _bd2.otRecords    || [];
+      allOrders    = _bd2.orders       || [];
+      allMachines  = _bd2.machines     || [];
+      machineTypes = _bd2.machineTypes || [];
+      technicians  = _bd2.technicians  || [];
+      var _tok2 = _bd2.sessionToken || res.sessionToken;
+      if (_tok2) {
+        try { localStorage.setItem('pmp_st',_tok2); sessionStorage.setItem('pmp_st',_tok2); } catch(e){}
       }
-      _saveSession(__idToken, myEmail, myRole);
+
+      document.getElementById('ls').style.display='none';
+      document.getElementById('expiredView').classList.add('hidden');
+      document.getElementById('homeEmail').textContent=myEmail;
+      var rp=document.getElementById('homeRolePill');
+      rp.textContent=myRole.toUpperCase();
+      rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');
       var savedApp = _loadCurrentApp();
+      document.getElementById('pmpShell').classList.remove('hidden');
+      var _sE=document.getElementById('sidebarEmail'); if(_sE)_sE.textContent=myEmail;
+      var _sR=document.getElementById('sidebarRole');  if(_sR)_sR.textContent=myLeaveRole.toUpperCase();
+      var _sA=document.getElementById('sidebarAvatar');if(_sA)_sA.textContent=myEmail.charAt(0).toUpperCase();
+      // Always show OT nav
+      var _no=document.getElementById('nav-ot');if(_no)_no.style.display='';
+      // Show order nav if has order role
+      var _nord=document.getElementById('nav-order');
+      if(_nord)_nord.style.display=(myOrderRole&&myOrderRole!=='')?'':'none';
+      if(myLeaveRole==='superadmin'||myOTRole==='superadmin'||myOrderRole==='superadmin'){
+        var _ls=document.getElementById('logNavSection');if(_ls)_ls.style.display='';
+        var _ln=document.getElementById('nav-log');if(_ln)_ln.style.display='';
+      }
+      document.getElementById('homeEmail').textContent=myEmail;
+      var _rp=document.getElementById('homeRolePill');
+      if(_rp){_rp.textContent=myRole.toUpperCase();_rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');}
       initPads();
       navTo('home');
       if (savedApp) setTimeout(function(){ navTo(savedApp); }, 300);
@@ -2492,29 +2481,32 @@ function onGoogleSignIn(resp) {
     }
     myEmail      = res.email;
     myRole       = res.role; // backward compat (leaveRole)
-    var _b2      = res.data || {};
-    myLeaveRole  = _b2.leaveRole  || res.role || 'staff';
-    myOTRole     = _b2.otRole     || res.role || 'staff';
-    myOrderRole  = _b2.orderRole  || res.role || 'staff';
-    myDepartment = _b2.department || '';
-    // Roles already loaded from res.data above
+    var ar       = res.authRec || {};
+    myLeaveRole  = ar.leaveRole  || res.role || 'staff';
+    myOTRole     = ar.otRole     || res.role || 'staff';
+    myOrderRole  = ar.orderRole  || res.role || 'staff';
+    myDepartment = ar.department || '';
+    _saveSession(__idToken, myEmail, myRole);
+    var b   = res.data || {};
+    // Also get roles from data bundle
+    if (b.leaveRole)  myLeaveRole  = b.leaveRole;
+    if (b.otRole)     myOTRole     = b.otRole;
+    if (b.orderRole)  myOrderRole  = b.orderRole;
+    if (b.department) myDepartment = b.department;
 
     // Store all pre-loaded data
-    holidays     = _b2.holidays     || [];
-    staffNames   = _b2.staffNames   || [];
-    leaveRecords = _b2.leaveRecords || [];
-    otRecords    = _b2.otRecords    || [];
-    allOrders    = _b2.orders       || [];
-    allMachines  = _b2.machines     || [];
-    technicians  = _b2.technicians  || [];
-    machineTypes = _b2.machineTypes || [];
-    // Save session token
-    if (_b2.sessionToken || res.sessionToken) {
-      try {
-        var _st3 = _b2.sessionToken || res.sessionToken;
-        localStorage.setItem('pmp_st', _st3);
-        sessionStorage.setItem('pmp_st', _st3);
-      } catch(e){}
+    holidays     = b.holidays     || [];
+    staffNames   = b.staffNames   || [];
+    leaveRecords = b.leaveRecords || [];
+    otRecords    = b.otRecords    || [];
+    allOrders    = b.orders       || [];
+    allMachines  = b.machines     || [];
+    technicians  = b.technicians  || [];
+    machineTypes = b.machineTypes || [];
+    // Save persistent session token (30 days, survives refresh)
+    var _tok = b.sessionToken || res.sessionToken;
+    if (_tok) {
+      try { localStorage.setItem('pmp_st',_tok); sessionStorage.setItem('pmp_st',_tok); } catch(e){}
     }
 
     document.getElementById('ls').style.display='none';
@@ -3337,9 +3329,6 @@ function otResetForm(){
 
 // OT Admin
 function otAdminRefresh(){
-  // Always render immediately
-  var otb=document.getElementById('otTbody');
-  if(otb&&!otRecords.length) otb.innerHTML='<tr><td colspan="8" class="empty" style="color:#aaa;">Loading records…</td></tr>';
   if(otRecords.length>0){
     document.getElementById('otsTotal').textContent=otRecords.length;
     document.getElementById('otsPending').textContent=otRecords.filter(function(r){return r.status==='Pending';}).length;
@@ -3547,29 +3536,16 @@ function ordAdminTab(tab,btn){
 }
 
 function ordAdminRefresh(){
-  var tb=document.getElementById('ordTbody');
-  if(tb) tb.innerHTML='<tr><td colspan="9" class="empty" style="color:#aaa;">Loading orders…</td></tr>';
-  var mb=document.getElementById('machTbody');
-  if(mb) mb.innerHTML='<tr><td colspan="8" class="empty" style="color:#aaa;">Loading machines…</td></tr>';
-  // Update stats with cached data if available
-  try { ordRenderTbl(); } catch(e){ if(tb) tb.innerHTML='<tr><td colspan="9" class="empty" style="color:red;">Error: '+e.message+'</td></tr>'; }
-  try { machRenderStats(); } catch(e){}
-  try { machRenderTbl(); } catch(e){ if(mb) mb.innerHTML='<tr><td colspan="8" class="empty" style="color:red;">Error: '+e.message+'</td></tr>'; }
+  if(allOrders.length>0||allMachines.length>0){
+    ordRenderTbl();machRenderStats();machRenderTbl();
+  }
   api('getOrderAdminBundle').then(function(res){
-    if(!res||!res.ok){
-      if(tb) tb.innerHTML='<tr><td colspan="9" class="empty" style="color:red;">API error: '+(res?res.error:'no response')+'</td></tr>';
-      return;
-    }
     var b=res.data||{};
     allOrders=b.orders||[];
     allMachines=b.machines||[];
     technicians=b.technicians||[];
     machineTypes=b.machineTypes||[];
-    try { ordRenderTbl(); } catch(e){ if(tb) tb.innerHTML='<tr><td colspan="9" class="empty" style="color:red;">Render error: '+e.message+'</td></tr>'; }
-    try { machRenderStats(); } catch(e){}
-    try { machRenderTbl(); } catch(e){}
-  }).catch(function(e){
-    if(tb) tb.innerHTML='<tr><td colspan="9" class="empty" style="color:red;">Network error: '+e.message+'</td></tr>';
+    ordRenderTbl();machRenderStats();machRenderTbl();
   });
 }
 
@@ -4928,6 +4904,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div id="versionBadge" style="position:fixed;bottom:10px;right:12px;font-size:.65rem;color:#444;font-family:monospace;z-index:99999;background:rgba(255,255,255,.85);padding:2px 7px;border-radius:4px;border:1px solid #ddd;pointer-events:none;">v1.4.2</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.5</div>
 </body>
 </html>
