@@ -247,7 +247,7 @@ body {
    APP SHELL — SIDEBAR LAYOUT
 ════════════════════════════════════════════ */
 #pmpShell {
-  display: flex; min-height: 100vh;
+  display: flex; height: 100vh; overflow: hidden;
 }
 
 
@@ -391,7 +391,8 @@ body {
   flex: 1;
   margin-left: var(--sidebar-width);
   display: flex; flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   min-width: 0;
 }
 @media(max-width: 991px) { #pmpMain { margin-left: 0; } }
@@ -421,7 +422,7 @@ body {
 /* ════════════════════════════════════════════
    HOMEPAGE — OPERATIONS OVERVIEW
 ════════════════════════════════════════════ */
-#homeView { display: block; flex: 1; min-height: 0; overflow-y: auto; }
+#homeView { display: block; flex: 1; overflow-y: auto; padding: 20px 24px; box-sizing: border-box; }
 
 /* Old home-header hidden (user info moved to sidebar) */
 .home-header { display: none; }
@@ -576,9 +577,10 @@ body {
 /* ════════════════════════════════════════════
    APP VIEW — MODULE PAGES
 ════════════════════════════════════════════ */
-#appView { display: block; flex: 1; min-height: 0; overflow-y: auto; }
+#appView { display: block; flex: 1; overflow-y: auto; padding: 20px 24px; box-sizing: border-box; }
 .app-topbar { display: none; } /* Replaced by sidebar */
 .app-content { padding: 0; max-width: none; margin: 0; width: 100%; }
+#leaveApp, #otApp, #orderApp, #logApp { display: block; width: 100%; }
 
 /* ════════════════════════════════════════════
    PANELS / CARDS
@@ -1018,8 +1020,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 ═══════════════════════════════════════ -->
 
 <!-- Mobile overlay -->
-<div id="sidebarOverlay" onclick="closeSidebar()">
-<div style="position:fixed;bottom:10px;right:14px;font-size:.7rem;color:#333;font-family:monospace;z-index:9999;pointer-events:none;background:rgba(255,255,255,.7);padding:2px 6px;border-radius:4px;">v1.4.2</div></div>
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 
 
@@ -2249,12 +2250,28 @@ function apiWithToken(action, sessionToken) {
   return new Promise(function(resolve, reject) {
     var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     var url = GAS_API_URL + '?action=' + action + '&sessionToken=' + encodeURIComponent(sessionToken) + '&cb=' + cb;
-    window[cb] = function(data) { delete window[cb]; resolve(data); };
     var s = document.createElement('script');
+    var done = false;
+    window[cb] = function(data) {
+      if (done) return; done = true;
+      delete window[cb];
+      try { document.head.removeChild(s); } catch(e) {}
+      resolve(data);
+    };
     s.src = url;
-    s.onerror = function() { delete window[cb]; reject(new Error('Network error')); };
+    s.onerror = function() {
+      if (done) return; done = true;
+      delete window[cb];
+      try { document.head.removeChild(s); } catch(e) {}
+      reject(new Error('Network error'));
+    };
     document.head.appendChild(s);
-    setTimeout(function() { delete window[cb]; reject(new Error('Timeout')); }, 15000);
+    setTimeout(function() {
+      if (done) return; done = true;
+      delete window[cb];
+      try { document.head.removeChild(s); } catch(e) {}
+      reject(new Error('Timeout'));
+    }, 20000);
   });
 }
 
@@ -4911,5 +4928,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
+<div id="versionBadge" style="position:fixed;bottom:10px;right:12px;font-size:.65rem;color:#444;font-family:monospace;z-index:99999;background:rgba(255,255,255,.85);padding:2px 7px;border-radius:4px;border:1px solid #ddd;pointer-events:none;">v1.4.2</div>
 </body>
 </html>
