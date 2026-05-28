@@ -576,7 +576,7 @@ body {
 /* ════════════════════════════════════════════
    APP VIEW — MODULE PAGES
 ════════════════════════════════════════════ */
-#appView { display: contents; }
+#appView { display: block; }
 .app-topbar { display: none; } /* Replaced by sidebar */
 .app-content { padding: 0; max-width: none; margin: 0; width: 100%; }
 
@@ -2647,6 +2647,9 @@ function openApp(app){
 // LEAVE SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function loadLeaveApp(){
+  // Show leaveApp explicitly
+  var la = document.getElementById('leaveApp');
+  if(la){ la.classList.remove('hidden'); la.style.display=''; }
   if(myLeaveRole==='superadmin'||myLeaveRole==='admin'){
     document.getElementById('leaveAdminView').classList.remove('hidden');
     lAdminRefresh();
@@ -3190,6 +3193,8 @@ function lRenderHols(){
 // OT SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function loadOTApp(){
+  var ota = document.getElementById('otApp');
+  if(ota){ ota.classList.remove('hidden'); ota.style.display=''; }
   if(myOTRole==='superadmin'||myOTRole==='admin'){
     document.getElementById('otAdminView').classList.remove('hidden');
     otAdminRefresh();
@@ -3395,6 +3400,8 @@ function otDel(ri,id,name){
 // ORDER SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function loadOrderApp(){
+  var oa = document.getElementById('orderApp');
+  if(oa){ oa.classList.remove('hidden'); oa.style.display=''; }
   if(myOrderRole==='superadmin'){
     // Superadmin: full control
     document.getElementById('orderAdminView').classList.remove('hidden');
@@ -4021,6 +4028,8 @@ function ordRenderTblWithRoles(){
 var allLogs = [];
 
 function loadLogApp(){
+  var lga = document.getElementById('logApp');
+  if(lga){ lga.classList.remove('hidden'); lga.style.display=''; }
   logRefresh();
 }
 
@@ -4207,13 +4216,13 @@ function navTo(section) {
     if (phTitle) phTitle.textContent = t[0];
     if (phSub)   phSub.textContent   = t[1];
     // Show the page header
-    var ph = document.querySelector('.page-header');
-    if (ph) ph.style.display = '';
+    // page-header removed, handled by module headers
 
     currentApp = section;
     var appEl = document.getElementById(section + 'App');
     if (appEl) {
       appEl.classList.remove('hidden');
+      appEl.style.display = '';
       if (section === 'leave') loadLeaveApp();
       else if (section === 'ot') loadOTApp();
       else if (section === 'order') loadOrderApp();
