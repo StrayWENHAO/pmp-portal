@@ -1102,6 +1102,28 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       </div>
 
       <div id="homeAppContent">
+        <!-- Notice + Clock Banner -->
+        <div id="noticeBanner" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-md);padding:0;margin-bottom:16px;overflow:hidden;display:none;">
+          <div style="display:flex;align-items:stretch;">
+            <div style="background:#003366;width:4px;flex-shrink:0;"></div>
+            <div style="flex:1;padding:12px 16px;min-height:56px;display:flex;align-items:center;gap:16px;">
+              <div style="flex:1;min-width:0;">
+                <div id="noticeText" style="font-size:.84rem;color:var(--text-primary);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                <div id="noticeDate" style="font-size:.68rem;color:var(--text-tertiary);margin-top:2px;"></div>
+              </div>
+              <div id="noticeDots" style="display:flex;gap:5px;flex-shrink:0;"></div>
+              <!-- Digital Clock -->
+              <div style="border-left:1px solid var(--border);padding-left:16px;flex-shrink:0;text-align:right;">
+                <div id="digitalClock" style="font-family:'JetBrains Mono','Courier New',monospace;font-size:1.5rem;font-weight:700;color:#003366;letter-spacing:3px;line-height:1;"></div>
+                <div id="digitalDate" style="font-size:.62rem;color:var(--text-tertiary);margin-top:2px;letter-spacing:.5px;"></div>
+              </div>
+            </div>
+            <div id="noticeEditBtn" style="display:none;padding:12px;align-items:center;display:flex;">
+              <button onclick="openNoticeEditor()" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:.7rem;color:var(--text-secondary);cursor:pointer;">Edit</button>
+            </div>
+          </div>
+        </div>
+
         <!-- KPI Overview -->
         <div class="overview-grid" id="kpiGrid">
           <div class="kpi-card kpi-navy" onclick="kpiNavOrderAll()" style="cursor:pointer;">
@@ -1131,27 +1153,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
 
         <!-- Quick Actions -->
-        <!-- Notice + Clock Banner -->
-        <div id="noticeBanner" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-md);padding:0;margin-bottom:16px;overflow:hidden;display:none;">
-          <div style="display:flex;align-items:stretch;">
-            <div style="background:#003366;width:4px;flex-shrink:0;"></div>
-            <div style="flex:1;padding:12px 16px;min-height:56px;display:flex;align-items:center;gap:16px;">
-              <div style="flex:1;min-width:0;">
-                <div id="noticeText" style="font-size:.84rem;color:var(--text-primary);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-                <div id="noticeDate" style="font-size:.68rem;color:var(--text-tertiary);margin-top:2px;"></div>
-              </div>
-              <div id="noticeDots" style="display:flex;gap:5px;flex-shrink:0;"></div>
-              <!-- Digital Clock -->
-              <div style="border-left:1px solid var(--border);padding-left:16px;flex-shrink:0;text-align:right;">
-                <div id="digitalClock" style="font-family:'JetBrains Mono','Courier New',monospace;font-size:1.5rem;font-weight:700;color:#003366;letter-spacing:3px;line-height:1;"></div>
-                <div id="digitalDate" style="font-size:.62rem;color:var(--text-tertiary);margin-top:2px;letter-spacing:.5px;"></div>
-              </div>
-            </div>
-            <div id="noticeEditBtn" style="display:none;padding:12px;align-items:center;display:flex;">
-              <button onclick="openNoticeEditor()" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:.7rem;color:var(--text-secondary);cursor:pointer;">Edit</button>
-            </div>
-          </div>
-        </div>
+
 
         <!-- Notice Editor Modal (superadmin) -->
         <div id="noticeModal" class="modal-ov">
@@ -2258,6 +2260,64 @@ var assignOrderData={};
 // ═══════════════════════════════════════════════════════════════
 // ── API HELPER (JSONP — bypasses CORS) ───────────────────────
 var _cbCount = 0;
+function apiWithToken(action, sessionToken) {
+  return new Promise(function(resolve, reject) {
+    var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    var url = GAS_API_URL + '?action=' + action + '&sessionToken=' + encodeURIComponent(sessionToken) + '&cb=' + cb;
+    window[cb] = function(data) { delete window[cb]; resolve(data); };
+    var s = document.createElement('script');
+    s.src = url;
+    s.onerror = function() { delete window[cb]; reject(new Error('Network error')); };
+    document.head.appendChild(s);
+    setTimeout(function() { delete window[cb]; reject(new Error('Timeout')); }, 15000);
+  });
+}
+
+// Extract boot from bundle into reusable function
+function _bootFromBundle(res) {
+  myEmail      = res.email;
+  myRole       = res.role || res.leaveRole || '';
+  myLeaveRole  = res.leaveRole  || '';
+  myOTRole     = res.otRole     || '';
+  myOrderRole  = res.orderRole  || '';
+  myDept       = res.department || '';
+  holidays     = res.holidays   || [];
+  staffNames   = res.staffNames || [];
+  machineTypes = res.machineTypes || [];
+  technicians  = res.technicians  || [];
+  allOrders    = res.orders    || [];
+  allMachines  = res.machines  || [];
+  leaveRecords = res.leaveRecords || [];
+  otRecords    = res.otRecords    || [];
+  if (res.sessionToken) {
+    try {
+      localStorage.setItem('pmp_st', res.sessionToken);
+      sessionStorage.setItem('pmp_st', res.sessionToken);
+    } catch(e){}
+  }
+  _saveSession(res.token||__idToken, myEmail, myRole);
+  document.getElementById('ls').style.display = 'none';
+  document.getElementById('expiredView').classList.add('hidden');
+  document.getElementById('pmpShell').classList.remove('hidden');
+  var _mtb=document.getElementById('mobileTopbar');if(_mtb)_mtb.style.display='';
+  var _sE=document.getElementById('sidebarEmail'); if(_sE)_sE.textContent=myEmail;
+  var _sR=document.getElementById('sidebarRole');  if(_sR)_sR.textContent=myLeaveRole.toUpperCase();
+  var _sA=document.getElementById('sidebarAvatar');if(_sA)_sA.textContent=myEmail.charAt(0).toUpperCase();
+  var _no=document.getElementById('nav-ot');if(_no)_no.style.display='';
+  var _nord=document.getElementById('nav-order');if(_nord)_nord.style.display=(myOrderRole&&myOrderRole!=='')?'':'none';
+  if(myLeaveRole==='superadmin'||myOTRole==='superadmin'||myOrderRole==='superadmin'){
+    var _ls2=document.getElementById('logNavSection');if(_ls2)_ls2.style.display='';
+    var _ln2=document.getElementById('nav-log');if(_ln2)_ln2.style.display='';
+  }
+  document.getElementById('homeEmail').textContent=myEmail;
+  var rp=document.getElementById('homeRolePill');
+  if(rp){rp.textContent=myRole.toUpperCase();rp.className='role-pill '+(myRole==='superadmin'?'superadmin':myRole==='admin'?'admin':'staff');}
+  initPads();
+  navTo('home');
+  var savedApp=_loadCurrentApp();
+  if(savedApp)setTimeout(function(){navTo(savedApp);},300);
+}
+
 function api(action, params) {
   return new Promise(function(resolve, reject) {
     var cbName = '_gasCallback' + (++_cbCount);
@@ -2297,22 +2357,43 @@ function apiPost(action, data) {
 window.onload=function(){
   var now=new Date(); lCalYear=now.getFullYear(); lCalMonth=now.getMonth();
 
-  // Try restore session
+  // Try session token first (persistent, no JWT expiry)
+  var savedST = null;
+  try { savedST = localStorage.getItem('pmp_st') || sessionStorage.getItem('pmp_st'); } catch(e){}
+
+  if (savedST) {
+    // Validate session token with GAS - no Google JWT needed
+    var lsStatus0 = document.getElementById('lsStatus');
+    if(lsStatus0) lsStatus0.textContent = 'Restoring session…';
+    apiWithToken('validateSession', savedST).then(function(res){
+      if (res && res.ok) {
+        // Session valid - boot normally
+        _bootFromBundle(res);
+      } else {
+        // Session expired - need fresh login
+        try { localStorage.removeItem('pmp_st'); sessionStorage.removeItem('pmp_st'); } catch(e){}
+        document.getElementById('ls').style.display = 'none';
+        document.getElementById('expiredView').classList.remove('hidden');
+        initGSI();
+      }
+    }).catch(function(){
+      document.getElementById('ls').style.display = 'none';
+      document.getElementById('expiredView').classList.remove('hidden');
+      initGSI();
+    });
+    return;
+  }
+
+  // No session token - try Google JWT from storage
   var saved = _loadSession();
   if (saved) {
     __idToken = saved.token;
     myEmail   = saved.email;
     myRole    = saved.role;
-
-    // Set timeout - if API takes >10s, try silent re-login
     var sessionTimer = setTimeout(function(){
-      // Don't clear session yet - try silent Google re-login first
       initGSI();
       setTimeout(function(){
-        // If still not logged in after GSI attempt, show sign-in
-        if(!myEmail || !document.getElementById('pmpShell') || 
-           document.getElementById('pmpShell').classList.contains('hidden')){
-          _clearSession();
+        if(document.getElementById('pmpShell').classList.contains('hidden')){
           document.getElementById('ls').style.display='none';
           document.getElementById('expiredView').classList.remove('hidden');
         }
@@ -2359,6 +2440,11 @@ window.onload=function(){
       var _sE=document.getElementById('sidebarEmail'); if(_sE)_sE.textContent=myEmail;
       var _sR=document.getElementById('sidebarRole');  if(_sR)_sR.textContent=myLeaveRole.toUpperCase();
       var _sA=document.getElementById('sidebarAvatar');if(_sA)_sA.textContent=myEmail.charAt(0).toUpperCase();
+      // Always show OT nav
+      var _no=document.getElementById('nav-ot');if(_no)_no.style.display='';
+      // Show order nav if has order role
+      var _nord=document.getElementById('nav-order');
+      if(_nord)_nord.style.display=(myOrderRole&&myOrderRole!=='')?'':'none';
       if(myLeaveRole==='superadmin'||myOTRole==='superadmin'||myOrderRole==='superadmin'){
         var _ls=document.getElementById('logNavSection');if(_ls)_ls.style.display='';
         var _ln=document.getElementById('nav-log');if(_ln)_ln.style.display='';
@@ -2436,6 +2522,9 @@ function onGoogleSignIn(resp) {
     var _sE3=document.getElementById('sidebarEmail');if(_sE3)_sE3.textContent=myEmail;
     var _sR3=document.getElementById('sidebarRole');if(_sR3)_sR3.textContent=myLeaveRole.toUpperCase();
     var _sA3=document.getElementById('sidebarAvatar');if(_sA3)_sA3.textContent=myEmail.charAt(0).toUpperCase();
+    var _no3=document.getElementById('nav-ot');if(_no3)_no3.style.display='';
+    var _nord3=document.getElementById('nav-order');
+    if(_nord3)_nord3.style.display=(myOrderRole&&myOrderRole!=='')?'':'none';
     if(myLeaveRole==='superadmin'||myOTRole==='superadmin'||myOrderRole==='superadmin'){
       var _ls4=document.getElementById('logNavSection');if(_ls4)_ls4.style.display='';
       var _ln4=document.getElementById('nav-log');if(_ln4)_ln4.style.display='';
@@ -4162,6 +4251,12 @@ function closeSidebar() {
 }
 
 function handleSignOut() {
+  try {
+    var st = localStorage.getItem('pmp_st') || sessionStorage.getItem('pmp_st');
+    if (st) apiWithToken('deleteSession', st).catch(function(){});
+    localStorage.removeItem('pmp_st');
+    sessionStorage.removeItem('pmp_st');
+  } catch(e){}
   _clearSession();
   if (typeof google !== 'undefined' && google.accounts) {
     google.accounts.id.disableAutoSelect();
