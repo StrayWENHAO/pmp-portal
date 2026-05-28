@@ -400,10 +400,11 @@ body {
 .page-header {
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
-  padding: 16px 24px;
+  padding: 14px 24px;
   display: flex; align-items: center; justify-content: space-between;
   position: sticky; top: 0; z-index: 100;
 }
+#homeView .page-header { display: none !important; }
 @media(max-width: 991px) { .page-header { display: none; } }
 .page-header-left { display: flex; flex-direction: column; }
 .page-header-title { font-size: .88rem; font-weight: 600; color: var(--text-primary); letter-spacing: -.1px; }
@@ -1090,19 +1091,30 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
     <!-- ─── DASHBOARD / HOME ─── -->
     <div id="homeView">
-      <div class="page-header">
-        <div class="page-header-left">
-          <div class="page-header-title">Operations Dashboard</div>
-          <div class="page-header-sub">Real-time overview — PMP Equipments Sdn Bhd</div>
-        </div>
-        <div class="page-header-actions" style="display:none;">
-          <span id="homeEmail" style="display:none;"></span>
-          <span class="role-pill" id="homeRolePill" style="display:none;"></span>
-        </div>
-      </div>
+      <span id="homeEmail" style="display:none;"></span><span id="homeRolePill" style="display:none;"></span>
 
       <div id="homeAppContent">
 
+        <!-- Notice + Clock Banner -->
+        <div id="noticeBanner" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-md);padding:0;margin-bottom:16px;overflow:hidden;display:none;">
+          <div style="display:flex;align-items:stretch;">
+            <div style="background:#003366;width:4px;flex-shrink:0;"></div>
+            <div style="flex:1;padding:12px 16px;min-height:56px;display:flex;align-items:center;gap:16px;">
+              <div style="flex:1;min-width:0;">
+                <div id="noticeText" style="font-size:.84rem;color:var(--text-primary);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                <div id="noticeDate" style="font-size:.68rem;color:var(--text-tertiary);margin-top:2px;"></div>
+              </div>
+              <div id="noticeDots" style="display:flex;gap:5px;flex-shrink:0;"></div>
+              <div style="border-left:1px solid var(--border);padding-left:16px;flex-shrink:0;text-align:right;">
+                <div id="digitalClock" style="font-family:'JetBrains Mono','Courier New',monospace;font-size:1.5rem;font-weight:700;color:#003366;letter-spacing:3px;line-height:1;"></div>
+                <div id="digitalDate" style="font-size:.62rem;color:var(--text-tertiary);margin-top:2px;letter-spacing:.5px;"></div>
+              </div>
+            </div>
+            <div id="noticeEditBtn" style="display:none;padding:12px;align-items:center;display:flex;">
+              <button onclick="openNoticeEditor()" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:.7rem;color:var(--text-secondary);cursor:pointer;">Edit</button>
+            </div>
+          </div>
+        </div>
 
         <!-- Notice Editor Modal (superadmin) -->
         <div id="noticeModal" class="modal-ov">
@@ -1117,13 +1129,42 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           </div>
         </div>
 
+        <!-- KPI Overview -->
+        <div class="overview-grid" id="kpiGrid">
+          <div class="kpi-card kpi-navy" onclick="kpiNavOrderAll()" style="cursor:pointer;">
+            <span class="kpi-icon">🚧</span>
+            <div class="kpi-val" id="kpiActiveRentals">—</div>
+            <div class="kpi-label">Active Rentals</div>
+            <div class="kpi-sub">Machines on site</div>
+          </div>
+          <div class="kpi-card kpi-green" onclick="kpiNavMachineReady()" style="cursor:pointer;">
+            <span class="kpi-icon">✅</span>
+            <div class="kpi-val" id="kpiReadyFleet">—</div>
+            <div class="kpi-label">Fleet Ready</div>
+            <div class="kpi-sub">Available for dispatch</div>
+          </div>
+          <div class="kpi-card kpi-amber" onclick="kpiNavLeavePending()" style="cursor:pointer;">
+            <span class="kpi-icon">⏳</span>
+            <div class="kpi-val" id="kpiPendingOps">—</div>
+            <div class="kpi-label">Pending Approvals</div>
+            <div class="kpi-sub">Leave & OT requests</div>
+          </div>
+          <div class="kpi-card kpi-red" onclick="kpiNavMachinePending()" style="cursor:pointer;">
+            <span class="kpi-icon">🔧</span>
+            <div class="kpi-val" id="kpiPendingMach">—</div>
+            <div class="kpi-label">In Maintenance</div>
+            <div class="kpi-sub">Pending service</div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
         <div class="quick-actions">
           <div class="quick-actions-title">Quick Actions</div>
           <div class="quick-actions-row">
             <button class="quick-action-btn" onclick="qaApplyLeave()">
               <span class="qa-icon">📅</span> Apply Leave
             </button>
-            <button class="quick-action-btn" onclick="qaSubmitOT()">
+            <button class="quick-action-btn" onclick="openSubmitOTModal()">
               <span class="qa-icon">⏱</span> Submit OT
             </button>
             <button class="quick-action-btn" id="qaNewOrder" style="display:none;" onclick="qaNewOrderForm()">
@@ -1134,42 +1175,36 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
         <!-- Operations Panels -->
         <div class="ops-grid" id="opsPanels">
-          <!-- Pending Orders panel -->
           <div class="ops-panel" id="opsPendingOrders">
             <div class="ops-panel-hdr">
               <h4>⚠ Unassigned Orders</h4>
-              <a onclick="navToPendingOrders()">View all →</a>
+              <a onclick="navToPendingOrders()" style="cursor:pointer;">View all →</a>
             </div>
             <div class="ops-panel-body" id="opsPendingOrdersList">
               <div class="ops-row"><span class="ops-meta">Loading…</span></div>
             </div>
           </div>
-
-          <!-- On Leave Today panel -->
           <div class="ops-panel" id="opsOnLeave">
             <div class="ops-panel-hdr">
               <h4>🏖 On Leave Today</h4>
-              <a onclick="navToLeaveSchedule()">Schedule →</a>
+              <a onclick="navToLeaveSchedule()" style="cursor:pointer;">Schedule →</a>
             </div>
             <div class="ops-panel-body" id="opsOnLeaveList">
               <div class="ops-row"><span class="ops-meta">Loading…</span></div>
             </div>
           </div>
-
-          <!-- Pending Approvals panel -->
           <div class="ops-panel" id="opsPendingLeave">
             <div class="ops-panel-hdr">
               <h4>📋 Pending Approvals</h4>
-              <a onclick="navToLeavePending()">Review →</a>
+              <a onclick="navToLeavePending()" style="cursor:pointer;">Review →</a>
             </div>
             <div class="ops-panel-body" id="opsPendingLeaveList">
               <div class="ops-row"><span class="ops-meta">Loading…</span></div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
+      </div>
     <!-- ─── APP PAGES (Leave, OT, Order, Log) ─── -->
     <div id="appView">
       <div class="app-topbar"></div>
@@ -2271,11 +2306,20 @@ function _bootFromBundle(res) {
 function api(action, params) {
   return new Promise(function(resolve, reject) {
     var cbName = '_gasCallback' + (++_cbCount);
-    // base64 encode token to avoid URL encoding issues with JWT special chars
-    var safeToken = btoa(__idToken);
-    var url = GAS_API_URL + '?action=' + encodeURIComponent(action)
-            + '&token=' + encodeURIComponent(safeToken)
-            + '&cb=' + cbName;
+    // Use session token if available (persistent), fallback to Google JWT
+    var _st = '';
+    try { _st = localStorage.getItem('pmp_st') || sessionStorage.getItem('pmp_st') || ''; } catch(e){}
+    var url;
+    if (_st) {
+      url = GAS_API_URL + '?action=' + encodeURIComponent(action)
+              + '&sessionToken=' + encodeURIComponent(_st)
+              + '&cb=' + cbName;
+    } else {
+      var safeToken = btoa(__idToken);
+      url = GAS_API_URL + '?action=' + encodeURIComponent(action)
+              + '&token=' + encodeURIComponent(safeToken)
+              + '&cb=' + cbName;
+    }
     if (params && typeof params === 'object') {
       Object.keys(params).forEach(function(k){
         url += '&' + k + '=' + encodeURIComponent(
