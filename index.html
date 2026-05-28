@@ -3319,6 +3319,9 @@ function otResetForm(){
 
 // OT Admin
 function otAdminRefresh(){
+  // Always render immediately
+  var otb=document.getElementById('otTbody');
+  if(otb&&!otRecords.length) otb.innerHTML='<tr><td colspan="8" class="empty" style="color:#aaa;">Loading records…</td></tr>';
   if(otRecords.length>0){
     document.getElementById('otsTotal').textContent=otRecords.length;
     document.getElementById('otsPending').textContent=otRecords.filter(function(r){return r.status==='Pending';}).length;
@@ -3526,16 +3529,29 @@ function ordAdminTab(tab,btn){
 }
 
 function ordAdminRefresh(){
-  if(allOrders.length>0||allMachines.length>0){
-    ordRenderTbl();machRenderStats();machRenderTbl();
-  }
+  var tb=document.getElementById('ordTbody');
+  if(tb) tb.innerHTML='<tr><td colspan="9" class="empty" style="color:#aaa;">Loading orders…</td></tr>';
+  var mb=document.getElementById('machTbody');
+  if(mb) mb.innerHTML='<tr><td colspan="8" class="empty" style="color:#aaa;">Loading machines…</td></tr>';
+  // Update stats with cached data if available
+  try { ordRenderTbl(); } catch(e){ if(tb) tb.innerHTML='<tr><td colspan="9" class="empty" style="color:red;">Error: '+e.message+'</td></tr>'; }
+  try { machRenderStats(); } catch(e){}
+  try { machRenderTbl(); } catch(e){ if(mb) mb.innerHTML='<tr><td colspan="8" class="empty" style="color:red;">Error: '+e.message+'</td></tr>'; }
   api('getOrderAdminBundle').then(function(res){
+    if(!res||!res.ok){
+      if(tb) tb.innerHTML='<tr><td colspan="9" class="empty" style="color:red;">API error: '+(res?res.error:'no response')+'</td></tr>';
+      return;
+    }
     var b=res.data||{};
     allOrders=b.orders||[];
     allMachines=b.machines||[];
     technicians=b.technicians||[];
     machineTypes=b.machineTypes||[];
-    ordRenderTbl();machRenderStats();machRenderTbl();
+    try { ordRenderTbl(); } catch(e){ if(tb) tb.innerHTML='<tr><td colspan="9" class="empty" style="color:red;">Render error: '+e.message+'</td></tr>'; }
+    try { machRenderStats(); } catch(e){}
+    try { machRenderTbl(); } catch(e){}
+  }).catch(function(e){
+    if(tb) tb.innerHTML='<tr><td colspan="9" class="empty" style="color:red;">Network error: '+e.message+'</td></tr>';
   });
 }
 
