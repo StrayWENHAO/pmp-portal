@@ -2651,17 +2651,19 @@ function openApp(app){
 // LEAVE SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function loadLeaveApp(){
-  // Show leaveApp explicitly
-  var la = document.getElementById('leaveApp');
-  if(la){ la.classList.remove('hidden'); la.style.display=''; }
-  if(myLeaveRole==='superadmin'||myLeaveRole==='admin'){
-    document.getElementById('leaveAdminView').classList.remove('hidden');
+  var la=document.getElementById('leaveApp');
+  if(la){la.classList.remove('hidden');la.style.display='block';}
+  var effLR=myLeaveRole||myRole||'staff';
+  if(effLR==='superadmin'||effLR==='admin'){
+    var lav=document.getElementById('leaveAdminView');
+    if(lav){lav.classList.remove('hidden');lav.style.display='block';}
     lAdminRefresh();
   } else {
-    document.getElementById('leaveStaffView').classList.remove('hidden');
+    var lsv=document.getElementById('leaveStaffView');
+    if(lsv){lsv.classList.remove('hidden');lsv.style.display='block';}
     document.getElementById('lEmail').value=myEmail;
     lInitTimes();
-    setTimeout(function(){resizePad(lPad,'lSigPad');},80);
+    setTimeout(function(){try{resizePad(lPad,'lSigPad');}catch(e){}},80);
   }
 }
 
@@ -3198,16 +3200,20 @@ function lRenderHols(){
 // ═══════════════════════════════════════════════════════════════
 function loadOTApp(){
   var ota = document.getElementById('otApp');
-  if(ota){ ota.classList.remove('hidden'); ota.style.display=''; }
-  if(myOTRole==='superadmin'||myOTRole==='admin'){
-    document.getElementById('otAdminView').classList.remove('hidden');
+  if(ota){ ota.classList.remove('hidden'); ota.style.display='block'; }
+  // Use otRole with fallback to leaveRole and myRole
+  var effOTRole = myOTRole || myLeaveRole || myRole || 'staff';
+  if(effOTRole==='superadmin'||effOTRole==='admin'){
+    var oav=document.getElementById('otAdminView');
+    if(oav){oav.classList.remove('hidden');oav.style.display='block';}
     otAdminRefresh();
   } else {
-    document.getElementById('otStaffView').classList.remove('hidden');
+    var osv=document.getElementById('otStaffView');
+    if(osv){osv.classList.remove('hidden');osv.style.display='block';}
     var today=new Date().toISOString().split('T')[0];
     document.getElementById('otDate').value=today;
     document.getElementById('otVerified').value='false';
-    setTimeout(function(){resizePad(otPad,'otSigPad');},80);
+    setTimeout(function(){try{resizePad(otPad,'otSigPad');}catch(e){}},80);
   }
 }
 
@@ -3405,22 +3411,16 @@ function otDel(ri,id,name){
 // ═══════════════════════════════════════════════════════════════
 function loadOrderApp(){
   var oa = document.getElementById('orderApp');
-  if(oa){ oa.classList.remove('hidden'); oa.style.display=''; }
-  if(myOrderRole==='superadmin'){
-    // Superadmin: full control
-    document.getElementById('orderAdminView').classList.remove('hidden');
+  if(oa){ oa.classList.remove('hidden'); oa.style.display='block'; }
+  var effOR = myOrderRole || myLeaveRole || myRole || 'staff';
+  if(effOR==='superadmin'||effOR==='admin'){
+    var oav2=document.getElementById('orderAdminView');
+    if(oav2){oav2.classList.remove('hidden');oav2.style.display='block';}
     ordAdminRefresh();
-    // Show create order button
-    document.getElementById('ordCreateBtn').style.display='';
-  } else if(myOrderRole==='admin'){
-    // Admin: can see all + create, but no edit/delete/cancel
-    document.getElementById('orderAdminView').classList.remove('hidden');
-    ordAdminRefresh();
-    document.getElementById('ordCreateBtn').style.display='';
-    // Hide edit/delete/cancel buttons - handled in render
-  } else if(myOrderRole==='technician'){
+    var ocb=document.getElementById('ordCreateBtn');if(ocb)ocb.style.display='';
+  } else if(effOR==='technician'){
     // Technician: see dept orders + machine status + assign
-    document.getElementById('orderTechView').classList.remove('hidden');
+    var otv=document.getElementById('orderTechView');if(otv){otv.classList.remove('hidden');otv.style.display='block';}
     // Load tech data
     api('getOrderAdminBundle').then(function(res){
       var b=res.data||{};
@@ -3436,7 +3436,7 @@ function loadOrderApp(){
     });
   } else {
     // Staff: no order access
-    document.getElementById('orderNoAccess').classList.remove('hidden');
+    var ona=document.getElementById('orderNoAccess');if(ona){ona.classList.remove('hidden');ona.style.display='block';} else{var oa2=document.getElementById('orderApp');if(oa2)oa2.innerHTML='<div style="padding:40px;text-align:center;color:#888;">No access to Orders module.</div>';}
   }
 }
 
@@ -4033,7 +4033,7 @@ var allLogs = [];
 
 function loadLogApp(){
   var lga = document.getElementById('logApp');
-  if(lga){ lga.classList.remove('hidden'); lga.style.display=''; }
+  if(lga){ lga.classList.remove('hidden'); lga.style.display='block'; }
   logRefresh();
 }
 
@@ -4203,10 +4203,10 @@ function navTo(section) {
   closeSidebar();
 
   if (section === 'home') {
-    document.getElementById('homeView').style.display = '';
+    document.getElementById('homeView').style.display = 'block';
     dashboardRefresh();
   } else {
-    document.getElementById('appView').style.display = '';
+    document.getElementById('appView').style.display = 'block';
     // Update page header
     var hdTitles = {
       leave: ['📅 Leave Management', 'Workforce scheduling & leave requests'],
@@ -4226,7 +4226,7 @@ function navTo(section) {
     var appEl = document.getElementById(section + 'App');
     if (appEl) {
       appEl.classList.remove('hidden');
-      appEl.style.display = '';
+      appEl.style.display = 'block';
       if (section === 'leave') loadLeaveApp();
       else if (section === 'ot') loadOTApp();
       else if (section === 'order') loadOrderApp();
