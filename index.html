@@ -2396,8 +2396,11 @@ window.onload=function(){
       clearTimeout(sessionTimer);
       if (!res.ok) {
         _gsiReady = false;
-        var lsSt = document.getElementById('lsStatus');
-        if(lsSt) lsSt.textContent = 'Re-authenticating…';
+        // JWT expired - show login screen
+        _clearSession();
+        try { localStorage.removeItem('pmp_st'); sessionStorage.removeItem('pmp_st'); } catch(e){}
+        document.getElementById('ls').style.display = 'none';
+        document.getElementById('expiredView').classList.remove('hidden');
         initGSI();
         return;
       }
