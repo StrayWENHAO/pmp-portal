@@ -2617,7 +2617,9 @@ function resizePad(pad,canvasId){
 // HOME NAV
 // ═══════════════════════════════════════════════════════════════
 function goHome(){
-  document.getElementById('appView').classList.add('hidden');
+  document.getElementById('appView').style.display='none';
+  document.getElementById('appView').classList.remove('hidden');
+  document.getElementById('homeView').style.display='block';
   document.getElementById('homeView').classList.remove('hidden');
   // Hide all app sections
   ['leaveApp','otApp','orderApp','logApp'].forEach(function(id){
@@ -2636,7 +2638,9 @@ function goHome(){
 function openApp(app){
   currentApp=app;
   _saveCurrentApp(app);
-  document.getElementById('homeView').classList.add('hidden');
+  document.getElementById('homeView').style.display='none';
+  document.getElementById('homeView').classList.remove('hidden');
+  document.getElementById('appView').style.display='block';
   document.getElementById('appView').classList.remove('hidden');
   document.getElementById('leaveApp').classList.add('hidden');
   document.getElementById('otApp').classList.add('hidden');
@@ -4201,11 +4205,11 @@ function lShowConfirm2(){
 // SIDEBAR NAVIGATION SYSTEM
 // ═══════════════════════════════════════════════════════════════
 function navTo(section) {
-  // Hide all views
+  // Hide all views - use style only, NOT classList (avoids !important override)
   document.getElementById('homeView').style.display = 'none';
-  document.getElementById('homeView').classList.add('hidden');
+  document.getElementById('homeView').classList.remove('hidden');
   document.getElementById('appView').style.display = 'none';
-  document.getElementById('appView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
 
   // Hide all app panels
   ['leaveApp','otApp','orderApp','logApp'].forEach(function(id){
@@ -4928,6 +4932,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.5.3</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.5.4</div>
 </body>
 </html>
