@@ -2404,17 +2404,21 @@ window.onload=function(){
       myEmail      = res.email;myEmail      = res.email;
       myRole       = res.role;
       // Read flat structure from GAS bundle
-      myLeaveRole  = res.leaveRole  || res.role || 'staff';
-      myOTRole     = res.otRole     || res.role || 'staff';
-      myOrderRole  = res.orderRole  || res.role || 'staff';
-      myDepartment = res.department || '';
-      holidays     = res.holidays   || [];
-      staffNames   = res.staffNames || [];
-      leaveRecords = res.leaveRecords || [];
-      otRecords    = res.otRecords    || [];
-      allOrders    = res.orders    || [];
-      allMachines  = res.machines  || [];
-      technicians=res.technicians||[]; machineTypes=res.machineTypes||[];
+      // GAS returns roles in res.data bundle
+      var _bd2     = res.data || {};
+      myLeaveRole  = _bd2.leaveRole  || res.role || 'staff';
+      myOTRole     = _bd2.otRole     || res.role || 'staff';
+      myOrderRole  = _bd2.orderRole  || res.role || 'staff';
+      myDepartment = _bd2.department || '';
+      holidays     = _bd2.holidays     || [];
+      staffNames   = _bd2.staffNames   || [];
+      leaveRecords = _bd2.leaveRecords || [];
+      otRecords    = _bd2.otRecords    || [];
+      allOrders    = _bd2.orders       || [];
+      allMachines  = _bd2.machines     || [];
+      machineTypes = _bd2.machineTypes || [];
+      technicians  = _bd2.technicians  || [];
+
       document.getElementById('ls').style.display='none';
       document.getElementById('expiredView').classList.add('hidden');
       document.getElementById('homeEmail').textContent=myEmail;
