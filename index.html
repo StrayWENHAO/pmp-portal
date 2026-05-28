@@ -1102,57 +1102,6 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       </div>
 
       <div id="homeAppContent">
-        <!-- Notice + Clock Banner -->
-        <div id="noticeBanner" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-md);padding:0;margin-bottom:16px;overflow:hidden;display:none;">
-          <div style="display:flex;align-items:stretch;">
-            <div style="background:#003366;width:4px;flex-shrink:0;"></div>
-            <div style="flex:1;padding:12px 16px;min-height:56px;display:flex;align-items:center;gap:16px;">
-              <div style="flex:1;min-width:0;">
-                <div id="noticeText" style="font-size:.84rem;color:var(--text-primary);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-                <div id="noticeDate" style="font-size:.68rem;color:var(--text-tertiary);margin-top:2px;"></div>
-              </div>
-              <div id="noticeDots" style="display:flex;gap:5px;flex-shrink:0;"></div>
-              <!-- Digital Clock -->
-              <div style="border-left:1px solid var(--border);padding-left:16px;flex-shrink:0;text-align:right;">
-                <div id="digitalClock" style="font-family:'JetBrains Mono','Courier New',monospace;font-size:1.5rem;font-weight:700;color:#003366;letter-spacing:3px;line-height:1;"></div>
-                <div id="digitalDate" style="font-size:.62rem;color:var(--text-tertiary);margin-top:2px;letter-spacing:.5px;"></div>
-              </div>
-            </div>
-            <div id="noticeEditBtn" style="display:none;padding:12px;align-items:center;display:flex;">
-              <button onclick="openNoticeEditor()" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:.7rem;color:var(--text-secondary);cursor:pointer;">Edit</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- KPI Overview -->
-        <div class="overview-grid" id="kpiGrid">
-          <div class="kpi-card kpi-navy" onclick="kpiNavOrderAll()" style="cursor:pointer;">
-            <span class="kpi-icon">🚧</span>
-            <div class="kpi-val" id="kpiActiveRentals">—</div>
-            <div class="kpi-label">Active Rentals</div>
-            <div class="kpi-sub">Machines on site</div>
-          </div>
-          <div class="kpi-card kpi-green" onclick="kpiNavMachineReady()" style="cursor:pointer;">
-            <span class="kpi-icon">✅</span>
-            <div class="kpi-val" id="kpiReadyFleet">—</div>
-            <div class="kpi-label">Fleet Ready</div>
-            <div class="kpi-sub">Available for dispatch</div>
-          </div>
-          <div class="kpi-card kpi-amber" onclick="kpiNavLeavePending()" style="cursor:pointer;">
-            <span class="kpi-icon">⏳</span>
-            <div class="kpi-val" id="kpiPendingOps">—</div>
-            <div class="kpi-label">Pending Approvals</div>
-            <div class="kpi-sub">Leave & OT requests</div>
-          </div>
-          <div class="kpi-card kpi-red" onclick="kpiNavMachinePending()" style="cursor:pointer;">
-            <span class="kpi-icon">🔧</span>
-            <div class="kpi-val" id="kpiPendingMach">—</div>
-            <div class="kpi-label">In Maintenance</div>
-            <div class="kpi-sub">Pending service</div>
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
 
 
         <!-- Notice Editor Modal (superadmin) -->
@@ -2281,6 +2230,7 @@ function _bootFromBundle(res) {
   myOTRole     = res.otRole     || '';
   myOrderRole  = res.orderRole  || '';
   myDept       = res.department || '';
+  myDepartment = res.department || '';
   holidays     = res.holidays   || [];
   staffNames   = res.staffNames || [];
   machineTypes = res.machineTypes || [];
@@ -2414,21 +2364,18 @@ window.onload=function(){
       }
       myEmail      = res.email;myEmail      = res.email;
       myRole       = res.role;
-      var ar2      = res.authRec || {};
-      myLeaveRole  = ar2.leaveRole  || res.role || 'staff';
-      myOTRole     = ar2.otRole     || res.role || 'staff';
-      myOrderRole  = ar2.orderRole  || res.role || 'staff';
-      myDepartment = ar2.department || '';
-      _saveSession(__idToken, myEmail, myRole);
-      var b = res.data || {};
-      if (b.leaveRole)  myLeaveRole  = b.leaveRole;
-      if (b.otRole)     myOTRole     = b.otRole;
-      if (b.orderRole)  myOrderRole  = b.orderRole;
-      if (b.department) myDepartment = b.department;
-      holidays=b.holidays||[]; staffNames=b.staffNames||[];
-      leaveRecords=b.leaveRecords||[]; otRecords=b.otRecords||[];
-      allOrders=b.orders||[]; allMachines=b.machines||[];
-      technicians=b.technicians||[]; machineTypes=b.machineTypes||[];
+      // Read flat structure from GAS bundle
+      myLeaveRole  = res.leaveRole  || res.role || 'staff';
+      myOTRole     = res.otRole     || res.role || 'staff';
+      myOrderRole  = res.orderRole  || res.role || 'staff';
+      myDepartment = res.department || '';
+      holidays     = res.holidays   || [];
+      staffNames   = res.staffNames || [];
+      leaveRecords = res.leaveRecords || [];
+      otRecords    = res.otRecords    || [];
+      allOrders    = res.orders    || [];
+      allMachines  = res.machines  || [];
+      technicians=res.technicians||[]; machineTypes=res.machineTypes||[];
       document.getElementById('ls').style.display='none';
       document.getElementById('expiredView').classList.add('hidden');
       document.getElementById('homeEmail').textContent=myEmail;
@@ -4889,7 +4836,8 @@ function startClock() {
     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     var dateStr = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
     if (de) de.textContent = dateStr;
-    if (nd) nd.textContent = dateStr;
+    // Notice date stays fixed - set only once when notice loads
+  if (nd && !nd.dataset.fixed) { nd.textContent = dateStr; nd.dataset.fixed = '1'; }
   }
   tick();
   setInterval(tick, 1000);
