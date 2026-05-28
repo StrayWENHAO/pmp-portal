@@ -2482,14 +2482,22 @@ function onGoogleSignIn(resp) {
     // Roles already loaded from res.data above
 
     // Store all pre-loaded data
-    holidays     = b.holidays     || [];
-    staffNames   = b.staffNames   || [];
-    leaveRecords = b.leaveRecords || [];
-    otRecords    = b.otRecords    || [];
-    allOrders    = b.orders       || [];
-    allMachines  = b.machines     || [];
-    technicians  = b.technicians  || [];
-    machineTypes = b.machineTypes || [];
+    holidays     = _b2.holidays     || [];
+    staffNames   = _b2.staffNames   || [];
+    leaveRecords = _b2.leaveRecords || [];
+    otRecords    = _b2.otRecords    || [];
+    allOrders    = _b2.orders       || [];
+    allMachines  = _b2.machines     || [];
+    technicians  = _b2.technicians  || [];
+    machineTypes = _b2.machineTypes || [];
+    // Save session token
+    if (_b2.sessionToken || res.sessionToken) {
+      try {
+        var _st3 = _b2.sessionToken || res.sessionToken;
+        localStorage.setItem('pmp_st', _st3);
+        sessionStorage.setItem('pmp_st', _st3);
+      } catch(e){}
+    }
 
     document.getElementById('ls').style.display='none';
     document.getElementById('expiredView').classList.add('hidden');
@@ -2563,8 +2571,7 @@ function initGSI(){
     client_id:    GOOGLE_CLIENT_ID,
     callback:     onGoogleSignIn,
     auto_select:  true,
-    use_fedcm_for_prompt: true,
-    itp_support: true
+    use_fedcm_for_prompt: false
   });
 
   var wrap=document.getElementById('gsiButtonWrap');
@@ -2574,8 +2581,6 @@ function initGSI(){
       theme:'outline', size:'large', width:260, text:'signin_with', locale:'en'
     });
   }
-  // Trigger one-tap prompt
-  google.accounts.id.prompt();
 }
 // Show sign-in page immediately, init GSI
 document.getElementById('ls').style.display='none';
