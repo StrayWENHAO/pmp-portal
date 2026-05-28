@@ -421,7 +421,7 @@ body {
 /* ════════════════════════════════════════════
    HOMEPAGE — OPERATIONS OVERVIEW
 ════════════════════════════════════════════ */
-#homeView { display: block; }
+#homeView { display: block; flex: 1; min-height: 0; overflow-y: auto; }
 
 /* Old home-header hidden (user info moved to sidebar) */
 .home-header { display: none; }
@@ -576,7 +576,7 @@ body {
 /* ════════════════════════════════════════════
    APP VIEW — MODULE PAGES
 ════════════════════════════════════════════ */
-#appView { display: block; }
+#appView { display: block; flex: 1; min-height: 0; overflow-y: auto; }
 .app-topbar { display: none; } /* Replaced by sidebar */
 .app-content { padding: 0; max-width: none; margin: 0; width: 100%; }
 
@@ -2439,7 +2439,8 @@ window.onload=function(){
         } catch(e){}
       }
       _saveSession(__idToken, myEmail, myRole);
-            initPads();
+      var savedApp = _loadCurrentApp();
+      initPads();
       navTo('home');
       if (savedApp) setTimeout(function(){ navTo(savedApp); }, 300);
     }).catch(function(){
