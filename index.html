@@ -2392,6 +2392,48 @@ function apiWithToken(action, sessionToken) {
 
 // Extract boot from bundle into reusable function
 var _booted = false;
+
+function _bootUI(sessionToken) {
+  // Show shell with cached data, then fetch fresh data in background
+  document.getElementById('ls').style.display = 'none';
+  document.getElementById('expiredView').classList.add('hidden');
+  var shell = document.getElementById('pmpShell');
+  shell.classList.remove('hidden');
+  var _mtb = document.getElementById('mobileTopbar'); if(_mtb) _mtb.style.display='';
+  var _sE = document.getElementById('sidebarEmail'); if(_sE) _sE.textContent = myEmail;
+  var _sR = document.getElementById('sidebarRole');  if(_sR) _sR.textContent = (myLeaveRole||myRole).toUpperCase();
+  var _sA = document.getElementById('sidebarAvatar');if(_sA) _sA.textContent = myEmail.charAt(0).toUpperCase();
+  var _no = document.getElementById('nav-ot');    if(_no) _no.style.display='';
+  var _nord = document.getElementById('nav-order'); if(_nord) _nord.style.display = myOrderRole ? '' : 'none';
+  if(myLeaveRole==='superadmin'||myOTRole==='superadmin'||myOrderRole==='superadmin'){
+    var _ls2=document.getElementById('logNavSection');if(_ls2)_ls2.style.display='';
+    var _ln2=document.getElementById('nav-log');if(_ln2)_ln2.style.display='';
+  }
+  initPads();
+  var _savedApp = _loadCurrentApp();
+  navTo('home');
+  if(_savedApp) setTimeout(function(){ navTo(_savedApp); }, 100);
+  // Fetch fresh data in background
+  if(sessionToken) {
+    apiWithToken('validateSession', sessionToken).then(function(res){
+      if(res && res.ok) {
+        // Update data silently
+        holidays     = res.holidays     || holidays;
+        staffNames   = res.staffNames   || staffNames;
+        leaveRecords = res.leaveRecords || leaveRecords;
+        otRecords    = res.otRecords    || otRecords;
+        allOrders    = res.orders       || allOrders;
+        allMachines  = res.machines     || allMachines;
+        machineTypes = res.machineTypes || machineTypes;
+        technicians  = res.technicians  || technicians;
+        if(res.sessionToken) {
+          try{ localStorage.setItem('pmp_st', res.sessionToken); }catch(e){}
+        }
+      }
+    }).catch(function(){});
+  }
+}
+
 function _bootFromBundle(res) {
   if (_booted) { console.log('[PMP] _bootFromBundle called again - ignored'); return; }
   _booted = true;
@@ -2417,6 +2459,15 @@ function _bootFromBundle(res) {
     } catch(e){}
   }
   _saveSession(res.token||__idToken, myEmail, myRole);
+  // Cache full bundle for instant F5 restore
+  try {
+    var _bundle = {
+      email: myEmail, role: myRole,
+      leaveRole: myLeaveRole, otRole: myOTRole, orderRole: myOrderRole, department: myDepartment,
+      sessionToken: res.sessionToken || ''
+    };
+    localStorage.setItem('pmp_bundle', JSON.stringify(_bundle));
+  } catch(e) {}
   document.getElementById('ls').style.display = 'none';
   document.getElementById('expiredView').classList.add('hidden');
   document.getElementById('pmpShell').classList.remove('hidden');
@@ -5113,6 +5164,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.5</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.6</div>
 </body>
 </html>
