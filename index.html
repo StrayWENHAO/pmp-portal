@@ -980,8 +980,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
     <div class="ring"></div>
     <div id="lsStatus" style="font-size:.64rem;color:#9ca3af;letter-spacing:1px;font-family:'JetBrains Mono',monospace;">Initialising…</div>
-    <!-- Hidden GSI button for auto_select without showing sign-in page -->
-    <div id="lsGsiWrap" style="opacity:0;height:0;overflow:hidden;"></div>
+
   </div>
 </div>
 
@@ -2629,7 +2628,11 @@ function renderGSIButton(){
 var _gsiReady = false;
 function initGSI(){
   if(typeof google==='undefined'||!google.accounts){setTimeout(initGSI,150);return;}
-  if(_gsiReady) return;
+  if(_gsiReady) {
+    // Already initialized - just call prompt() again for auto_select
+    try { google.accounts.id.prompt(); } catch(e) {}
+    return;
+  }
   _gsiReady = true;
 
   google.accounts.id.initialize({
@@ -2652,14 +2655,7 @@ function initGSI(){
       }
     }
   });
-  // Render button in loading screen (hidden) for auto_select
-  var lsWrap=document.getElementById('lsGsiWrap');
-  if(lsWrap){
-    google.accounts.id.renderButton(lsWrap,{
-      theme:'outline', size:'large', width:260, text:'signin_with', locale:'en'
-    });
-  }
-  // Also render button in expiredView (visible sign-in page)
+  // Render button in expiredView
   var wrap=document.getElementById('gsiButtonWrap');
   if(wrap){
     wrap.style.display='flex';
@@ -5021,6 +5017,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.8</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.9</div>
 </body>
 </html>
