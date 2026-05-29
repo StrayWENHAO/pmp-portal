@@ -2379,39 +2379,22 @@ window.onload=function(){
     // Validate session token with GAS - no Google JWT needed
     var lsStatus0 = document.getElementById('lsStatus');
     if(lsStatus0) lsStatus0.textContent = 'Restoring session…';
-    var _lsEl = document.getElementById('lsStatus');
-    if(_lsEl) _lsEl.textContent = 'Restoring session…';
-
     apiWithToken('validateSession', savedST).then(function(res){
-      console.log('[PMP] validateSession res.ok='+( res&&res.ok)+' res.leaveRole='+( res&&res.leaveRole));
       if (res && res.ok) {
-        // Session valid - boot without showing login page
+        // Session valid - boot directly
         _bootFromBundle(res);
       } else {
-        // Token expired - clear it, try Google silent re-auth
+        // Token invalid - clear it, show sign-in for auto_select
         try { localStorage.removeItem('pmp_st'); sessionStorage.removeItem('pmp_st'); } catch(e){}
-        if(_lsEl) _lsEl.textContent = 'Re-authenticating…';
-        // Keep loading screen (don't show expiredView yet)
-        // GSI auto_select will fire onGoogleSignIn silently
+        document.getElementById('ls').style.display = 'none';
+        document.getElementById('expiredView').classList.remove('hidden');
         initGSI();
-        // After 8s, if still not logged in, show sign-in page
-        setTimeout(function(){
-          if(document.getElementById('pmpShell').classList.contains('hidden')){
-            document.getElementById('ls').style.display='none';
-            document.getElementById('expiredView').classList.remove('hidden');
-          }
-        }, 8000);
       }
     }).catch(function(){
-      // Network error - keep loading, try GSI silent auth
-      if(_lsEl) _lsEl.textContent = 'Re-authenticating…';
+      // Network error - show sign-in for auto_select
+      document.getElementById('ls').style.display = 'none';
+      document.getElementById('expiredView').classList.remove('hidden');
       initGSI();
-      setTimeout(function(){
-        if(document.getElementById('pmpShell').classList.contains('hidden')){
-          document.getElementById('ls').style.display='none';
-          document.getElementById('expiredView').classList.remove('hidden');
-        }
-      }, 8000);
     });
     return;
   }
@@ -5017,6 +5000,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.9</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.0</div>
 </body>
 </html>
