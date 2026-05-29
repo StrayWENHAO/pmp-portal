@@ -2283,7 +2283,6 @@ var _booted = false;
 function _bootFromBundle(res) {
   if (_booted) { console.log('[PMP] _bootFromBundle called again - ignored'); return; }
   _booted = true;
-  console.log('[PMP] _bootFromBundle: leaveRole='+res.leaveRole+' sessionToken='+( res.sessionToken?res.sessionToken.substring(0,8)+'...':'NULL'));
   myEmail      = res.email;
   myRole       = res.role || res.leaveRole || '';
   myLeaveRole  = res.leaveRole  || '';
@@ -2480,8 +2479,7 @@ window.onload=function(){
         if (savedApp) setTimeout(function(){ navTo(savedApp); }, 300);
       } else {
         _booted = true;
-        console.log('[PMP] JWT re-auth done, staying on current page');
-      }
+            }
     }).catch(function(){
       clearTimeout(sessionTimer);
       _clearSession();
@@ -2538,13 +2536,10 @@ function onGoogleSignIn(resp) {
     machineTypes = b.machineTypes || [];
     // Save persistent session token (30 days, survives refresh)
     var _tok = b.sessionToken || res.sessionToken;
-    console.log('[PMP] onGoogleSignIn sessionToken='+(_tok?_tok.substring(0,8)+'...':'NULL')+' b.sessionToken='+( b.sessionToken?'Y':'N')+' res.sessionToken='+( res.sessionToken?'Y':'N'));
-    if (_tok) {
+      if (_tok) {
       try { localStorage.setItem('pmp_st',_tok); sessionStorage.setItem('pmp_st',_tok); } catch(e){}
-      console.log('[PMP] pmp_st saved to localStorage ✅');
-    } else {
-      console.log('[PMP] ❌ NO sessionToken to save! b.keys='+Object.keys(b).join(','));
-    }
+        } else {
+        }
 
     document.getElementById('ls').style.display='none';
     document.getElementById('expiredView').classList.add('hidden');
@@ -2611,11 +2606,7 @@ function renderGSIButton(){
 var _gsiReady = false;
 function initGSI(){
   if(typeof google==='undefined'||!google.accounts){setTimeout(initGSI,150);return;}
-  if(_gsiReady) {
-    // Already initialized - just call prompt() again for auto_select
-    try { google.accounts.id.prompt(); } catch(e) {}
-    return;
-  }
+  if(_gsiReady) return;
   _gsiReady = true;
 
   google.accounts.id.initialize({
@@ -5000,6 +4991,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.0</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.1</div>
 </body>
 </html>
