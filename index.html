@@ -135,12 +135,95 @@ body {
 /* ════════════════════════════════════════════
    LOADING SCREEN
 ════════════════════════════════════════════ */
+/* ═══════ LOADING SCREEN ═══════ */
 #ls {
   position: fixed; inset: 0; z-index: 9999;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  background: #ffffff;
+  background: linear-gradient(135deg, #001a40 0%, #003366 50%, #002244 100%);
+  display: flex; align-items: center; justify-content: center;
 }
+
+/* Orbs */
+.ls-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.ls-orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(60px); opacity: .25; animation: ls-float 8s ease-in-out infinite;
+}
+.ls-orb1 { width: 400px; height: 400px; background: #1a6fd4; top: -100px; left: -100px; animation-delay: 0s; }
+.ls-orb2 { width: 300px; height: 300px; background: #0a4fa6; bottom: -80px; right: -80px; animation-delay: -3s; }
+.ls-orb3 { width: 250px; height: 250px; background: #2484e4; top: 50%; left: 60%; animation-delay: -6s; }
+@keyframes ls-float {
+  0%,100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-30px) scale(1.08); }
+}
+
+/* Card */
+.ls-card {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48px 56px;
+  background: rgba(255,255,255,.06);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 24px;
+  box-shadow: 0 32px 64px rgba(0,0,0,.4);
+  min-width: 320px;
+}
+
+/* Logo */
+.ls-logo-wrap {
+  width: 120px; height: 120px;
+  background: #fff;
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  overflow: hidden;
+}
+.ls-logo-img { width: 100px; height: auto; display: block; }
+
+/* Brand text */
+.ls-brand {
+  font-size: 1.25rem; font-weight: 700; color: #fff;
+  letter-spacing: .5px; margin-bottom: 4px;
+}
+.ls-tagline {
+  font-size: .78rem; color: rgba(255,255,255,.5);
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 32px;
+}
+
+/* Progress bar */
+.ls-bar-wrap { width: 100%; margin-bottom: 16px; }
+.ls-bar-track {
+  width: 100%; height: 3px;
+  background: rgba(255,255,255,.15);
+  border-radius: 99px; overflow: hidden;
+}
+.ls-bar-fill {
+  height: 100%; width: 30%;
+  background: linear-gradient(90deg, #4da3ff, #fff, #4da3ff);
+  background-size: 200% 100%;
+  border-radius: 99px;
+  animation: ls-shimmer 1.6s linear infinite, ls-grow 3s ease-out forwards;
+}
+@keyframes ls-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes ls-grow {
+  0%   { width: 10%; }
+  60%  { width: 70%; }
+  100% { width: 90%; }
+}
+
+/* Status text */
+.ls-status {
+  font-size: .68rem; color: rgba(255,255,255,.45);
+  letter-spacing: 1.5px; text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+
 #ls .ls-logo {
   width: 220px; margin-bottom: 20px;
   background: rgba(255,255,255,0.9);
@@ -971,17 +1054,40 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
 <!-- LOADING -->
 <div id="ls">
-  <div style="background:#fff;border-radius:16px;padding:12px 20px;margin-bottom:20px;">
-    <img class="ls-logo" src="https://pmp-equipments.github.io/pmp-portal/logo.png"
-         style="width:280px;display:block;margin-bottom:0;"
-         onerror="this.style.display='none'" alt="PMP">
+
+  <!-- Background particles -->
+  <div class="ls-bg">
+    <div class="ls-orb ls-orb1"></div>
+    <div class="ls-orb ls-orb2"></div>
+    <div class="ls-orb ls-orb3"></div>
   </div>
-  <div class="ls-sub">Operations Platform</div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-    <div class="ring"></div>
-    <div id="lsStatus" style="font-size:.64rem;color:#9ca3af;letter-spacing:1px;font-family:'JetBrains Mono',monospace;">Initialising…</div>
+
+  <!-- Card -->
+  <div class="ls-card">
+
+    <!-- Logo -->
+    <div class="ls-logo-wrap">
+      <img src="https://pmp-equipments.github.io/pmp-portal/logo.png"
+           class="ls-logo-img"
+           onerror="this.style.display='none'" alt="PMP">
+    </div>
+
+    <!-- Brand -->
+    <div class="ls-brand">PMP Equipments</div>
+    <div class="ls-tagline">Operations Platform</div>
+
+    <!-- Loader bar -->
+    <div class="ls-bar-wrap">
+      <div class="ls-bar-track">
+        <div class="ls-bar-fill" id="lsBarFill"></div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div id="lsStatus" class="ls-status">Initialising…</div>
 
   </div>
+
 </div>
 
 <!-- SIGN IN / ACCESS REQUIRED -->
@@ -2368,6 +2474,9 @@ function apiPost(action, data) {
 
 // ── BOOT ──────────────────────────────────────────────────────
 window.onload=function(){
+  // Animate loading bar reset on each page load
+  var lbf = document.getElementById('lsBarFill');
+  if(lbf){ lbf.style.animation='none'; void lbf.offsetHeight; lbf.style.animation=''; }
   var now=new Date(); lCalYear=now.getFullYear(); lCalMonth=now.getMonth();
 
   // Try session token first (persistent, no JWT expiry)
@@ -4991,6 +5100,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.1</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.2</div>
 </body>
 </html>
