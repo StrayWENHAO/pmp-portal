@@ -1086,8 +1086,11 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     <!-- Status -->
     <div id="lsStatus" class="ls-status">Initialising…</div>
 
-    <!-- Hidden GSI trigger (for silent auto-select, never visible) -->
-    <div id="lsGsiBtn" style="position:absolute;opacity:0;pointer-events:none;height:1px;overflow:hidden;"></div>
+    <!-- Sign-in button (hidden until needed) -->
+    <div id="lsSignInWrap" style="display:none;flex-direction:column;align-items:center;gap:12px;margin-top:8px;">
+      <div style="font-size:.72rem;color:rgba(255,255,255,.5);letter-spacing:1px;">Session expired — please sign in</div>
+      <div id="lsGsiBtn"></div>
+    </div>
 
   </div>
 
@@ -2494,24 +2497,19 @@ window.onload=function(){
       if (res && res.ok) {
         _bootFromBundle(res);
       } else {
-        // Token invalid - clear, silent reauth (keep loading screen)
+        // Token invalid - clear, show sign-in button in loading screen
         try { localStorage.removeItem('pmp_st'); sessionStorage.removeItem('pmp_st'); } catch(e){}
-        var _s=document.getElementById('lsStatus');
-        if(_s) _s.textContent = 'Re-authenticating…';
         initGSI();
-        // Show sign-in page only after 15s if still not logged in
         setTimeout(function(){
           if(document.getElementById('pmpShell').classList.contains('hidden')) _showExpiredView();
-        }, 15000);
+        }, 2000);
       }
     }).catch(function(){
-      // Network error - silent reauth (keep loading screen)
-      var _s=document.getElementById('lsStatus');
-      if(_s) _s.textContent = 'Re-authenticating…';
+      // Network error - show sign-in button after short delay
       initGSI();
       setTimeout(function(){
         if(document.getElementById('pmpShell').classList.contains('hidden')) _showExpiredView();
-      }, 15000);
+      }, 2000);
     });
     return;
   }
@@ -2608,14 +2606,11 @@ window.onload=function(){
     return;
   }
 
-  // No saved session - try silent GSI auth, keep loading screen
-  var _s2=document.getElementById('lsStatus');
-  if(_s2) _s2.textContent = 'Sign in required…';
+  // No saved session - show sign-in button in loading screen
   initGSI();
-  // Show sign-in page after 5s (new user, needs to sign in)
   setTimeout(function(){
     if(document.getElementById('pmpShell').classList.contains('hidden')) _showExpiredView();
-  }, 5000);
+  }, 1500);
 };
 
 // Called by Google Sign-In SDK after user signs in
@@ -2738,15 +2733,32 @@ function initGSI(){
       use_fedcm_for_prompt: false
     });
   }
-  // Render button ONCE in hidden loading screen div - triggers silent auto_select
+  // Render button in loading screen
   if(!_gsiButtonRendered){
     _gsiButtonRendered=true;
     var lsBtn=document.getElementById('lsGsiBtn');
     if(lsBtn){
-      try{ google.accounts.id.renderButton(lsBtn,{theme:'outline',size:'large',width:260}); }catch(e){}
+      try{ google.accounts.id.renderButton(lsBtn,{theme:'outline',size:'large',width:280,text:'signin_with'}); }catch(e){}
     }
   }
-  try{ google.accounts.id.prompt(); }catch(e){}
+  // Try silent prompt - if it fails/skips, show the button in loading screen
+  try{
+    google.accounts.id.prompt(function(n){
+      if(n.isNotDisplayed()||n.isSkippedMoment()||n.isDismissedMoment()){
+        // Can't auto-login - show button in loading screen
+        var w=document.getElementById('lsSignInWrap');
+        if(w) w.style.display='flex';
+        var s=document.getElementById('lsStatus');
+        if(s) s.style.display='none';
+      }
+    });
+  }catch(e){
+    // FedCM disabled - show button immediately
+    var w=document.getElementById('lsSignInWrap');
+    if(w) w.style.display='flex';
+    var s=document.getElementById('lsStatus');
+    if(s) s.style.display='none';
+  }
 }
 // Show sign-in page immediately, init GSI
 document.getElementById('ls').style.display='none';
@@ -5101,6 +5113,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.4</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.5</div>
 </body>
 </html>
