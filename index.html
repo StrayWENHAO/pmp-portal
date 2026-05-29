@@ -2278,7 +2278,11 @@ function apiWithToken(action, sessionToken) {
 }
 
 // Extract boot from bundle into reusable function
+var _booted = false;
 function _bootFromBundle(res) {
+  if (_booted) { console.log('[PMP] _bootFromBundle called again - ignored'); return; }
+  _booted = true;
+  console.log('[PMP] _bootFromBundle: leaveRole='+res.leaveRole+' sessionToken='+( res.sessionToken?res.sessionToken.substring(0,8)+'...':'NULL'));
   myEmail      = res.email;
   myRole       = res.role || res.leaveRole || '';
   myLeaveRole  = res.leaveRole  || '';
@@ -2542,8 +2546,12 @@ function onGoogleSignIn(resp) {
     machineTypes = b.machineTypes || [];
     // Save persistent session token (30 days, survives refresh)
     var _tok = b.sessionToken || res.sessionToken;
+    console.log('[PMP] onGoogleSignIn sessionToken='+(_tok?_tok.substring(0,8)+'...':'NULL')+' b.sessionToken='+( b.sessionToken?'Y':'N')+' res.sessionToken='+( res.sessionToken?'Y':'N'));
     if (_tok) {
       try { localStorage.setItem('pmp_st',_tok); sessionStorage.setItem('pmp_st',_tok); } catch(e){}
+      console.log('[PMP] pmp_st saved to localStorage ✅');
+    } else {
+      console.log('[PMP] ❌ NO sessionToken to save! b.keys='+Object.keys(b).join(','));
     }
 
     document.getElementById('ls').style.display='none';
@@ -4996,6 +5004,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.5</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.6</div>
 </body>
 </html>
