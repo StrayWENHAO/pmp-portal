@@ -2071,12 +2071,19 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     <label class="form-label">Email *</label>
     <input type="email" id="alEmail" class="form-control" readonly style="background:var(--bg-subtle);">
     <label class="form-label">Leave Type *</label>
-    <select id="alType" class="form-control">
+    <select id="alType" class="form-control" onchange="alToggleMC()">
       <option value="Annual Leave">Annual Leave</option>
       <option value="Medical Leave (MC)">Medical Leave (MC)</option>
       <option value="Emergency Leave">Emergency Leave</option>
       <option value="Unpaid Leave">Unpaid Leave</option>
     </select>
+
+    <!-- MC Attachment (shown when MC selected) -->
+    <div id="alMCSec" class="hidden mt-2">
+      <label class="form-label" style="color:var(--red);">MC Attachment * (Required)</label>
+      <input type="file" id="alMCFile" class="form-control-file" accept="image/*,.pdf">
+    </div>
+
     <div class="form-row-2 mt-2">
       <div>
         <label class="form-label">Start Date</label>
@@ -2372,16 +2379,26 @@ window.onload=function(){
         // Session valid - boot normally
         _bootFromBundle(res);
       } else {
-        // Session expired - need fresh login
+        // Session token invalid/expired - clear it and show login
         try { localStorage.removeItem('pmp_st'); sessionStorage.removeItem('pmp_st'); } catch(e){}
         document.getElementById('ls').style.display = 'none';
         document.getElementById('expiredView').classList.remove('hidden');
         initGSI();
       }
-    }).catch(function(){
-      document.getElementById('ls').style.display = 'none';
-      document.getElementById('expiredView').classList.remove('hidden');
+    }).catch(function(err){
+      // Network error or timeout - DON'T clear pmp_st, try Google silent sign-in
+      // The token may still be valid, just couldn't reach GAS
+      var lsEl = document.getElementById('lsStatus');
+      if (lsEl) lsEl.textContent = 'Network error, trying Google sign-in…';
       initGSI();
+      // After 5 seconds, if still not logged in, show sign-in page
+      setTimeout(function(){
+        var shell = document.getElementById('pmpShell');
+        if (shell && shell.classList.contains('hidden')) {
+          document.getElementById('ls').style.display = 'none';
+          document.getElementById('expiredView').classList.remove('hidden');
+        }
+      }, 5000);
     });
     return;
   }
@@ -3850,7 +3867,7 @@ function ordTechRender(){
     var unit=o.selectedUnit?'<span class="bs bs-ordered">'+o.selectedUnit+'</span>':'<span class="bs bs-pending">Unassigned</span>';
     var canAssign=!o.selectedUnit;
     return '<tr>'+
-      '<td style="font-size:.72rem;font-weight:700;font-family:monospace;white-space:nowrap;">'+o.orderId+'</td>'+
+      '<td><div style="font-size:.72rem;color:var(--text-secondary);white-space:nowrap;">'+o.orderId+'</div></td>'+
       '<td>'+o.machineType+'<br><span style="font-size:.7rem;color:#aaa;">'+o.specValue+' '+o.specUnit+'</span></td>'+
       '<td style="text-align:center;">'+o.unitQty+'</td>'+
       '<td style="font-size:.78rem;">'+o.deliveryDate+'</td>'+
@@ -4046,7 +4063,7 @@ function ordRenderTblWithRoles(){
       actions+='<button class="ab ab-del" onclick="ordDel('+o.rowIndex+',\''+o.orderId+'\')" >Del</button>';
     }
     return '<tr>'+
-      '<td style="font-size:.72rem;font-family:monospace;white-space:nowrap;max-width:140px;">'+o.orderId+'</td>'+
+      '<td><div style="font-size:.72rem;color:var(--text-secondary);white-space:nowrap;">'+o.orderId+'</div></td>'+
       '<td style="font-weight:600;min-width:120px;">'+o.machineType+'<br><span style="font-size:.72rem;color:var(--text-secondary);font-weight:400;">'+o.specValue+' '+o.specUnit+'</span></td>'+
       '<td style="text-align:center;width:40px;">'+o.unitQty+'</td>'+
       '<td style="white-space:nowrap;font-size:.84rem;min-width:100px;">'+o.deliveryDate+'</td>'+
@@ -4747,6 +4764,13 @@ function openApplyLeaveModal() {
     alPad.clear();
     setTimeout(function(){ resizePad(alPad,'alSigPad'); }, 80);
   }
+  // Reset MC section
+  var almc = document.getElementById('alMCSec');
+  if (almc) almc.classList.add('hidden');
+  var almcf = document.getElementById('alMCFile');
+  if (almcf) almcf.value = '';
+  var alt = document.getElementById('alType');
+  if (alt) alt.selectedIndex = 0;
 }
 
 async function alVerify() {
@@ -4764,6 +4788,12 @@ async function alVerify() {
       document.getElementById('alStaffName').readOnly = true;
     } else Swal.fire('Failed','Incorrect passcode.','error');
   });
+}
+
+function alToggleMC() {
+  var show = document.getElementById('alType').value === 'Medical Leave (MC)';
+  var sec = document.getElementById('alMCSec');
+  if (sec) sec.classList.toggle('hidden', !show);
 }
 
 function alCalcDur() {
@@ -4788,11 +4818,16 @@ function alSubmit() {
   if (!document.getElementById('alStartDate').value || !document.getElementById('alEndDate').value) { Swal.fire('Missing','Select dates.','warning'); return; }
   if (!document.getElementById('alReason').value.trim()) { Swal.fire('Missing','Enter reason.','warning'); return; }
   if (!alPad || alPad.isEmpty()) { Swal.fire('Missing','Please sign.','warning'); return; }
-  Swal.fire({title:'Submitting…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
-  apiPost('submitLeave',{
+  // MC file required for Medical Leave
+  var leaveType = document.getElementById('alType').value;
+  var mcFile = document.getElementById('alMCFile') ? document.getElementById('alMCFile').files[0] : null;
+  if (leaveType === 'Medical Leave (MC)' && !mcFile) {
+    Swal.fire('MC Required','Please attach MC file.','error'); return;
+  }
+  var data = {
     staffName: document.getElementById('alStaffName').value,
     email: myEmail,
-    leaveType: document.getElementById('alType').value,
+    leaveType: leaveType,
     startDate: document.getElementById('alStartDate').value,
     startTime: '08:00',
     endDate: document.getElementById('alEndDate').value,
@@ -4800,14 +4835,23 @@ function alSubmit() {
     duration: document.getElementById('alDuration').value,
     reason: document.getElementById('alReason').value,
     signatureData: alPad.toDataURL()
-  }).then(function(res){
-    Swal.close();
-    if (res.ok) {
-      Swal.fire('Submitted!','ID: '+res.id,'success');
-      document.getElementById('applyLeaveModal').style.display = 'none';
-      lAdminRefresh();
-    } else Swal.fire('Error',res.error||'Error','error');
-  });
+  };
+  var doSend = function(d) {
+    Swal.fire({title:'Submitting…',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+    apiPost('submitLeave', d).then(function(res){
+      Swal.close();
+      if (res.ok) {
+        Swal.fire('Submitted!','ID: '+res.id,'success');
+        document.getElementById('applyLeaveModal').style.display = 'none';
+        lAdminRefresh();
+      } else Swal.fire('Error',res.error||'Error','error');
+    });
+  };
+  if (mcFile) {
+    var fr = new FileReader();
+    fr.onload = function(e) { data.mcFile = {contents: btoa(e.target.result), mimeType: mcFile.type}; doSend(data); };
+    fr.readAsBinaryString(mcFile);
+  } else doSend(data);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -4931,6 +4975,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.1</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.3</div>
 </body>
 </html>
