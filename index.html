@@ -1086,6 +1086,9 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     <!-- Status -->
     <div id="lsStatus" class="ls-status">Initialising…</div>
 
+    <!-- Hidden GSI trigger (for silent auto-select, never visible) -->
+    <div id="lsGsiBtn" style="position:absolute;opacity:0;pointer-events:none;height:1px;overflow:hidden;"></div>
+
   </div>
 
 </div>
@@ -2489,20 +2492,26 @@ window.onload=function(){
     if(lsStatus0) lsStatus0.textContent = 'Restoring session…';
     apiWithToken('validateSession', savedST).then(function(res){
       if (res && res.ok) {
-        // Session valid - boot directly
         _bootFromBundle(res);
       } else {
-        // Token invalid - clear it, show sign-in for auto_select
+        // Token invalid - clear, silent reauth (keep loading screen)
         try { localStorage.removeItem('pmp_st'); sessionStorage.removeItem('pmp_st'); } catch(e){}
-        document.getElementById('ls').style.display = 'none';
-        document.getElementById('expiredView').classList.remove('hidden');
+        var _s=document.getElementById('lsStatus');
+        if(_s) _s.textContent = 'Re-authenticating…';
         initGSI();
+        // Show sign-in page only after 15s if still not logged in
+        setTimeout(function(){
+          if(document.getElementById('pmpShell').classList.contains('hidden')) _showExpiredView();
+        }, 15000);
       }
     }).catch(function(){
-      // Network error - show sign-in for auto_select
-      document.getElementById('ls').style.display = 'none';
-      document.getElementById('expiredView').classList.remove('hidden');
+      // Network error - silent reauth (keep loading screen)
+      var _s=document.getElementById('lsStatus');
+      if(_s) _s.textContent = 'Re-authenticating…';
       initGSI();
+      setTimeout(function(){
+        if(document.getElementById('pmpShell').classList.contains('hidden')) _showExpiredView();
+      }, 15000);
     });
     return;
   }
@@ -2599,10 +2608,14 @@ window.onload=function(){
     return;
   }
 
-  // No saved session, show sign-in
-  document.getElementById('ls').style.display='none';
-  document.getElementById('expiredView').classList.remove('hidden');
+  // No saved session - try silent GSI auth, keep loading screen
+  var _s2=document.getElementById('lsStatus');
+  if(_s2) _s2.textContent = 'Sign in required…';
   initGSI();
+  // Show sign-in page after 5s (new user, needs to sign in)
+  setTimeout(function(){
+    if(document.getElementById('pmpShell').classList.contains('hidden')) _showExpiredView();
+  }, 5000);
 };
 
 // Called by Google Sign-In SDK after user signs in
@@ -2715,37 +2728,24 @@ function renderGSIButton(){
 var _gsiReady = false;
 function initGSI(){
   if(typeof google==='undefined'||!google.accounts){setTimeout(initGSI,150);return;}
-  if(_gsiReady) return;
-  _gsiReady = true;
-
-  google.accounts.id.initialize({
-    client_id:    GOOGLE_CLIENT_ID,
-    callback:     onGoogleSignIn,
-    auto_select:  true,
-    use_fedcm_for_prompt: false
-  });
-
-  // Trigger silent auto-select (fires onGoogleSignIn without user interaction if session exists)
-  google.accounts.id.prompt(function(notification){
-    // If auto-select doesn't work, show the button
-    if(notification.isNotDisplayed() || notification.isSkippedMoment()){
-      var wrap=document.getElementById('gsiButtonWrap');
-      if(wrap){
-        wrap.style.display='flex';
-        google.accounts.id.renderButton(wrap,{
-          theme:'outline', size:'large', width:260, text:'signin_with', locale:'en'
-        });
-      }
-    }
-  });
-  // Render button in expiredView
-  var wrap=document.getElementById('gsiButtonWrap');
-  if(wrap){
-    wrap.style.display='flex';
-    google.accounts.id.renderButton(wrap,{
-      theme:'outline', size:'large', width:260, text:'signin_with', locale:'en'
+  if(!_gsiReady){
+    _gsiReady=true;
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback:  onGoogleSignIn,
+      auto_select: true,
+      use_fedcm_for_prompt: false
     });
   }
+  // Render button ONCE in hidden loading screen div - triggers silent auto_select
+  if(!_gsiButtonRendered){
+    _gsiButtonRendered=true;
+    var lsBtn=document.getElementById('lsGsiBtn');
+    if(lsBtn){
+      try{ google.accounts.id.renderButton(lsBtn,{theme:'outline',size:'large',width:260}); }catch(e){}
+    }
+  }
+  try{ google.accounts.id.prompt(); }catch(e){}
 }
 // Show sign-in page immediately, init GSI
 document.getElementById('ls').style.display='none';
@@ -5100,6 +5100,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.2</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.3</div>
 </body>
 </html>
