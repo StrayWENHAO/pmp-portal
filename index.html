@@ -2374,31 +2374,38 @@ window.onload=function(){
     // Validate session token with GAS - no Google JWT needed
     var lsStatus0 = document.getElementById('lsStatus');
     if(lsStatus0) lsStatus0.textContent = 'Restoring session…';
+    var _lsEl = document.getElementById('lsStatus');
+    if(_lsEl) _lsEl.textContent = 'Restoring session…';
+
     apiWithToken('validateSession', savedST).then(function(res){
       if (res && res.ok) {
-        // Session valid - boot normally
+        // Session valid - boot without showing login page
         _bootFromBundle(res);
       } else {
-        // Session token invalid/expired - clear it and show login
+        // Token expired - clear it, try Google silent re-auth
         try { localStorage.removeItem('pmp_st'); sessionStorage.removeItem('pmp_st'); } catch(e){}
-        document.getElementById('ls').style.display = 'none';
-        document.getElementById('expiredView').classList.remove('hidden');
+        if(_lsEl) _lsEl.textContent = 'Re-authenticating…';
+        // Keep loading screen (don't show expiredView yet)
+        // GSI auto_select will fire onGoogleSignIn silently
         initGSI();
+        // After 8s, if still not logged in, show sign-in page
+        setTimeout(function(){
+          if(document.getElementById('pmpShell').classList.contains('hidden')){
+            document.getElementById('ls').style.display='none';
+            document.getElementById('expiredView').classList.remove('hidden');
+          }
+        }, 8000);
       }
-    }).catch(function(err){
-      // Network error or timeout - DON'T clear pmp_st, try Google silent sign-in
-      // The token may still be valid, just couldn't reach GAS
-      var lsEl = document.getElementById('lsStatus');
-      if (lsEl) lsEl.textContent = 'Network error, trying Google sign-in…';
+    }).catch(function(){
+      // Network error - keep loading, try GSI silent auth
+      if(_lsEl) _lsEl.textContent = 'Re-authenticating…';
       initGSI();
-      // After 5 seconds, if still not logged in, show sign-in page
       setTimeout(function(){
-        var shell = document.getElementById('pmpShell');
-        if (shell && shell.classList.contains('hidden')) {
-          document.getElementById('ls').style.display = 'none';
+        if(document.getElementById('pmpShell').classList.contains('hidden')){
+          document.getElementById('ls').style.display='none';
           document.getElementById('expiredView').classList.remove('hidden');
         }
-      }, 5000);
+      }, 8000);
     });
     return;
   }
@@ -2614,6 +2621,20 @@ function initGSI(){
     use_fedcm_for_prompt: false
   });
 
+  // Trigger silent auto-select (fires onGoogleSignIn without user interaction if session exists)
+  google.accounts.id.prompt(function(notification){
+    // If auto-select doesn't work, show the button
+    if(notification.isNotDisplayed() || notification.isSkippedMoment()){
+      var wrap=document.getElementById('gsiButtonWrap');
+      if(wrap){
+        wrap.style.display='flex';
+        google.accounts.id.renderButton(wrap,{
+          theme:'outline', size:'large', width:260, text:'signin_with', locale:'en'
+        });
+      }
+    }
+  });
+  // Always render the button too (shown in expiredView)
   var wrap=document.getElementById('gsiButtonWrap');
   if(wrap){
     wrap.style.display='flex';
@@ -4975,6 +4996,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.3</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.5</div>
 </body>
 </html>
