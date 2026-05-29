@@ -1406,7 +1406,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <!-- Calendar -->
         <div id="lTabCalendar" class="hidden">
           <div class="pcard">
-            <div class="pcard-hdr"><h4>Leave Calendar</h4></div>
+            <div class="pcard-hdr">
+                <h4>📅 Leave Calendar</h4>
+                <button onclick="openApplyLeaveModal()" class="btn" style="background:var(--navy);color:#fff;font-size:.75rem;padding:5px 12px;border-radius:8px;">+ Apply Leave</button>
+              </div>
             <div class="pcard-body">
               <div class="cal-nav">
                 <button class="cnb" onclick="lCalM(-1)">‹</button>
@@ -1629,19 +1632,8 @@ textarea.form-control { resize: vertical; min-height: 80px; }
               <label class="form-label">Location / Project Name *</label>
               <input type="text" id="ordLocation" class="form-control" placeholder="Project site name">
 
-              <label class="form-label">Job Type *</label>
-              <select id="ordJobType" class="form-control">
-                <option value="SL">SL — Scissor Lift</option>
-                <option value="BL">BL — Boom Lift</option>
-                <option value="FL">FL — Forklift</option>
-                <option value="TF">TF — Teleforklift</option>
-                <option value="BTL">BTL — Battery Telehandler</option>
-                <option value="GT">GT — Generator</option>
-                <option value="WS">WS — Welding Set</option>
-                <option value="VL">VL — Vertical Lift</option>
-                <option value="LT">LT — Lighting Tower</option>
-                <option value="ATCH">ATCH — Attachment</option>
-              </select>
+                            <label class="form-label">Job Type *</label>
+              <input type="text" id="ordJobType" class="form-control" placeholder="e.g. Painting, Cement, Boom Lift, Scissor Lift…">
 
               <label class="form-label">Requested By (Company) *</label>
               <input type="text" id="ordReqBy" class="form-control" placeholder="Company / client name">
@@ -2673,46 +2665,15 @@ function loadLeaveApp(){
   var la=document.getElementById('leaveApp');
   if(la){la.classList.remove('hidden');la.style.display='block';}
   var effLR=myLeaveRole||myRole||'staff';
-  // Debug: show role info
-  console.log('[PMP] loadLeaveApp effLR='+effLR+' myLeaveRole='+myLeaveRole+' myRole='+myRole);
-  if(la){
-    // Log entire parent chain
-    var _p=la, _chain=[];
-    while(_p){ _chain.push(_p.id||_p.className||_p.tagName); _p=_p.parentElement; }
-    console.log('[PMP] parent chain: '+_chain.join(' > '));
-    // Check each parent's display
-    var _pp=la.parentElement;
-    while(_pp){
-      var _cs=window.getComputedStyle(_pp);
-      if(_cs.display==='none'){
-        console.log('[PMP] HIDDEN PARENT: id='+_pp.id+' class='+_pp.className+' computedDisplay='+_cs.display);
-      }
-      _pp=_pp.parentElement;
-    }
-    console.log('[PMP] leaveApp offsetHeight='+la.offsetHeight+' offsetParent='+la.offsetParent);
-    var dbg=document.createElement('div');
-    dbg.id='leaveDebug';
-    dbg.style.cssText='background:#fef3cd;padding:8px 16px;font-size:.75rem;border-bottom:1px solid #fde68a;position:relative;z-index:1000;';
-    dbg.textContent='Role: '+effLR+' | myLeaveRole='+myLeaveRole+' | myRole='+myRole;
-    la.insertBefore(dbg, la.firstChild);
-  }
   if(effLR==='superadmin'||effLR==='admin'){
     var lav=document.getElementById('leaveAdminView');
-    if(lav){
-      lav.classList.remove('hidden');
-      lav.style.display='block';
-      console.log('[PMP] leaveAdminView shown, offsetHeight='+lav.offsetHeight);
-    }
-    console.log('[PMP] calling lAdminRefresh');
-    try{ lAdminRefresh(); console.log('[PMP] lAdminRefresh done'); }catch(e){
-      console.error('[PMP] lAdminRefresh error: '+e.message);
-      if(la){var err=document.createElement('div');err.style.cssText='background:#fee;padding:8px;color:red;font-size:.8rem;';err.textContent='Error: '+e.message;la.appendChild(err);}
-    }
+    if(lav){lav.classList.remove('hidden');lav.style.display='block';}
+    lAdminRefresh();
   } else {
     var lsv=document.getElementById('leaveStaffView');
     if(lsv){lsv.classList.remove('hidden');lsv.style.display='block';}
     try{ document.getElementById('lEmail').value=myEmail; }catch(e){}
-    try{ lInitTimes(); }catch(e){}
+    lInitTimes();
     setTimeout(function(){try{resizePad(lPad,'lSigPad');}catch(e){}},80);
   }
 }
@@ -3516,9 +3477,30 @@ function ordLoadMachineTypes(){
 }
 
 function ordTypeChange(){
-  var type=document.getElementById('ordMachType').value;
-  var found=machineTypes.find(function(t){return t.type===type;});
-  document.getElementById('ordSpecUnit').textContent=found?found.unit:'—';
+  var type=document.getElementById('ordMachType').value.toUpperCase();
+  // Auto-unit mapping
+  var ftTypes=['SCISSOR LIFT','BOOM LIFT','VERTICAL LIFT','AERIAL WORK PLATFORM'];
+  var tonTypes=['FORKLIFT','TELEFORKLIFT','REACH STACKER','BATTERY TELEHANDLER'];
+  var kvaTypes=['GENERATOR','TRANSFORMER'];
+  var ampTypes=['WELDING SET'];
+  var unit='—';
+  if(ftTypes.some(function(t){return type.indexOf(t)>-1;})) unit='FT';
+  else if(tonTypes.some(function(t){return type.indexOf(t)>-1;})) unit='Ton';
+  else if(kvaTypes.some(function(t){return type.indexOf(t)>-1;})) unit='KVA';
+  else if(ampTypes.some(function(t){return type.indexOf(t)>-1;})) unit='AMP';
+  else {
+    // Fallback to machineTypes list
+    var found=machineTypes.find(function(t){return t.type===type;});
+    if(found) unit=found.unit;
+  }
+  var unitEl=document.getElementById('ordSpecUnit');
+  if(unitEl) unitEl.textContent=unit;
+  // Show/hide FT↔M switch (only for FT unit types)
+  var switchBtn=document.getElementById('ordFtMSwitch');
+  if(switchBtn) switchBtn.style.display=(unit==='FT')?'':'none';
+  // Reset spec value
+  var specIn=document.getElementById('ordSpec');
+  if(specIn) specIn.value='';
 }
 
 function ordSubmit(){
@@ -4949,6 +4931,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.5.8</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.0</div>
 </body>
 </html>
