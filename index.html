@@ -1293,11 +1293,13 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
 
         <!-- Tabs: Records | Calendar | Holidays | Schedule -->
-        <div class="stabs">
-          <button class="stab on leave" onclick="lAdminTab('records',this)">📋 Records</button>
-          <button class="stab" onclick="lAdminTab('schedule',this)">🗓 Schedule</button>
-          <button class="stab" onclick="lAdminTab('calendar',this)">📅 Calendar</button>
-
+        <div class="stabs" style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;gap:4px;">
+            <button class="stab on leave" onclick="lAdminTab('records',this)">📋 Records</button>
+            <button class="stab" onclick="lAdminTab('schedule',this)">🗓 Schedule</button>
+            <button class="stab" onclick="lAdminTab('calendar',this)">📅 Calendar</button>
+          </div>
+          <button onclick="openApplyLeaveModal()" style="background:var(--navy);color:#fff;font-size:.75rem;padding:5px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:600;">+ Apply Leave</button>
         </div>
 
         <!-- Records -->
@@ -1406,10 +1408,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <!-- Calendar -->
         <div id="lTabCalendar" class="hidden">
           <div class="pcard">
-            <div class="pcard-hdr">
-                <h4>📅 Leave Calendar</h4>
-                <button onclick="openApplyLeaveModal()" class="btn" style="background:var(--navy);color:#fff;font-size:.75rem;padding:5px 12px;border-radius:8px;">+ Apply Leave</button>
-              </div>
+            <div class="pcard-hdr"><h4>📅 Leave Calendar</h4></div>
             <div class="pcard-body">
               <div class="cal-nav">
                 <button class="cnb" onclick="lCalM(-1)">‹</button>
@@ -2246,12 +2245,28 @@ function apiWithToken(action, sessionToken) {
   return new Promise(function(resolve, reject) {
     var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     var url = GAS_API_URL + '?action=' + action + '&sessionToken=' + encodeURIComponent(sessionToken) + '&cb=' + cb;
-    window[cb] = function(data) { delete window[cb]; resolve(data); };
     var s = document.createElement('script');
+    var done = false;
+    window[cb] = function(data) {
+      if(done) return; done = true;
+      delete window[cb];
+      try{ document.head.removeChild(s); }catch(e){}
+      resolve(data);
+    };
     s.src = url;
-    s.onerror = function() { delete window[cb]; reject(new Error('Network error')); };
+    s.onerror = function() {
+      if(done) return; done = true;
+      delete window[cb];
+      try{ document.head.removeChild(s); }catch(e){}
+      reject(new Error('Network error'));
+    };
     document.head.appendChild(s);
-    setTimeout(function() { delete window[cb]; reject(new Error('Timeout')); }, 15000);
+    setTimeout(function() {
+      if(done) return; done = true;
+      delete window[cb];
+      try{ document.head.removeChild(s); }catch(e){}
+      reject(new Error('Timeout'));
+    }, 20000);
   });
 }
 
@@ -3558,18 +3573,30 @@ function ordAdminTab(tab,btn){
   btn.classList.add('on','order');
 }
 
+function _ordUpdateStats(){
+  var total=allOrders.length;
+  var unassigned=allOrders.filter(function(o){return !o.selectedUnit||!o.selectedUnit.length;}).length;
+  var assigned=total-unassigned;
+  var el;
+  el=document.getElementById('ordStTotal');   if(el)el.textContent=total;
+  el=document.getElementById('ordStPending'); if(el)el.textContent=unassigned;
+  el=document.getElementById('ordStAssigned');if(el)el.textContent=assigned;
+  el=document.getElementById('ordStMachines');if(el)el.textContent=allMachines.length;
+}
+
 function ordAdminRefresh(){
   if(allOrders.length>0||allMachines.length>0){
-    ordRenderTbl();machRenderStats();machRenderTbl();
+    ordRenderTbl();machRenderStats();machRenderTbl();_ordUpdateStats();
   }
   api('getOrderAdminBundle').then(function(res){
+    if(!res||!res.ok) return;
     var b=res.data||{};
     allOrders=b.orders||[];
     allMachines=b.machines||[];
     technicians=b.technicians||[];
     machineTypes=b.machineTypes||[];
-    ordRenderTbl();machRenderStats();machRenderTbl();
-  });
+    ordRenderTbl();machRenderStats();machRenderTbl();_ordUpdateStats();
+  }).catch(function(){});
 }
 
 var ordStatusFilt='pending';
@@ -3582,34 +3609,7 @@ function ordFilt(f,btn){
 
 function ordRenderTbl(){ ordRenderTblWithRoles(); }
 
-function ordRenderTbl(){
-  var search=document.getElementById('ordSearch').value.toLowerCase();
-  var list=allOrders.filter(function(o){
-    var matchF=ordStatusFilt===''||(ordStatusFilt==='pending'&&!o.selectedUnit)||(ordStatusFilt==='assigned'&&!!o.selectedUnit);
-    var matchS=!search||(o.orderId+o.machineType+o.location+o.requestedBy+o.submittedBy+o.selectedUnit).toLowerCase().indexOf(search)>-1;
-    return matchF&&matchS;
-  });
-  var tb=document.getElementById('ordTbody');
-  if(!list.length){tb.innerHTML='<tr><td colspan="9" class="empty">No orders.</td></tr>';return;}
-  tb.innerHTML=list.map(function(o){
-    var unitCell=o.selectedUnit?'<span class="bs bs-ordered">'+o.selectedUnit+'</span>':'<span class="bs bs-pending">Unassigned</span>';
-    var subName=o.submittedBy.replace(/\s*\(.*?\)/g,'');
-    return '<tr>'+
-      '<td style="font-size:.74rem;white-space:nowrap;color:var(--text-secondary);max-width:150px;">'+o.orderId+'</td>'+
-      '<td style="font-weight:700;">'+o.machineType+'<br><span style="font-size:.72rem;color:#aaa;">'+o.specValue+' '+o.specUnit+'</span></td>'+
-      '<td style="text-align:center;">'+o.unitQty+'</td>'+
-      '<td style="font-size:.78rem;">'+o.deliveryDate+'</td>'+
-      '<td style="font-size:.78rem;">'+o.location+'</td>'+
-      '<td style="font-size:.78rem;">'+o.requestedBy+'</td>'+
-      '<td>'+unitCell+'</td>'+
-      '<td style="font-size:.75rem;color:#888;">'+subName+'</td>'+
-      '<td><div class="act">'+
-        '<button class="ab ab-assign" onclick="openAssign(\''+o.orderId+'\',\''+o.machineType+'\','+o.unitQty+',\''+o.rowIndex+'\')">Assign</button>'+
-        '<button class="ab ab-wa" onclick="openWA(\''+o.orderId+'\',\''+o.machineType+'\',\''+o.deliveryDate+'\',\''+o.location+'\',\''+o.requestedBy+'\',\''+o.unitQty+'\',\''+o.rentalPeriod+'\',\''+o.powerType+'\',\''+o.jobType+'\',\''+o.specialReq+'\')">WhatsApp</button>'+
-        '<button class="ab ab-del" onclick="ordDel('+o.rowIndex+',\''+o.orderId+'\')">Del</button>'+
-      '</div></td></tr>';
-  }).join('');
-}
+
 
 function machRenderStats(){
   document.getElementById('msPending').textContent=allMachines.filter(function(m){return m.status==='PENDING';}).length;
@@ -4931,6 +4931,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.0</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.6.1</div>
 </body>
 </html>
