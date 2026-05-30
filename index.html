@@ -2539,7 +2539,26 @@ window.onload=function(){
   if(lbf){ lbf.style.animation='none'; void lbf.offsetHeight; lbf.style.animation=''; }
   var now=new Date(); lCalYear=now.getFullYear(); lCalMonth=now.getMonth();
 
-  // Try session token first (persistent, no JWT expiry)
+  // ── INSTANT RESTORE from cached bundle ──
+  var _cb = null;
+  try { var _cbs = localStorage.getItem('pmp_bundle'); if(_cbs) _cb = JSON.parse(_cbs); } catch(e){}
+
+  if (_cb && _cb.email && (_cb.sessionToken || localStorage.getItem('pmp_st'))) {
+    // Restore roles immediately - no GAS call needed
+    myEmail      = _cb.email;
+    myRole       = _cb.role       || '';
+    myLeaveRole  = _cb.leaveRole  || '';
+    myOTRole     = _cb.otRole     || '';
+    myOrderRole  = _cb.orderRole  || '';
+    myDepartment = _cb.department || '';
+    var _st0 = _cb.sessionToken || localStorage.getItem('pmp_st') || '';
+    var _lsEl = document.getElementById('lsStatus');
+    if(_lsEl) _lsEl.textContent = 'Loading…';
+    _bootUI(_st0);
+    return;  // Done - shell is shown, background refresh happens in _bootUI
+  }
+
+  // No cached bundle - try session token (slower GAS validation)
   var savedST = null;
   try { savedST = localStorage.getItem('pmp_st') || sessionStorage.getItem('pmp_st'); } catch(e){}
 
@@ -2707,10 +2726,18 @@ function onGoogleSignIn(resp) {
     machineTypes = b.machineTypes || [];
     // Save persistent session token (30 days, survives refresh)
     var _tok = b.sessionToken || res.sessionToken;
-      if (_tok) {
-      try { localStorage.setItem('pmp_st',_tok); sessionStorage.setItem('pmp_st',_tok); } catch(e){}
-        } else {
-        }
+    if (_tok) {
+      try { localStorage.setItem('pmp_st', _tok); sessionStorage.setItem('pmp_st', _tok); } catch(e){}
+    }
+    // Save full bundle for instant F5 restore
+    try {
+      localStorage.setItem('pmp_bundle', JSON.stringify({
+        email: myEmail, role: myRole,
+        leaveRole: myLeaveRole, otRole: myOTRole,
+        orderRole: myOrderRole, department: myDepartment,
+        sessionToken: _tok || ''
+      }));
+    } catch(e) {}
 
     document.getElementById('ls').style.display='none';
     document.getElementById('expiredView').classList.add('hidden');
@@ -5167,6 +5194,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 </script>
-<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.7</div>
+<div style="position:fixed;bottom:8px;right:10px;font-size:.62rem;color:#555;font-family:monospace;background:rgba(255,255,255,.9);padding:2px 6px;border-radius:3px;border:1px solid #ddd;z-index:99999;pointer-events:none;">v1.7.9</div>
 </body>
 </html>
